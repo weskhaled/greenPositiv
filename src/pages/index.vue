@@ -17,7 +17,7 @@ const { t } = useI18n()
   <main class="main-content">
     <!--== Start Hero Area Wrapper ==-->
     <section class="home-slider-area">
-      <div class="home-slider-container default-slider-container">
+      <div class="home-slider-container default-slider-container bg-gray-600">
         <div class="home-slider-wrapper slider-default">
           <div class="slider-content-area" data-bg-img="../assets/img/slider/slider-bg.jpg">
             <div class="container pt--0 pb--0">
