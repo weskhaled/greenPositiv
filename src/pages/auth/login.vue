@@ -1,23 +1,31 @@
 <script setup lang="ts">
-import { useUserStore } from '~/stores/user'
 import { token } from '~/stores'
 import authApi from '~/api/modules/auth'
 import logoLight from '~/assets/img/logo-light.png'
 import logoLightTheme from '~/assets/img/logo-light-theme.png'
 
-const user = useUserStore()
+interface FormState {
+  username: string
+  password: string
+  remember: boolean
+}
+
 const router = useRouter()
 const { t } = useI18n()
 
-const name = ref(user.savedName)
-
-const go = () => {
-  if (name.value)
-    router.push(`/hi/${encodeURIComponent(name.value)}`)
-}
-const login = async() => {
-  const { data } = await authApi.login({ username: 'khaled', password: 'azerty123' })
+const formState = reactive<FormState>({
+  username: 'khaled',
+  password: 'azerty123',
+  remember: true,
+})
+const onFinish = async(values: any) => {
+  const { username, password } = values
+  const { data } = await authApi.login({ username, password })
   data && (token.value = data.token)
+}
+
+const onFinishFailed = (errorInfo: any) => {
+  console.log('Failed:', errorInfo)
 }
 </script>
 
@@ -60,7 +68,42 @@ const login = async() => {
                     Sign In
                   </h4>
                 </div>
-                <form action="#">
+                <a-form
+                  :model="formState"
+                  name="basic"
+                  :label-col="{ span: 0 }"
+                  :wrapper-col="{ span: 24 }"
+                  autocomplete="on"
+                  @finish="onFinish"
+                  @finish-failed="onFinishFailed"
+                >
+                  <a-form-item
+                    name="username"
+                    :rules="[{ required: true, message: 'Please input your username!' }]"
+                  >
+                    <a-input v-model:value="formState.username" />
+                  </a-form-item>
+
+                  <a-form-item
+                    name="password"
+                    :rules="[{ required: true, message: 'Please input your password!' }]"
+                  >
+                    <a-input-password v-model:value="formState.password" />
+                  </a-form-item>
+
+                  <a-form-item name="remember" :wrapper-col="{ offset: 0, span: 24 }">
+                    <a-checkbox v-model:checked="formState.remember">
+                      Remember me
+                    </a-checkbox>
+                  </a-form-item>
+
+                  <a-form-item :wrapper-col="{ offset: 0, span: 24 }">
+                    <a-button type="primary" block html-type="submit">
+                      Submit
+                    </a-button>
+                  </a-form-item>
+                </a-form>
+                <form class="hidden" action="#">
                   <div class="row">
                     <div class="col-12">
                       <div class="form-group">

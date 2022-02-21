@@ -1,6 +1,7 @@
 @import './markdown.css';
-@import '/node_modules/swiper/swiper.scss';
 // Import Swiper styles
+@import '/node_modules/swiper/swiper.scss';
+@import '/node_modules/aos/dist/aos.css';
 @import './scss/style.scss';
 
 html,
