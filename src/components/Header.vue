@@ -43,14 +43,14 @@ const toggleLocales = () => {
                   <li><a href="employers-details.html"><span>Blog</span></a></li>
                   <li><a href="employers-details.html"><span>À propos</span></a></li>
                   <li v-if="!isAuthenticated">
-                    <router-link to="/register">
+                    <router-link to="/auth/registration" class="header-action-area">
                       <span class="btn-registration">Je suis freelance</span>
                     </router-link>
                   </li>
                   <li v-if="!isAuthenticated">
-                    <router-link to="/register">
+                    <a href="javascript:;" class="header-action-area" @click="router.push({path: '/auth/registration', query:{agence: 'true'}})">
                       <span class="btn-registration">Je suis une entreprise</span>
-                    </router-link>
+                    </a>
                   </li>
                   <li v-if="!isAuthenticated">
                     <router-link class="nav-link" to="/auth/login">

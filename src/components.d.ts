@@ -9,20 +9,19 @@ declare module 'vue' {
     CarbonCampsite: typeof import('~icons/carbon/campsite')['default']
     CarbonDicomOverlay: typeof import('~icons/carbon/dicom-overlay')['default']
     CarbonLanguage: typeof import('~icons/carbon/language')['default']
-    CarbonLogoFacebook: typeof import('~icons/carbon/logo-facebook')['default']
     CarbonLogoGithub: typeof import('~icons/carbon/logo-github')['default']
-    CarbonLogoSkype: typeof import('~icons/carbon/logo-skype')['default']
-    CarbonLogoTwitter: typeof import('~icons/carbon/logo-twitter')['default']
     CarbonMoon: typeof import('~icons/carbon/moon')['default']
     CarbonPlayFilledAlt: typeof import('~icons/carbon/play-filled-alt')['default']
     CarbonSearch: typeof import('~icons/carbon/search')['default']
     CarbonSun: typeof import('~icons/carbon/sun')['default']
-    CarbonWarning: typeof import('~icons/carbon/warning')['default']
     Counter: typeof import('./components/Counter.vue')['default']
     Footer: typeof import('./components/Footer.vue')['default']
     Header: typeof import('./components/Header.vue')['default']
+    MdiLightArrowUp: typeof import('~icons/mdi-light/arrow-up')['default']
     MdiLightMenu: typeof import('~icons/mdi-light/menu')['default']
     README: typeof import('./components/README.md')['default']
+    UimBag: typeof import('~icons/uim/bag')['default']
+    UimUserNurse: typeof import('~icons/uim/user-nurse')['default']
   }
 }
 

@@ -1,4 +1,4 @@
-import { Alert, Avatar, Badge, Breadcrumb, Button, Checkbox, Col, ConfigProvider, DatePicker, Descriptions, Divider, Drawer, Dropdown, Form, Input, InputNumber, Layout, Menu, Modal, Pagination, Popover, Radio, Result, Row, Select, Skeleton, Spin, Statistic, Switch, Table, Tabs, Tag, Tooltip, Transfer, Upload } from 'ant-design-vue'
+import { Alert, Avatar, Badge, Breadcrumb, Button, Checkbox, Col, ConfigProvider, DatePicker, Descriptions, Divider, Drawer, Dropdown, Form, Input, InputNumber, Layout, Menu, Modal, Pagination, Popover, Radio, Result, Row, Select, Skeleton, Spin, Statistic, Steps, Switch, Table, Tabs, Tag, Tooltip, Transfer, Upload } from 'ant-design-vue'
 
 import type { UserModule } from '~/types'
 
@@ -14,6 +14,7 @@ export const install: UserModule = ({ isClient, app }) => {
       .use(Dropdown)
       .use(Breadcrumb)
       .use(Popover)
+      .use(Steps)
       .use(Tabs)
       .use(Badge)
       .use(Result)

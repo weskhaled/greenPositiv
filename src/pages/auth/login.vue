@@ -146,7 +146,7 @@ onMounted(() => {
                   </div>
                 </form>
                 <div class="login-register-form-info">
-                  <p>Don't you have an account? <a href="registration.html">Register</a></p>
+                  <p>Don't you have an account? <a href="javascript:;" @click="router.push('/auth/registration')">Register</a></p>
                 </div>
               </div>
             </div>

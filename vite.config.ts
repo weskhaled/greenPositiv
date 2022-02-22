@@ -125,6 +125,9 @@ export default defineConfig({
           },
         ],
       },
+      workbox: {
+        cleanupOutdatedCaches: true,
+      },
     }),
 
     // https://github.com/intlify/bundle-tools/tree/main/packages/vite-plugin-vue-i18n
