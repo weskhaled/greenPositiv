@@ -1,19 +1,13 @@
 <script setup lang="ts">
-import { token } from '~/stores'
+import { currentUser, token } from '~/stores'
 import authApi from '~/api/modules/auth'
 import logoLight from '~/assets/img/logo-light.png'
 import logoLightTheme from '~/assets/img/logo-light-theme.png'
 
-interface FormState {
-  username: string
-  password: string
-  remember: boolean
-}
-
 const router = useRouter()
 const { t } = useI18n()
 
-const formState = reactive<FormState>({
+const formState = reactive<any>({
   username: 'khaled',
   password: 'azerty123',
   remember: true,
@@ -22,11 +16,25 @@ const onFinish = async(values: any) => {
   const { username, password } = values
   const { data } = await authApi.login({ username, password })
   data && (token.value = data.token)
+  const { data: currentUserData } = await authApi.currentUser()
+  if (currentUserData) {
+    currentUser.value = currentUserData
+    router.push('/')
+  }
+  else {
+    currentUser.value = null
+    token.value = null
+  }
 }
 
 const onFinishFailed = (errorInfo: any) => {
   console.log('Failed:', errorInfo)
 }
+
+onMounted(() => {
+  if (token.value)
+    router.push('/')
+})
 </script>
 
 <template>

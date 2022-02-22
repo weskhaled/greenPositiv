@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { isDark, toggleDark } from '~/composables'
+import { currentUser, isAuthenticated, token } from '~/stores'
 
 const router = useRouter()
 const { t, availableLocales, locale } = useI18n()
@@ -29,49 +30,78 @@ const toggleLocales = () => {
             <div class="header-align-center">
               <div class="header-navigation-area position-relative">
                 <ul class="main-menu nav">
-                  <li><a href="javascript:;" @click="router.push('/')"><span>Home</span></a></li>
+                  <li><a href="javascript:;" @click="router.push('/')"><span>Offres et tarifs</span></a></li>
+                  <li><a href="javascript:;" @click="router.push('/')"><span>Entreprise</span></a></li>
                   <li class="has-submenu">
-                    <a href="#/"><span>Find Jobs</span></a>
+                    <a href="#/"><span>Ressources</span></a>
                     <ul class="submenu-nav">
-                      <li><a href="job.html"><span>Jobs</span></a></li>
-                      <li><a href="job-details.html"><span>Job Details</span></a></li>
+                      <li><a href="job.html"><span>Freelance</span></a></li>
+                      <li><a href="job-details.html"><span>Agence</span></a></li>
+                      <li><a href="job-details.html"><span>Entreprise</span></a></li>
                     </ul>
                   </li>
-                  <li><a href="employers-details.html"><span>Employers Details</span></a></li>
-                  <li class="has-submenu">
-                    <a href="#/"><span>Candidates</span></a>
+                  <li><a href="employers-details.html"><span>Blog</span></a></li>
+                  <li><a href="employers-details.html"><span>À propos</span></a></li>
+                  <li v-if="!isAuthenticated">
+                    <router-link to="/register">
+                      <span class="btn-registration">Je suis freelance</span>
+                    </router-link>
+                  </li>
+                  <li v-if="!isAuthenticated">
+                    <router-link to="/register">
+                      <span class="btn-registration">Je suis une entreprise</span>
+                    </router-link>
+                  </li>
+                  <li v-if="!isAuthenticated">
+                    <router-link class="nav-link" to="/auth/login">
+                      <span>Se Connecter</span>
+                    </router-link>
+                  </li>
+                  <li v-if="isAuthenticated" class="header-align has-submenu">
+                    <router-link class="nav-link" to="#">
+                      <span>Mon espace</span>
+                    </router-link>
                     <ul class="submenu-nav">
-                      <li><a href="candidate.html"><span>Candidates</span></a></li>
-                      <li><a href="candidate-details.html"><span>Candidate Details</span></a></li>
+                      <li>
+                        <router-link class="nav-link" :to="`/profile/${currentUser?.username}`">
+                          <span>Modifier mon profil</span>
+                        </router-link>
+                      </li>
+                      <li>
+                        <router-link class="nav-link" to="#">
+                          <span>Mes missions</span>
+                        </router-link>
+                      </li>
+                      <li>
+                        <router-link class="nav-link" to="#">
+                          <span>Créer un devis </span>
+                        </router-link>
+                      </li>
+                      <li>
+                        <router-link class="nav-link" :to="`/profile-entreprise/${currentUser?.username}`">
+                          <span>Paramètre de mon entreprise</span>
+                        </router-link>
+                      </li>
+                      <li>
+                        <router-link class="nav-link" to="#">
+                          <span>Paramètre de compte</span>
+                        </router-link>
+                      </li>
+                      <li class="nav-item">
+                        <router-link class="nav-link" to="#" @click="() => token = null">
+                          <span>Déconnexion</span>
+                        </router-link>
+                      </li>
                     </ul>
                   </li>
-                  <li class="has-submenu">
-                    <a href="#/"><span>Blog</span></a>
-                    <ul class="submenu-nav">
-                      <li><a href="blog-grid.html">Blog Grid</a></li>
-                      <li><a href="blog.html">Blog Left Sidebar</a></li>
-                      <li><a href="blog-right-sidebar.html">Blog Right Sidebar</a></li>
-                      <li><a href="blog-details.html">Blog Details</a></li>
-                    </ul>
-                  </li>
-                  <li class="has-submenu">
-                    <a href="#/"><span>Pages</span></a>
-                    <ul class="submenu-nav">
-                      <li><a href="about-us.html"><span>About us</span></a></li>
-                      <li><a href="login.html"><span>Login</span></a></li>
-                      <li><a href="registration.html"><span>Registration</span></a></li>
-                      <li><a href="page-not-found.html"><span>Page Not Found</span></a></li>
-                    </ul>
-                  </li>
-                  <li><a href="contact.html"><span>Contact</span></a></li>
                 </ul>
               </div>
             </div>
             <div class="header-align-end">
               <div class="header-action-area">
-                <a class="btn-registration" href="javascript:;" @click="router.push('/auth/login')"><span>+</span> Registration</a>
                 <button class="btn-menu" type="button" data-bs-toggle="offcanvas" data-bs-target="#AsideOffcanvasMenu" aria-controls="AsideOffcanvasMenu">
                   <i class="icofont-navigation-menu" />
+                  <mdi-light-menu />
                 </button>
               </div>
             </div>

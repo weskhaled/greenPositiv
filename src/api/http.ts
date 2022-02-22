@@ -1,6 +1,7 @@
 import type { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 import axios from 'axios'
 import { message } from 'ant-design-vue'
+import { token } from '~/stores'
 import showCodeMessage from '~/api/code'
 import type { instanceObject } from '~/utils/format'
 import { formatJsonToUrlParams } from '~/utils/format'
@@ -8,7 +9,7 @@ import { formatJsonToUrlParams } from '~/utils/format'
 const BASE_PREFIX = `${import.meta.env.VITE_API_BASEURL}`
 
 // Create instance
-const axiosInstance: AxiosInstance = axios.create({
+export const http: AxiosInstance = axios.create({
   // prefix
   baseURL: BASE_PREFIX,
   // time out
@@ -20,7 +21,7 @@ const axiosInstance: AxiosInstance = axios.create({
 })
 
 // request interceptor
-axiosInstance.interceptors.request.use(
+http.interceptors.request.use(
   (config: AxiosRequestConfig) => {
     // TODO Here you can add the logic you want to process before the request is sent
     // TODO for example loading Wait
@@ -32,7 +33,7 @@ axiosInstance.interceptors.request.use(
 )
 
 // response interceptor
-axiosInstance.interceptors.response.use(
+http.interceptors.response.use(
   (response: AxiosResponse) => {
     if (response.status === 200)
       return response
@@ -51,12 +52,12 @@ axiosInstance.interceptors.response.use(
   },
 )
 const service = {
-  get: (url: string, data?: object) => axiosInstance.get(url, { params: data }),
-  post: (url: string, data?: object) => axiosInstance.post(url, data),
-  put: (url: string, data?: object) => axiosInstance.put(url, data),
-  delete: (url: string, data?: object) => axiosInstance.delete(url, data),
+  get: (url: string, data?: object) => http.get(url, { params: data }),
+  post: (url: string, data?: object) => http.post(url, data),
+  put: (url: string, data?: object) => http.put(url, data),
+  delete: (url: string, data?: object) => http.delete(url, data),
   upload: (url: string, file: File) =>
-    axiosInstance.post(url, file, {
+    http.post(url, file, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
   download: (url: string, data: instanceObject) => {
@@ -64,5 +65,18 @@ const service = {
     window.location.href = downloadUrl
   },
 }
+
+watch(token, () => {
+  http.interceptors.request.use((config: any) => {
+    if (token.value && token.value.length)
+      config.headers.token = token.value
+    else
+      delete config.headers.token
+
+    return config
+  }, (err) => {
+    return Promise.reject(err)
+  })
+}, { immediate: true })
 
 export default service
