@@ -37,12 +37,10 @@ const jobs = ref([])
 
 const validaterePassword = async(_rule: RuleObject, value: string) => {
   if (value === '')
-    // eslint-disable-next-line prefer-promise-reject-errors
-    return Promise.reject('Please input the password again')
+    return Promise.reject(new Error('Please input the password again'))
 
   else if (value !== formRegisterState.password)
-    // eslint-disable-next-line prefer-promise-reject-errors
-    return Promise.reject('two inputs don\'t match!')
+    return Promise.reject(new Error('two inputs don\'t match!'))
 
   else
     return Promise.resolve()
@@ -51,22 +49,19 @@ const validateConfidentiality = async(_rules, value) => {
   console.log(value)
   if (value === true)
     return Promise.resolve()
-  // eslint-disable-next-line prefer-promise-reject-errors
-  return Promise.reject('Please input the Confidentiality')
+  return Promise.reject(new Error('Please input the Confidentiality'))
 }
 const validatePhone = async(_rule: RuleObject, value: any) => {
   if (!value)
-  // eslint-disable-next-line prefer-promise-reject-errors
-    return Promise.reject('Please input the phone')
+    return Promise.reject(new Error('Please input the phone'))
 
   if (!Number.isInteger(+value)) {
-    // eslint-disable-next-line prefer-promise-reject-errors
-    return Promise.reject('Please input digits')
+    return Promise.reject(new Error('Please input digits'))
   }
   else {
     if (value.length < 10)
     // eslint-disable-next-line prefer-promise-reject-errors
-      return Promise.reject('Phone must be greater than 10')
+      return Promise.reject(new Error('Phone must be greater than 10'))
     else
       return Promise.resolve()
   }
