@@ -99,9 +99,8 @@ const toggleLocales = () => {
             </div>
             <div class="header-align-end">
               <div class="header-action-area">
-                <button class="btn-menu" type="button" data-bs-toggle="offcanvas" data-bs-target="#AsideOffcanvasMenu" aria-controls="AsideOffcanvasMenu">
-                  <i class="icofont-navigation-menu" />
-                  <mdi-light-menu />
+                <button class="btn-menu !flex md:!hidden items-center" type="button" data-bs-toggle="offcanvas" data-bs-target="#AsideOffcanvasMenu" aria-controls="AsideOffcanvasMenu">
+                  <span class="i-mdi-light-menu inline-block text-xl mx-auto" />
                 </button>
               </div>
             </div>

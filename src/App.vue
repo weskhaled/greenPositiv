@@ -12,5 +12,7 @@ const isMounted = useMounted()
 </script>
 
 <template>
-  <router-view v-if="isMounted" />
+  <suspense>
+    <router-view v-if="isMounted" />
+  </suspense>
 </template>

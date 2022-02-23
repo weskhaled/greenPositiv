@@ -20,16 +20,13 @@ const onFinish = async(values: any) => {
   const { data: currentUserData } = await authApi.currentUser()
   if (currentUserData) {
     currentUser.value = currentUserData
+    message.success('Bienvenue')
     router.push('/')
   }
   else {
     currentUser.value = null
     token.value = null
   }
-}
-
-const onFinishFailed = (errorInfo: any) => {
-  message.error(errorInfo)
 }
 
 onMounted(() => {
@@ -42,7 +39,7 @@ onMounted(() => {
   <main class="main-content">
     <!--== Start Page Header Area Wrapper ==-->
     <div class="page-header-area sec-overlay sec-overlay-black" data-bg-img="../assets/img/photos/bg2.jpg">
-      <div class="container pt--0 pb--0">
+      <div class="container pt-0 pb-0">
         <div class="row">
           <div class="col-12">
             <div class="page-header-content">
@@ -79,12 +76,11 @@ onMounted(() => {
                 </div>
                 <a-form
                   :model="formState"
-                  name="basic"
+                  name="formState"
                   :label-col="{ span: 0 }"
                   :wrapper-col="{ span: 24 }"
                   autocomplete="on"
                   @finish="onFinish"
-                  @finish-failed="onFinishFailed"
                 >
                   <a-form-item
                     name="username"

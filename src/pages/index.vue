@@ -94,7 +94,7 @@ const { t } = useI18n()
                             <div class="col-lg-auto col-sm-6 col-12 flex-grow-1">
                               <div class="form-group">
                                 <button type="button" class="btn-form-search">
-                                  <carbon-search class="icofont-search-1" />
+                                  <span class="i-carbon-search icofont-search-1" />
                                 </button>
                               </div>
                             </div>
@@ -114,7 +114,7 @@ const { t } = useI18n()
           <div class="col-12">
             <div class="play-video-btn">
               <a href="https://www.youtube.com/mcvqOUtcAJg" class="video-popup">
-                <carbon-play-filled-alt class="text-white text-xl" />
+                <span class="i-carbon-play-filled-alt text-white text-2xl" />
               </a>
             </div>
           </div>

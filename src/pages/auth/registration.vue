@@ -143,8 +143,8 @@ onMounted(async() => {
                   <a-tabs v-model:activeKey="activeTabKey" centered @change="params.agence = (activeTabKey === '2' ? 'true' : 'false')">
                     <a-tab-pane key="1">
                       <template #tab>
-                        <span class="px-2">
-                          <uim-bag class="mb-1" />
+                        <span class="px-2 px-2 flex items-center">
+                          <span class="i-uim-bag text-md inline-block mr-1" />
                           Freelance
                         </span>
                       </template>
@@ -345,8 +345,8 @@ onMounted(async() => {
                     </a-tab-pane>
                     <a-tab-pane key="2" force-render>
                       <template #tab>
-                        <span class="px-2">
-                          <uim-user-nurse class="mb-1" />
+                        <span class="px-2 flex items-center">
+                          <span class="i-uim-user-nurse text-md inline-block mr-1" />
                           Agence
                         </span>
                       </template>

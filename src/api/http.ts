@@ -44,6 +44,9 @@ http.interceptors.response.use(
   (error: AxiosError) => {
     const { response } = error
     if (response) {
+      if (response.status === 401)
+        token.value = null
+
       message.error(showCodeMessage(response.status))
       return Promise.reject(response.data)
     }

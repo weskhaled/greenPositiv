@@ -59,14 +59,50 @@ const scrollTop = () => {
                   <img class="logo-main" :src="logo" alt="Logo">
                 </a>
               </div>
-              <p class="desc">
+              <p
+                class="desc"
+              >
                 Lorem Ipsum is simply dummy text of the printing and typesetting industry.
               </p>
               <div class="social-icons">
-                <a href="https://www.facebook.com" target="_blank" rel="noopener"><i class="icofont-facebook" /></a>
-                <a href="https://www.isntagram.com" target="_blank" rel="noopener"><i class="icofont-instagram" /></a>
-                <a href="https://www.linkedin.com" target="_blank" rel="noopener"><i class="icofont-linkedin" /></a>
-                <a href="https://twitter.com" target="_blank" rel="noopener"><i class="icofont-twitter" /></a>
+                <a
+                  href="https://www.facebook.com"
+                  target="_blank"
+                  class="!flex items-center"
+                  rel="noopener"
+                >
+                  <span
+                    class="i-fa-brands-facebook-f icofont-facebook inline-block mx-auto text-xl"
+                  />
+                </a>
+                <a
+                  href="https://www.isntagram.com"
+                  target="_blank"
+                  class="!flex items-center"
+                  rel="noopener"
+                >
+                  <span
+                    class="i-fa-brands-instagram icofont-facebook inline-block mx-auto text-xl"
+                  />
+                </a>
+                <a
+                  href="https://www.linkedin.com"
+                  target="_blank"
+                  class="!flex items-center"
+                  rel="noopener"
+                >
+                  <span
+                    class="i-fa-brands-linkedin-in icofont-facebook inline-block mx-auto text-xl"
+                  />
+                </a>
+                <a
+                  href="https://twitter.com"
+                  target="_blank"
+                  class="!flex items-center"
+                  rel="noopener"
+                >
+                  <span class="i-fa-brands-twitter icofont-facebook inline-block mx-auto text-xl" />
+                </a>
               </div>
             </div>
           </div>
@@ -77,7 +113,11 @@ const scrollTop = () => {
                   <h4 class="widget-title">
                     Green-positiv
                   </h4>
-                  <h4 class="widget-collapsed-title collapsed" data-bs-toggle="collapse" data-bs-target="#widgetId-1">
+                  <h4
+                    class="widget-collapsed-title collapsed"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#widgetId-1"
+                  >
                     Company
                   </h4>
                   <div id="widgetId-1" class="collapse widget-collapse-body">
@@ -115,7 +155,11 @@ const scrollTop = () => {
                   <h4 class="widget-title">
                     Ressource
                   </h4>
-                  <h4 class="widget-collapsed-title collapsed" data-bs-toggle="collapse" data-bs-target="#widgetId-2">
+                  <h4
+                    class="widget-collapsed-title collapsed"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#widgetId-2"
+                  >
                     Resources
                   </h4>
                   <div id="widgetId-2" class="collapse widget-collapse-body">
@@ -148,7 +192,11 @@ const scrollTop = () => {
                   <h4 class="widget-title">
                     Legal
                   </h4>
-                  <h4 class="widget-collapsed-title collapsed" data-bs-toggle="collapse" data-bs-target="#widgetId-3">
+                  <h4
+                    class="widget-collapsed-title collapsed"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#widgetId-3"
+                  >
                     Legal
                   </h4>
                   <div id="widgetId-3" class="collapse widget-collapse-body">
@@ -181,7 +229,11 @@ const scrollTop = () => {
                   <h4 class="widget-title">
                     Inscription
                   </h4>
-                  <h4 class="widget-collapsed-title collapsed" data-bs-toggle="collapse" data-bs-target="#widgetId-4">
+                  <h4
+                    class="widget-collapsed-title collapsed"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#widgetId-4"
+                  >
                     Inscriptions
                   </h4>
                   <div id="widgetId-4" class="collapse widget-collapse-body">
@@ -223,10 +275,9 @@ const scrollTop = () => {
           <div class="col-12">
             <div class="footer-bottom-content">
               <p class="copyright">
-                © 2021 Finate. Made with <i class="icofont-heart" /> by <a
-                  target="_blank"
-                  href="https://themeforest.net/user/codecarnival"
-                >Codecarnival.</a>
+                © 2021 Finate. Made with
+                <i class="icofont-heart" /> by
+                <a target="_blank" href="https://themeforest.net/user/codecarnival">Codecarnival.</a>
               </p>
             </div>
           </div>
@@ -238,87 +289,99 @@ const scrollTop = () => {
   <!--== End Footer Area Wrapper ==-->
 
   <!--== Scroll Top Button ==-->
-  <div
-    id="scroll-to-top" class="scroll-to-top" :class="y > 200 && 'show'" @click="scrollTop()"
-  >
-    <mdi-light-arrow-up class="icofont-rounded-up mb-1.5" />
+  <div id="scroll-to-top" class="scroll-to-top" :class="y > 200 && 'show'" @click="scrollTop()">
+    <span class="i-mdi-light-arrow-up inline-block mx-auto text-2xl icofont-rounded-up mt-1" />
   </div>
 
   <!--== Start Aside Menu ==-->
-  <aside id="AsideOffcanvasMenu" class="off-canvas-wrapper offcanvas offcanvas-start" tabindex="-1" aria-labelledby="offcanvasExampleLabel">
+  <aside
+    id="AsideOffcanvasMenu"
+    class="off-canvas-wrapper offcanvas offcanvas-start"
+    tabindex="-1"
+    aria-labelledby="offcanvasExampleLabel"
+  >
     <div class="offcanvas-header">
       <h1 id="offcanvasExampleLabel" class="d-none">
         Aside Menu
       </h1>
       <button class="btn-menu-close" data-bs-dismiss="offcanvas" aria-label="Close">
-        menu <i class="icofont-simple-left" />
+        menu
+        <i class="icofont-simple-left" />
       </button>
     </div>
     <div class="offcanvas-body">
       <!-- Mobile Menu Start -->
       <div class="mobile-menu-items">
         <ul class="nav-menu">
-          <li><a href="index.html">Home</a></li>
+          <li>
+            <a href="index.html">Home</a>
+          </li>
           <li>
             <a href="#">Find Jobs</a>
             <ul class="sub-menu">
-              <li><a href="job.html">Jobs</a></li>
-              <li><a href="job-details.html">Job Details</a></li>
+              <li>
+                <a href="job.html">Jobs</a>
+              </li>
+              <li>
+                <a href="job-details.html">Job Details</a>
+              </li>
             </ul>
           </li>
-          <li><a href="employers-details.html">Employers Details</a></li>
+          <li>
+            <a href="employers-details.html">Employers Details</a>
+          </li>
           <li>
             <a href="#">Candidates</a>
             <ul class="sub-menu">
-              <li><a href="candidate.html">Candidates</a></li>
-              <li><a href="candidate-details.html">Candidate Details</a></li>
+              <li>
+                <a href="candidate.html">Candidates</a>
+              </li>
+              <li>
+                <a href="candidate-details.html">Candidate Details</a>
+              </li>
             </ul>
           </li>
           <li>
             <a href="#">Blog</a>
             <ul class="sub-menu">
-              <li><a href="blog-grid.html">Blog Grid</a></li>
-              <li><a href="blog.html">Blog Left Sidebar</a></li>
-              <li><a href="blog-right-sidebar.html">Blog Right Sidebar</a></li>
-              <li><a href="blog-details.html">Blog Details</a></li>
+              <li>
+                <a href="blog-grid.html">Blog Grid</a>
+              </li>
+              <li>
+                <a href="blog.html">Blog Left Sidebar</a>
+              </li>
+              <li>
+                <a href="blog-right-sidebar.html">Blog Right Sidebar</a>
+              </li>
+              <li>
+                <a href="blog-details.html">Blog Details</a>
+              </li>
             </ul>
           </li>
           <li>
             <a href="#">Pages</a>
             <ul class="sub-menu">
-              <li><a href="about-us.html">About us</a></li>
-              <li><a href="login.html">Login</a></li>
-              <li><a href="registration.html">Registration</a></li>
-              <li><a href="page-not-found.html">Page Not Found</a></li>
+              <li>
+                <a href="about-us.html">About us</a>
+              </li>
+              <li>
+                <a href="login.html">Login</a>
+              </li>
+              <li>
+                <a href="registration.html">Registration</a>
+              </li>
+              <li>
+                <a href="page-not-found.html">Page Not Found</a>
+              </li>
             </ul>
           </li>
-          <li><a href="contact.html">Contact</a></li>
+          <li>
+            <a href="contact.html">Contact</a>
+          </li>
         </ul>
       </div>
       <!-- Mobile Menu End -->
     </div>
   </aside>
   <!--== End Aside Menu ==-->
-  <nav class="text-xl mt-6 hidden">
-    <router-link class="icon-btn mx-2" to="/" :title="t('button.home')">
-      <carbon-campsite />
-    </router-link>
-
-    <button class="icon-btn mx-2 !outline-none" :title="t('button.toggle_dark')" @click="toggleDark()">
-      <carbon-moon v-if="isDark" />
-      <carbon-sun v-else />
-    </button>
-
-    <a class="icon-btn mx-2" :title="t('button.toggle_langs')" @click="toggleLocales">
-      <carbon-language />
-    </a>
-
-    <router-link class="icon-btn mx-2" to="/about" :title="t('button.about')">
-      <carbon-dicom-overlay />
-    </router-link>
-
-    <a class="icon-btn mx-2" rel="noreferrer" href="https://github.com/antfu/vitesse" target="_blank" title="GitHub">
-      <carbon-logo-github />
-    </a>
-  </nav>
 </template>
