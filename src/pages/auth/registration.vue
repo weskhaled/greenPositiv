@@ -51,18 +51,21 @@ const validateConfidentiality = async(_rules, value) => {
   console.log(value)
   if (value === true)
     return Promise.resolve()
-
+  // eslint-disable-next-line prefer-promise-reject-errors
   return Promise.reject('Please input the Confidentiality')
 }
 const validatePhone = async(_rule: RuleObject, value: any) => {
   if (!value)
+  // eslint-disable-next-line prefer-promise-reject-errors
     return Promise.reject('Please input the phone')
 
   if (!Number.isInteger(+value)) {
+    // eslint-disable-next-line prefer-promise-reject-errors
     return Promise.reject('Please input digits')
   }
   else {
     if (value.length < 10)
+    // eslint-disable-next-line prefer-promise-reject-errors
       return Promise.reject('Phone must be greater than 10')
     else
       return Promise.resolve()
