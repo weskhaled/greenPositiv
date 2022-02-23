@@ -17,7 +17,7 @@ const { t } = useI18n()
   <main class="main-content">
     <!--== Start Hero Area Wrapper ==-->
     <section class="home-slider-area">
-      <div class="home-slider-container default-slider-container bg-gray-600">
+      <div class="home-slider-container default-slider-container bg-gray-500">
         <div class="home-slider-wrapper slider-default">
           <div class="slider-content-area" data-bg-img="../assets/img/slider/slider-bg.jpg">
             <div class="container pt--0 pb--0">
@@ -962,81 +962,6 @@ const { t } = useI18n()
       </div>
     </section>
     <!--== End Team Area Wrapper ==-->
-
-    <!--== Start Brand Logo Area Wrapper ==-->
-    <div class="brand-logo-area">
-      <div class="container pt--0 pb--0" data-aos="fade-down">
-        <div class="row">
-          <div class="col-12">
-            <div class="brand-logo-content">
-              <div class="swiper brand-logo-slider-container">
-                <div class="swiper-wrapper">
-                  <div class="swiper-slide">
-                    <!--== Start Brand Logo Item ==-->
-                    <div class="brand-logo-item">
-                      <img src="../assets/img/brand-logo/1.png" alt="Image-HasTech">
-                    </div>
-                    <!--== End Brand Logo Item ==-->
-                  </div>
-                  <div class="swiper-slide">
-                    <!--== Start Brand Logo Item ==-->
-                    <div class="brand-logo-item">
-                      <img src="../assets/img/brand-logo/2.png" alt="Image-HasTech">
-                    </div>
-                    <!--== End Brand Logo Item ==-->
-                  </div>
-                  <div class="swiper-slide">
-                    <!--== Start Brand Logo Item ==-->
-                    <div class="brand-logo-item">
-                      <img src="../assets/img/brand-logo/3.png" alt="Image-HasTech">
-                    </div>
-                    <!--== End Brand Logo Item ==-->
-                  </div>
-                  <div class="swiper-slide">
-                    <!--== Start Brand Logo Item ==-->
-                    <div class="brand-logo-item">
-                      <img src="../assets/img/brand-logo/4.png" alt="Image-HasTech">
-                    </div>
-                    <!--== End Brand Logo Item ==-->
-                  </div>
-                  <div class="swiper-slide">
-                    <!--== Start Brand Logo Item ==-->
-                    <div class="brand-logo-item">
-                      <img src="../assets/img/brand-logo/5.png" alt="Image-HasTech">
-                    </div>
-                    <!--== End Brand Logo Item ==-->
-                  </div>
-                  <div class="swiper-slide">
-                    <!--== Start Brand Logo Item ==-->
-                    <div class="brand-logo-item">
-                      <img src="../assets/img/brand-logo/6.png" alt="Image-HasTech">
-                    </div>
-                    <!--== End Brand Logo Item ==-->
-                  </div>
-                  <div class="swiper-slide">
-                    <!--== Start Brand Logo Item ==-->
-                    <div class="brand-logo-item">
-                      <img src="../assets/img/brand-logo/1.png" alt="Image-HasTech">
-                    </div>
-                    <!--== End Brand Logo Item ==-->
-                  </div>
-                </div>
-              </div>
-              <!--== Add Swiper Arrows ==-->
-              <div class="swiper-btn-wrap">
-                <div class="brand-swiper-btn-prev">
-                  <carbon-arrow-left class="icofont-long-arrow-left" />
-                </div>
-                <div class="brand-swiper-btn-next">
-                  <carbon-arrow-right class="icofont-long-arrow-right" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!--== End Brand Logo Area Wrapper ==-->
 
     <!--== Start Testimonial Area Wrapper ==-->
     <section class="testimonial-area bg-color-gray">

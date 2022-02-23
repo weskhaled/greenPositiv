@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { message } from 'ant-design-vue'
 import { currentUser, token } from '~/stores'
 import authApi from '~/api/modules/auth'
 import logoLight from '~/assets/img/logo-light.png'
@@ -28,7 +29,7 @@ const onFinish = async(values: any) => {
 }
 
 const onFinishFailed = (errorInfo: any) => {
-  console.log('Failed:', errorInfo)
+  message.error(errorInfo)
 }
 
 onMounted(() => {
@@ -111,40 +112,6 @@ onMounted(() => {
                     </a-button>
                   </a-form-item>
                 </a-form>
-                <form class="hidden" action="#">
-                  <div class="row">
-                    <div class="col-12">
-                      <div class="form-group">
-                        <input class="form-control" type="email" placeholder="Email">
-                      </div>
-                    </div>
-                    <div class="col-12">
-                      <div class="form-group">
-                        <input class="form-control" type="password" placeholder="Password">
-                      </div>
-                    </div>
-                    <div class="col-12">
-                      <div class="form-group">
-                        <div class="remember-forgot-info">
-                          <div class="remember">
-                            <input id="defaultCheck1" class="form-check-input" type="checkbox" value="">
-                            <label class="form-check-label" for="defaultCheck1">Remember me</label>
-                          </div>
-                          <div class="forgot-password">
-                            <a href="#/">Forgot Password?</a>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-12">
-                      <div class="form-group">
-                        <button type="button" class="btn-theme" @click="login()">
-                          Sign In
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </form>
                 <div class="login-register-form-info">
                   <p>Don't you have an account? <a href="javascript:;" @click="router.push('/auth/registration')">Register</a></p>
                 </div>

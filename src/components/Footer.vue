@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { isDark, toggleDark } from '~/composables'
+import logo from '~/assets/img/Green_positive.png'
 
 const { t, availableLocales, locale } = useI18n()
 
@@ -55,7 +56,7 @@ const scrollTop = () => {
             <div class="widget-item widget-about">
               <div class="widget-logo-area">
                 <a href="index.html">
-                  <img class="logo-main" src="/assets/img/Green_positive.png" alt="Logo">
+                  <img class="logo-main" :src="logo" alt="Logo">
                 </a>
               </div>
               <p class="desc">

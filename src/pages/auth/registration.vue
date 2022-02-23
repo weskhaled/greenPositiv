@@ -46,7 +46,6 @@ const validaterePassword = async(_rule: RuleObject, value: string) => {
     return Promise.resolve()
 }
 const validateConfidentiality = async(_rules, value) => {
-  console.log(value)
   if (value === true)
     return Promise.resolve()
   return Promise.reject(new Error('Please input the Confidentiality'))
@@ -74,7 +73,7 @@ const nextStep = async() => {
         currentStep.value = ++currentStep.value
     }
     catch (errorInfo) {
-      console.log('Failed:', errorInfo)
+      message.error(`${errorInfo}`)
     }
   }
   else {
@@ -87,10 +86,6 @@ const nextStep = async() => {
       }
     }
   }
-}
-
-const onFinishFailed = (errorInfo: any) => {
-  console.log('Failed:', errorInfo)
 }
 
 onMounted(async() => {

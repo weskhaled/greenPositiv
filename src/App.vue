@@ -8,8 +8,9 @@ useHead({
     { name: 'description', content: 'Opinionated Vite Starter Template' },
   ],
 })
+const isMounted = useMounted()
 </script>
 
 <template>
-  <router-view />
+  <router-view v-if="isMounted" />
 </template>
