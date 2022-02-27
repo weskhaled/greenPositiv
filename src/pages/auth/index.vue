@@ -15,17 +15,26 @@ const formState = reactive<any>({
 })
 const onFinish = async(values: any) => {
   const { username, password } = values
-  const { data } = await authApi.login({ username, password })
-  data && (token.value = data.token)
-  const { data: currentUserData } = await authApi.currentUser()
-  if (currentUserData) {
-    currentUser.value = currentUserData
-    message.success('Bienvenue')
-    router.push('/')
+  try {
+    const { data } = await authApi.login({ username, password })
+
+    if (data) {
+      token.value = data.token
+      const { data: currentUserData } = await authApi.currentUser()
+      if (currentUserData) {
+        currentUser.value = currentUserData
+        message.success('Bienvenue')
+        router.push('/')
+      }
+      else {
+        currentUser.value = null
+        token.value = null
+      }
+    }
   }
-  else {
-    currentUser.value = null
-    token.value = null
+  catch (error: any) {
+    message.destroy()
+    message.error(`${error.message}`)
   }
 }
 

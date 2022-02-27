@@ -40,7 +40,7 @@ const toggleLocales = () => {
                       <li><a href="job-details.html"><span>Entreprise</span></a></li>
                     </ul>
                   </li>
-                  <li><a href="employers-details.html"><span>Blog</span></a></li>
+                  <li><a href="javascript:;" @click="router.push('/blog')"><span>Blog</span></a></li>
                   <li><a href="employers-details.html"><span>À propos</span></a></li>
                   <li v-if="!isAuthenticated">
                     <router-link to="/auth/registration" class="header-action-area">
@@ -53,7 +53,7 @@ const toggleLocales = () => {
                     </a>
                   </li>
                   <li v-if="!isAuthenticated">
-                    <router-link class="nav-link" to="/auth/login">
+                    <router-link class="nav-link" to="/auth">
                       <span>Se Connecter</span>
                     </router-link>
                   </li>

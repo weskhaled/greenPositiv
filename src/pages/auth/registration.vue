@@ -60,7 +60,7 @@ const validatePhone = async(_rule: RuleObject, value: any) => {
   else {
     if (value.length < 10)
     // eslint-disable-next-line prefer-promise-reject-errors
-      return Promise.reject(new Error('Phone must be greater than 10'))
+      return Promise.reject(`${'Phone must be greater than 10'}`)
     else
       return Promise.resolve()
   }
@@ -72,17 +72,23 @@ const nextStep = async() => {
       if (values)
         currentStep.value = ++currentStep.value
     }
-    catch (errorInfo) {
-      message.error(`${errorInfo}`)
+    catch (errorInfo: any) {
+      console.error(errorInfo.errorFields)
     }
   }
   else {
     if (currentStep.value > 1) {
-      const { data } = await authApi.register({ ...formRegisterState, role: 'Freelancer' })
+      try {
+        const { data } = await authApi.register({ ...formRegisterState, role: 'Freelancer' })
 
-      if (data) {
-        message.success('account created')
-        await router.push('/')
+        if (data) {
+          message.success('account created')
+          await router.push('/')
+        }
+      }
+      catch (error: any) {
+        message.destroy()
+        message.error(`${error.message}`)
       }
     }
   }
