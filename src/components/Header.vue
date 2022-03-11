@@ -3,13 +3,16 @@ import { isDark, toggleDark } from '~/composables'
 import { currentUser, isAuthenticated, token } from '~/stores'
 
 const router = useRouter()
-const { t, availableLocales, locale } = useI18n()
+const { t } = useI18n()
 
-const toggleLocales = () => {
-  // change to some real logic
-  const locales = availableLocales
-  locale.value = locales[(locales.indexOf(locale.value) + 1) % locales.length]
-}
+const asideOffcanvasMenu = ref(null)
+const [value, toggleAsideOffcanvasMenu] = useToggle()
+
+onClickOutside(asideOffcanvasMenu.value, () => {
+  console.log(value.value)
+  // value.value = false
+})
+
 </script>
 
 <template>
@@ -63,7 +66,7 @@ const toggleLocales = () => {
                     </router-link>
                     <ul class="submenu-nav">
                       <li>
-                        <router-link class="nav-link" :to="`/profile/${currentUser?.username}`">
+                        <router-link class="nav-link" :to="`/profile/${currentUser?.freelancer?._id}`">
                           <span>Modifier mon profil</span>
                         </router-link>
                       </li>
@@ -99,8 +102,8 @@ const toggleLocales = () => {
             </div>
             <div class="header-align-end">
               <div class="header-action-area">
-                <button class="btn-menu !flex md:!hidden items-center" type="button" data-bs-toggle="offcanvas" data-bs-target="#AsideOffcanvasMenu" aria-controls="AsideOffcanvasMenu">
-                  <span class="i-mdi-light-menu inline-block text-xl mx-auto" />
+                <button class="btn-menu flex lg:!hidden items-center" type="button" data-bs-toggle="offcanvas" data-bs-target="#AsideOffcanvasMenu" aria-controls="AsideOffcanvasMenu" @click="toggleAsideOffcanvasMenu()">
+                  <span class="i-mdi-light-menu inline-block text-2xl mx-auto" />
                 </button>
               </div>
             </div>
@@ -110,4 +113,97 @@ const toggleLocales = () => {
     </div>
   </header>
   <!--== End Header Wrapper ==-->
+
+  <!--== Start Aside Menu ==-->
+  <aside
+    ref="asideOffcanvasMenu"
+    class="off-canvas-wrapper offcanvas offcanvas-start transition ease-in"
+    :class="value && `show visible before:block before:absolute before:w-screen before-h-screen before:z-20 before:bg-pink-500`"
+    tabindex="-1"
+    aria-labelledby="offcanvasExampleLabel"
+  >
+    <div class="offcanvas-header">
+      <h1 id="offcanvasExampleLabel" class="d-none">
+        Aside Menu
+      </h1>
+      <button class="btn-menu-close" data-bs-dismiss="offcanvas" aria-label="Close" @click="value = false">
+        menu
+        <i class="i-mdi-close text-xl" />
+      </button>
+    </div>
+    <div class="offcanvas-body">
+      <!-- Mobile Menu Start -->
+      <div class="mobile-menu-items">
+        <ul class="nav-menu">
+          <li>
+            <a href="index.html">Home</a>
+          </li>
+          <li>
+            <a href="#">Find Jobs</a>
+            <ul class="sub-menu">
+              <li>
+                <a href="job.html">Jobs</a>
+              </li>
+              <li>
+                <a href="job-details.html">Job Details</a>
+              </li>
+            </ul>
+          </li>
+          <li>
+            <a href="employers-details.html">Employers Details</a>
+          </li>
+          <li>
+            <a href="#">Candidates</a>
+            <ul class="sub-menu">
+              <li>
+                <a href="candidate.html">Candidates</a>
+              </li>
+              <li>
+                <a href="candidate-details.html">Candidate Details</a>
+              </li>
+            </ul>
+          </li>
+          <li>
+            <a href="#">Blog</a>
+            <ul class="sub-menu">
+              <li>
+                <a href="blog-grid.html">Blog Grid</a>
+              </li>
+              <li>
+                <a href="blog.html">Blog Left Sidebar</a>
+              </li>
+              <li>
+                <a href="blog-right-sidebar.html">Blog Right Sidebar</a>
+              </li>
+              <li>
+                <a href="blog-details.html">Blog Details</a>
+              </li>
+            </ul>
+          </li>
+          <li>
+            <a href="#">Pages</a>
+            <ul class="sub-menu">
+              <li>
+                <a href="about-us.html">About us</a>
+              </li>
+              <li>
+                <a href="login.html">Login</a>
+              </li>
+              <li>
+                <a href="registration.html">Registration</a>
+              </li>
+              <li>
+                <a href="page-not-found.html">Page Not Found</a>
+              </li>
+            </ul>
+          </li>
+          <li>
+            <a href="contact.html">Contact</a>
+          </li>
+        </ul>
+      </div>
+      <!-- Mobile Menu End -->
+    </div>
+  </aside>
+  <!--== End Aside Menu ==-->
 </template>

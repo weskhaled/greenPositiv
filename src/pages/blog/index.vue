@@ -2,7 +2,7 @@
 import dayjs, { Dayjs } from 'dayjs'
 import { message } from 'ant-design-vue'
 import { currentUser, token } from '~/stores'
-import postsApi from '~/api/modules/posts'
+import postsApi from '~/api/modules/jobs'
 import logoLight from '~/assets/img/logo-light.png'
 import logoLightTheme from '~/assets/img/logo-light-theme.png'
 
@@ -12,7 +12,6 @@ const posts: Ref<any> = ref([])
 
 const getPosts = async() => {
   const { data } = await postsApi.posts()
-  console.log(data.value)
   posts.value = data.value
 }
 onMounted(() => {
