@@ -58,6 +58,7 @@ const service = {
   get: (url: string, data?: object) => http.get(url, { params: data }),
   post: (url: string, data?: object) => http.post(url, data),
   put: (url: string, data?: object) => http.put(url, data),
+  patch: (url: string, data?: object) => http.patch(url, data),
   delete: (url: string, data?: object) => http.delete(url, data),
   upload: (url: string, file: File) =>
     http.post(url, file, {

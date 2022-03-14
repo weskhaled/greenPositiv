@@ -2,6 +2,7 @@
 import dayjs, { Dayjs } from 'dayjs'
 import { Form } from 'ant-design-vue'
 import Api from '~/api/modules/jobs'
+import freelancerApi from '~/api/modules/freelancer'
 import { currentUser } from '~/stores'
 
 const useForm = Form.useForm
@@ -9,6 +10,8 @@ const props = defineProps<{ id: string }>()
 const router = useRouter()
 const { t } = useI18n()
 const activeKey = ref('1')
+const activeKeyPrifileEtprs = ref('1')
+const currentStepProfileEtprs = ref(0)
 
 const formItemLayout = {
   labelCol: { span: 6 },
@@ -39,7 +42,9 @@ const socials = reactive([{
 const profile = ref(null)
 const skillsValue = ref([])
 const skills = ref([])
+const legalForms = ref([])
 const languages = ref([])
+const countries = ref([])
 const jobs = ref([])
 const activities = ref([])
 const visibleModalAddExperience = ref(false)
@@ -103,6 +108,18 @@ const getFormData = async() => {
       label: l.name,
     })))
   })
+  Api.skills().then(({ data }) => {
+    data.value && (skills.value = data.value.map(l => ({
+      value: l.name,
+      label: l.name,
+    })))
+  })
+  Api.countries().then(({ data }) => {
+    data.value && (countries.value = data.value.map(l => ({
+      value: l,
+      label: l,
+    })))
+  })
   Api.jobs().then(({ data }) => {
     data.value && (jobs.value = data.value.filter(j => j._id && j.name).map(j => ({
       value: j._id,
@@ -112,6 +129,12 @@ const getFormData = async() => {
   Api.activities().then(({ data }) => {
     data.value && (activities.value = data.value.filter(a => a.code && a.name).map(a => ({
       value: a.code,
+      label: a.name,
+    })))
+  })
+  Api.legalForms().then(({ data }) => {
+    data.value && (legalForms.value = data.value.filter(a => a.index && a.name).map(a => ({
+      value: a.name,
       label: a.name,
     })))
   })
@@ -127,6 +150,10 @@ const getFormData = async() => {
     skills.value = skills
     skillsValue.value = skills
   })
+}
+const updateProfile = async(profile: any) => {
+  const { data } = await freelancerApi.updateProfile(profile)
+  console.log(data.message)
 }
 onMounted(async() => {
   getFormData()
@@ -403,8 +430,8 @@ onMounted(async() => {
                             </div>
                             <div class="w-[40%]">
                               <span
-                                :class="`px-3 py-1 bg-${currentUser?.freelancer?.description.length ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ currentUser?.freelancer?.description.length ? 'Oui' : 'Non' }}</span>
+                                :class="`px-3 py-1 bg-${currentUser?.freelancer?.description?.length ? 'green' : 'red'}-600 rounded-lg text-light-50`"
+                              >{{ currentUser?.freelancer?.description?.length ? 'Oui' : 'Non' }}</span>
                             </div>
                           </div>
                           <div class="flex mb-4">
@@ -760,6 +787,9 @@ onMounted(async() => {
                         placeholder="Automatic tokenization"
                         :options="skills"
                       />
+                      <a-button class="mt-3" type="primary" block @click="updateProfile({...profile.freelancer, skills: skillsValue})">
+                        Primary
+                      </a-button>
                     </div>
                   </a-card>
                 </div>
@@ -825,10 +855,153 @@ onMounted(async() => {
               </a-tab-pane>
               <a-tab-pane key="7" tab="Profile entreprise" force-render>
                 <div class>
-                  <a-card title="Billing" :bordered="false" class="rounded-sm">
-                    <p>Card content</p>
-                    <p>Card content</p>
-                    <p>Card content</p>
+                  <a-card title="Profile entreprise" :bordered="false" class="rounded-sm">
+                    <div>
+                      <a-tabs v-model:activeKey="activeKeyPrifileEtprs" tab-position="left">
+                        <a-tab-pane key="1" tab="Mon Entreprise">
+                          <div>
+                            <a-steps
+                              v-model:current="currentStepProfileEtprs"
+                              type="navigation"
+                              size="small"
+                              :style="{
+                                marginBottom: '60px',
+                                boxShadow: '0px -1px 0 0 #e8e8e8 inset',
+                              }"
+                            >
+                              <a-step status="finish" title="Coordonnées" />
+                              <a-step status="finish" title="Représentant" />
+                              <a-step status="process" title="Taxes" />
+                              <a-step status="wait" title="Mentions" disabled />
+                              <a-step status="process" title="Documents légaux" />
+                            </a-steps>
+                            <div class="p-4">
+                              <div class="max-w-md mx-auto">
+                                <a-form
+                                  v-if="currentStepProfileEtprs === 0"
+                                  layout="vertical"
+                                  :label-col="{ span: 24 }"
+                                  :wrapper-col="{ span: 24 }"
+                                >
+                                  <a-form-item label="Nom de votre entreprise (raison sociale)">
+                                    <a-input />
+                                  </a-form-item>
+                                  <a-form-item label="Adresse">
+                                    <a-input />
+                                  </a-form-item>
+                                  <a-form-item label="Complément d'adresse (facultatif)">
+                                    <a-input />
+                                  </a-form-item>
+                                  <a-form-item label="Forme juridique">
+                                    <a-select placeholder="Forme juridique" :options="legalForms" />
+                                  </a-form-item>
+                                  <a-form-item :wrapper-col="{ span: 24, offset: 0 }">
+                                    <a-button block type="primary">
+                                      Enregistrer
+                                    </a-button>
+                                  </a-form-item>
+                                </a-form>
+                                <div v-else-if="currentStepProfileEtprs === 1">
+                                  <p>Lorem ipsum dolor sit amet. Qui nulla quas et consequatur odit ea dolore alias. Ut natus corporis in consectetur sunt est accusamus galisum et impedit nobis eos consequuntur provident aut alias adipisci ut illum sapiente. Ut quam velit hic architecto autem est libero sunt ut eaque consequuntur qui voluptatibus accusamus. Eum vero sequi rem nisi natus ut repellendus aliquam et labore laboriosam sit itaque rerum. Est rerum dolore eos nihil sint a veniam earum aut consequatur cupiditate..</p>
+                                  <a-form
+                                    layout="vertical"
+                                    :label-col="{ span: 24 }"
+                                    :wrapper-col="{ span: 24 }"
+                                  >
+                                    <a-form-item label="Nom">
+                                      <a-input />
+                                    </a-form-item>
+                                    <a-form-item label="Prénom">
+                                      <a-input />
+                                    </a-form-item>
+                                    <a-form-item name="date-picker" label="Date de naissance">
+                                      <a-date-picker class="w-full" value-format="YYYY-MM-DD" />
+                                    </a-form-item>
+                                    <div class="grid grid-cols-2 gap-3 w-full">
+                                      <div>
+                                        <a-form-item name="switch" label="Ville de naissance">
+                                          <a-input />
+                                        </a-form-item>
+                                      </div>
+                                      <div>
+                                        <a-form-item name="switch" label="Code postal">
+                                          <a-input />
+                                        </a-form-item>
+                                      </div>
+                                    </div>
+                                    <a-form-item label="Pays de naissance">
+                                      <a-select placeholder="Forme juridique" :options="countries" />
+                                    </a-form-item>
+                                    <a-form-item label="Nationalité">
+                                      <a-select placeholder="Nationalité" :options="countries" />
+                                    </a-form-item>
+                                    <p>Les informations que vous aurez saisies doivent correspondre exactement avec celles présentes sur le justificatif d'identité déposé. Il ne doit pas s'agir d'un pseudo ni d'un nom d'usage. <b> Une fois les documents validés, si vous êtes amené à modifier l'une des informations précédentes (nom, prénom, date de naissance ou nationalité), vous devrez soumettre à nouveau ces documents légaux pour validation, correspondants à votre nouvelle situation.</b></p>
+                                    <a-form-item label="Pièce d'identité (recto/verso)">
+                                      <a-form-item name="dragger" no-style>
+                                        <a-upload-dragger v-model:fileList="formState.dragger" name="files" action="/upload.do">
+                                          <p class="ant-upload-drag-icon">
+                                            <span class="i-carbon-cloud-upload inline-block text-xl" />
+                                          </p>
+                                          <p class="ant-upload-text">
+                                            Click or drag file to this area to upload
+                                          </p>
+                                          <p class="ant-upload-hint">
+                                            Support for a single or bulk upload.
+                                          </p>
+                                        </a-upload-dragger>
+                                      </a-form-item>
+                                    </a-form-item>
+                                    <a-form-item :wrapper-col="{ span: 24, offset: 0 }">
+                                      <a-button block type="primary">
+                                        Enregistrer
+                                      </a-button>
+                                    </a-form-item>
+                                  </a-form>
+                                </div>
+                                <div v-else-if="currentStepProfileEtprs === 2">
+                                  <a-form
+                                    layout="vertical"
+                                    :label-col="{ span: 24 }"
+                                    :wrapper-col="{ span: 24 }"
+                                  >
+                                    <a-form-item label="Tax">
+                                      <a-input placeholder="Basic usage">
+                                        <template #suffix>
+                                          <a-tooltip title="Extra information">
+                                            <span class="i-carbon-percentage inline-block text-lg" style="color: rgba(0, 0, 0, 0.45)" />
+                                          </a-tooltip>
+                                        </template>
+                                      </a-input>
+                                    </a-form-item>
+
+                                    <a-form-item :wrapper-col="{ span: 24, offset: 0 }">
+                                      <a-button block type="primary">
+                                        Enregistrer
+                                      </a-button>
+                                    </a-form-item>
+                                  </a-form>
+                                </div>
+                                <div v-else-if="currentStepProfileEtprs === 3">
+                                  <h3 class="text-xl">
+                                    Mentions Légales
+                                  </h3>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </a-tab-pane>
+                        <a-tab-pane
+                          key="2"
+                          tab="Coordonnées bancaires"
+                          force-render
+                        >
+                          Content of Tab Pane 2
+                        </a-tab-pane>
+                        <a-tab-pane key="3" tab="Historique des virements">
+                          Content of Tab Pane 3
+                        </a-tab-pane>
+                      </a-tabs>
+                    </div>
                   </a-card>
                 </div>
               </a-tab-pane>
@@ -885,7 +1058,7 @@ onMounted(async() => {
           </div>
         </div>
         <div class="grid grid-cols-2 gap-3 w-full">
-          <div class="">
+          <div class>
             <a-form-item
               name="month-picker"
               label="Start date"
@@ -905,7 +1078,7 @@ onMounted(async() => {
               />
             </a-form-item>
           </div>
-          <div class="">
+          <div class>
             <a-form-item
               :label-col="{
                 sm: { span: 24 }
@@ -972,6 +1145,13 @@ onMounted(async() => {
 }
 .ant-tabs-content-holder {
   @apply rounded-sm;
+}
+.steps-content {
+  margin-top: 12px;
+  border: 1px dashed #e9e9e9;
+  border-radius: 6px;
+  background-color: #fafafa;
+  min-height: 200px;
 }
 </style>
 <route lang="yaml">
