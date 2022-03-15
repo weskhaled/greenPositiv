@@ -65,7 +65,7 @@ onClickOutside(asideOffcanvasMenu.value, () => {
                       <span>Mon espace</span>
                     </router-link>
                     <ul class="submenu-nav">
-                      <li>
+                      <li v-if="currentUser">
                         <router-link class="nav-link" :to="`/profile/${currentUser?.freelancer?._id}`">
                           <span>Modifier mon profil</span>
                         </router-link>

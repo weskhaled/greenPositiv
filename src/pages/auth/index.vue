@@ -1,36 +1,38 @@
 <script setup lang="ts">
-import {message} from 'ant-design-vue'
-import {currentUser, token} from '~/stores'
+import { message } from 'ant-design-vue'
+import { currentUser, token } from '~/stores'
 import authApi from '~/api/modules/auth'
 import logoLight from '~/assets/img/logo-light.png'
 import logoLightTheme from '~/assets/img/logo-light-theme.png'
 
 const router = useRouter()
-const {t} = useI18n()
+const { t } = useI18n()
 
 const formState = reactive<any>({
   username: 'khaled',
   password: 'azerty123',
   remember: true,
 })
-const onFinish = async (values: any) => {
-  const {username, password} = values
+const onFinish = async(values: any) => {
+  const { username, password } = values
   try {
-    const {data} = await authApi.login({username, password})
+    const { data } = await authApi.login({ username, password })
 
     if (data) {
       token.value = data.token
-      const {data: currentUserData} = await authApi.currentUser()
+      const { data: currentUserData } = await authApi.currentUser()
       if (currentUserData) {
         currentUser.value = currentUserData
         message.success('Bienvenue')
         router.push('/')
-      } else {
+      }
+      else {
         currentUser.value = null
         token.value = null
       }
     }
-  } catch (error: any) {
+  }
+  catch (error: any) {
     message.destroy()
     message.error(`${error.message}`)
   }
@@ -82,25 +84,25 @@ onMounted(() => {
                   </h4>
                 </div>
                 <a-form
-                    :model="formState"
-                    name="formState"
-                    :label-col="{ span: 0 }"
-                    :wrapper-col="{ span: 24 }"
-                    autocomplete="on"
-                    @finish="onFinish"
+                  :model="formState"
+                  name="formState"
+                  :label-col="{ span: 0 }"
+                  :wrapper-col="{ span: 24 }"
+                  autocomplete="on"
+                  @finish="onFinish"
                 >
                   <a-form-item
-                      name="username"
-                      :rules="[{ required: true, message: 'Please input your username!' }]"
+                    name="username"
+                    :rules="[{ required: true, message: 'Please input your username!' }]"
                   >
-                    <a-input v-model:value="formState.username"/>
+                    <a-input v-model:value="formState.username" />
                   </a-form-item>
 
                   <a-form-item
-                      name="password"
-                      :rules="[{ required: true, message: 'Please input your password!' }]"
+                    name="password"
+                    :rules="[{ required: true, message: 'Please input your password!' }]"
                   >
-                    <a-input-password v-model:value="formState.password"/>
+                    <a-input-password v-model:value="formState.password" />
                   </a-form-item>
 
                   <a-form-item name="remember" :wrapper-col="{ offset: 0, span: 24 }">
@@ -116,8 +118,9 @@ onMounted(() => {
                   </a-form-item>
                 </a-form>
                 <div class="login-register-form-info">
-                  <p>Pas encore de compte? <a href="javascript:;" @click="router.push('/auth/registration')">Créer un
-                    compte</a>
+                  <p>
+                    Pas encore de compte? <a href="javascript:;" @click="router.push('/auth/registration')">Créer un
+                      compte</a>
                   </p>
                 </div>
               </div>
@@ -141,5 +144,5 @@ onMounted(() => {
 </style>
 <route lang="yaml">
 meta:
-layout: home
+  layout: home
 </route>
