@@ -45,22 +45,24 @@ const validaterePassword = async(_rule: RuleObject, value: string) => {
   else
     return Promise.resolve()
 }
+/*
 const validateConfidentiality = async(_rules, value) => {
   if (value === true)
     return Promise.resolve()
   return Promise.reject(new Error('Please input the Confidentiality'))
 }
+*/
 const validatePhone = async(_rule: RuleObject, value: any) => {
   if (!value)
-    return Promise.reject(new Error('Please input the phone'))
+    return Promise.reject(new Error('Veuillez saisir un numéro de téléphone valide'))
 
   if (!Number.isInteger(+value)) {
-    return Promise.reject(new Error('Please input digits'))
+    return Promise.reject(new Error('Veuillez saisir que des chiffres'))
   }
   else {
     if (value.length < 10)
     // eslint-disable-next-line prefer-promise-reject-errors
-      return Promise.reject(`${'Phone must be greater than 10'}`)
+      return Promise.reject(`${'le numéro doit contenir 10 chiffres'}`)
     else
       return Promise.resolve()
   }
@@ -82,7 +84,7 @@ const nextStep = async() => {
         const { data } = await authApi.register({ ...formRegisterState, role: 'Freelancer' })
 
         if (data) {
-          message.success('account created')
+          message.success('compte créé')
           await router.push('/')
         }
       }
@@ -119,11 +121,11 @@ onMounted(async() => {
               </h2>
               <nav class="breadcrumb-area">
                 <ul class="breadcrumb justify-content-center">
-                  <li><a href="index.html">Home</a></li>
+                  <li><a href="index.html">Accueil</a></li>
                   <li class="breadcrumb-sep">
                     //
                   </li>
-                  <li>Pages</li>
+                  <li>Création de compte</li>
                 </ul>
               </nav>
             </div>
@@ -156,8 +158,8 @@ onMounted(async() => {
                       </template>
                       <div class="px-2">
                         <a-steps size="small" :current="currentStep">
-                          <a-step title="first step" @click="currentStep > 0 && (currentStep= 0)" />
-                          <a-step title="second step" @click="currentStep > 0 && (currentStep= 1)" />
+                          <a-step title="premiére étape" @click="currentStep > 0 && (currentStep= 0)" />
+                          <a-step title="deuxiéme étape" @click="currentStep > 0 && (currentStep= 1)" />
                           <a-step title="Validation" @click="currentStep > 1 && (currentStep= 2)" />
                         </a-steps>
                         <div v-if="currentStep === 0" class="mt-4">
@@ -171,28 +173,28 @@ onMounted(async() => {
                           >
                             <a-form-item
                               name="username"
-                              :rules="[{ required: true, message: 'Please input your Identifant!', trigger: 'change' }]"
+                              :rules="[{ required: true, message: 'Veuillez saisir votre identifiant', trigger: 'change' }]"
                             >
                               <a-input v-model:value="formRegisterState.username" placeholder="Identifant" />
                             </a-form-item>
 
                             <a-form-item
                               name="firstName"
-                              :rules="[{ required: true, message: 'Please input your firstName!', trigger: 'change' }]"
+                              :rules="[{ required: true, message: 'Veuillez saisir votre prénom', trigger: 'change' }]"
                             >
                               <a-input v-model:value="formRegisterState.firstName" placeholder="Nom" />
                             </a-form-item>
 
                             <a-form-item
                               name="lastName"
-                              :rules="[{ required: true, message: 'Please input your lastName!', trigger: 'change' }]"
+                              :rules="[{ required: true, message: 'Veuillez saisir votre nom', trigger: 'change' }]"
                             >
                               <a-input v-model:value="formRegisterState.lastName" placeholder="Prénom" />
                             </a-form-item>
 
                             <a-form-item
                               name="email"
-                              :rules="[{ required: true, message: 'Please input your Email!', type: 'email', trigger: 'change' }]"
+                              :rules="[{ required: true, message: 'Veuillez saisir votre adresse mail', type: 'email', trigger: 'change' }]"
                             >
                               <a-input v-model:value="formRegisterState.email" placeholder="Email" />
                             </a-form-item>
@@ -237,23 +239,23 @@ onMounted(async() => {
                             <a-form-item
                               name="jobCat"
                               has-feedback
-                              :rules="[{ required: true, message: 'Please select your job!' }]"
+                              :rules="[{ required: true, message: 'Veuillez choisir une catégorie de métier' }]"
                             >
                               <label for="level">Choisissez votre métier :</label>
                               <a-select
-                                v-model:value="formRegisterState.jobCat" :options="jobs" placeholder="Please select a job"
+                                v-model:value="formRegisterState.jobCat" :options="jobs" placeholder="Veuillez choisir une catégorie de métier"
                               />
                             </a-form-item>
                             <a-form-item
                               name="title_profile"
-                              :rules="[{ required: true, message: 'Please input your Identifant!', trigger: 'change' }]"
+                              :rules="[{ required: true, message: 'Veuillez saisir votre poste', trigger: 'change' }]"
                             >
                               <label for="level">Choisissez votre métier :</label>
                               <a-input v-model:value="formRegisterState.title_profile" placeholder="Développeur Backend, Auditeur..." />
                             </a-form-item>
                             <a-form-item
                               name="localisation"
-                              :rules="[{ required: true, message: 'Please input your Identifant!', trigger: 'change' }]"
+                              :rules="[{ required: true, message: 'Veuillez saisir votre localisation', trigger: 'change' }]"
                             >
                               <label for="level">Votre localisation :</label>
                               <a-input v-model:value="formRegisterState.localisation" placeholder="Paris, 13éme arrondissement, ..." />
@@ -261,7 +263,7 @@ onMounted(async() => {
                             <a-form-item
                               name="level"
                               has-feedback
-                              :rules="[{ required: true, message: 'Please select your country!' }]"
+                              :rules="[{ required: true, message: 'Veuillez choisir votre pays' }]"
                             >
                               <label for="level">Votre niveau d'éxpérience :</label>
                               <div class="text-center">
@@ -279,12 +281,12 @@ onMounted(async() => {
                               </div>
                             </a-form-item>
 
-                            <a-form-item name="price_per_day" :rules="[{ required: true, message: 'Please select your price_per_day!' }]">
+                            <a-form-item name="price_per_day" :rules="[{ required: true, message: 'Veuillez saisir votre tarif' }]">
                               <span class="ant-form-text">Définissez votre tarif </span>
                               <a-input-number v-model:value="formRegisterState.price_per_day" step="50" :min="50" :max="9999" />
                             </a-form-item>
 
-                            <a-form-item name="show_price" no-style :rules="[{ required: true, message: 'Please select your show_price!' }]">
+                            <a-form-item name="show_price" no-style :rules="[{ required: true, message: 'Afficher votre prix' }]">
                               <a-checkbox v-model:checked="formRegisterState.show_price">
                                 Masquer mon tarif.
                               </a-checkbox>
@@ -295,7 +297,7 @@ onMounted(async() => {
                               </p>
                             </a-form-item>
 
-                            <a-form-item name="confidentiality" :rules="[{ validator: validateConfidentiality, trigger: 'change' }]">
+                            <a-form-item name="confidentiality" :rules="[{ required: true, message: 'Recevez des notifications par emails' }]">
                               <a-checkbox v-model:checked="formRegisterState.confidentiality">
                                 Acceptez de recevoir des notifications de Green-positiv.
                               </a-checkbox>
@@ -309,16 +311,16 @@ onMounted(async() => {
                           </a-form>
                         </div>
                         <div v-else-if="currentStep === 2">
-                          <a-descriptions title="User Info" layout="vertical">
+                          <a-descriptions title="Vos informations" layout="vertical">
                             <a-descriptions-item>
                               <template #label>
-                                <span class="text-md">UserName</span>
+                                <span class="text-md">Identifiant</span>
                               </template>
                               {{ formRegisterState.username }}
                             </a-descriptions-item>
                             <a-descriptions-item>
                               <template #label>
-                                <span class="text-md">Telephone</span>
+                                <span class="text-md">Téléphone</span>
                               </template>
                               {{ formRegisterState.phone }}
                             </a-descriptions-item>
@@ -336,7 +338,7 @@ onMounted(async() => {
                             </a-descriptions-item>
                             <a-descriptions-item>
                               <template #label>
-                                <span class="text-md">price_per_day</span>
+                                <span class="text-md">prix par jour</span>
                               </template>
                               {{ formRegisterState.price_per_day }}
                             </a-descriptions-item>
@@ -359,9 +361,6 @@ onMounted(async() => {
                       Content of Tab Pane 2
                     </a-tab-pane>
                   </a-tabs>
-                </div>
-                <div class="login-register-form-info">
-                  <p>Don't you have an account? <a href="registration.html">Register</a></p>
                 </div>
               </div>
             </div>

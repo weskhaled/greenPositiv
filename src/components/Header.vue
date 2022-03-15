@@ -25,8 +25,8 @@ onClickOutside(asideOffcanvasMenu.value, () => {
             <div class="header-align-start">
               <div class="header-logo-area">
                 <a href="javascript:;" @click="router.push('/')">
-                  <img class="logo-main" src="../assets/img/logo-light.png" alt="Logo">
-                  <img class="logo-light" src="../assets/img/logo-light.png" alt="Logo">
+                  <img class="logo-main" src="../assets/img/Green_positive.png" alt="Logo">
+                  <img class="logo-light" src="../assets/img/Green_positive.png" alt="Logo">
                 </a>
               </div>
             </div>

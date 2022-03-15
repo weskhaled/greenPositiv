@@ -1,38 +1,36 @@
 <script setup lang="ts">
-import { message } from 'ant-design-vue'
-import { currentUser, token } from '~/stores'
+import {message} from 'ant-design-vue'
+import {currentUser, token} from '~/stores'
 import authApi from '~/api/modules/auth'
 import logoLight from '~/assets/img/logo-light.png'
 import logoLightTheme from '~/assets/img/logo-light-theme.png'
 
 const router = useRouter()
-const { t } = useI18n()
+const {t} = useI18n()
 
 const formState = reactive<any>({
   username: 'khaled',
   password: 'azerty123',
   remember: true,
 })
-const onFinish = async(values: any) => {
-  const { username, password } = values
+const onFinish = async (values: any) => {
+  const {username, password} = values
   try {
-    const { data } = await authApi.login({ username, password })
+    const {data} = await authApi.login({username, password})
 
     if (data) {
       token.value = data.token
-      const { data: currentUserData } = await authApi.currentUser()
+      const {data: currentUserData} = await authApi.currentUser()
       if (currentUserData) {
         currentUser.value = currentUserData
         message.success('Bienvenue')
         router.push('/')
-      }
-      else {
+      } else {
         currentUser.value = null
         token.value = null
       }
     }
-  }
-  catch (error: any) {
+  } catch (error: any) {
     message.destroy()
     message.error(`${error.message}`)
   }
@@ -53,15 +51,15 @@ onMounted(() => {
           <div class="col-12">
             <div class="page-header-content">
               <h2 class="title">
-                Login
+                Connexion
               </h2>
               <nav class="breadcrumb-area">
                 <ul class="breadcrumb justify-content-center">
-                  <li><a href="index.html">Home</a></li>
+                  <li><a href="index.html">Accueil</a></li>
                   <li class="breadcrumb-sep">
                     //
                   </li>
-                  <li>Pages</li>
+                  <li>Connexion</li>
                 </ul>
               </nav>
             </div>
@@ -80,34 +78,34 @@ onMounted(() => {
               <div class="login-register-form">
                 <div class="form-title">
                   <h4 class="title">
-                    Sign In
+                    Connexion
                   </h4>
                 </div>
                 <a-form
-                  :model="formState"
-                  name="formState"
-                  :label-col="{ span: 0 }"
-                  :wrapper-col="{ span: 24 }"
-                  autocomplete="on"
-                  @finish="onFinish"
+                    :model="formState"
+                    name="formState"
+                    :label-col="{ span: 0 }"
+                    :wrapper-col="{ span: 24 }"
+                    autocomplete="on"
+                    @finish="onFinish"
                 >
                   <a-form-item
-                    name="username"
-                    :rules="[{ required: true, message: 'Please input your username!' }]"
+                      name="username"
+                      :rules="[{ required: true, message: 'Please input your username!' }]"
                   >
-                    <a-input v-model:value="formState.username" />
+                    <a-input v-model:value="formState.username"/>
                   </a-form-item>
 
                   <a-form-item
-                    name="password"
-                    :rules="[{ required: true, message: 'Please input your password!' }]"
+                      name="password"
+                      :rules="[{ required: true, message: 'Please input your password!' }]"
                   >
-                    <a-input-password v-model:value="formState.password" />
+                    <a-input-password v-model:value="formState.password"/>
                   </a-form-item>
 
                   <a-form-item name="remember" :wrapper-col="{ offset: 0, span: 24 }">
                     <a-checkbox v-model:checked="formState.remember">
-                      Remember me
+                      Se rappeller de mon compte
                     </a-checkbox>
                   </a-form-item>
 
@@ -118,7 +116,9 @@ onMounted(() => {
                   </a-form-item>
                 </a-form>
                 <div class="login-register-form-info">
-                  <p>Don't you have an account? <a href="javascript:;" @click="router.push('/auth/registration')">Register</a></p>
+                  <p>Pas encore de compte? <a href="javascript:;" @click="router.push('/auth/registration')">Créer un
+                    compte</a>
+                  </p>
                 </div>
               </div>
             </div>
@@ -131,14 +131,15 @@ onMounted(() => {
 </template>
 <style lang="scss">
 .ant-input, .ant-input-affix-wrapper {
-    @apply px-2 py-3;
+  @apply px-2 py-3;
 }
+
 .ant-btn {
-    @apply px-2 !h-auto;
+  @apply px-2 !h-auto;
 }
 
 </style>
 <route lang="yaml">
 meta:
-  layout: home
+layout: home
 </route>
