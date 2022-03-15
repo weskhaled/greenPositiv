@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { ExclamationCircleOutlined } from '@ant-design/icons-vue'
+
 import dayjs, { Dayjs } from 'dayjs'
-import { Form } from 'ant-design-vue'
+import { Form, Modal, message } from 'ant-design-vue'
 import Api from '~/api/modules/jobs'
 import freelancerApi from '~/api/modules/freelancer'
 import { currentUser } from '~/stores'
@@ -48,12 +50,14 @@ const countries = ref([])
 const jobs = ref([])
 const activities = ref([])
 const visibleModalAddExperience = ref(false)
+
 const formState = reactive<Record<string, any>>({
   'input-number': 3,
   'checkbox-group': ['A', 'B'],
   'rate': 3.5,
 })
 const modelRefExperience = reactive({
+  id: undefined,
   title: '',
   society: '',
   place: '',
@@ -77,30 +81,7 @@ const rulesRef = reactive({
       trigger: 'blur',
     },
   ],
-  region: [
-    {
-      required: true,
-      message: 'Please select region',
-    },
-  ],
 })
-const { resetFields, validate, validateInfos } = useForm(modelRefExperience, rulesRef)
-const onSubmit = () => {
-  validate()
-    .then(() => {
-      console.log(toRaw(modelRefExperience))
-    })
-    .catch((err) => {
-      console.log('error', err)
-    })
-}
-const onFinish = (values: any) => {
-  console.log('Success:', values)
-}
-
-const onFinishFailed = (errorInfo: any) => {
-  console.log('Failed:', errorInfo)
-}
 const getFormData = async() => {
   Api.languages().then(({ data }) => {
     data.value && (languages.value = data.value.map(l => ({
@@ -140,20 +121,86 @@ const getFormData = async() => {
   })
   Api.profile(props.id).then(({ data }) => {
     if (data.value)
-      console.log(data.value)
-    profile.value = data.value
+      profile.value = data.value
 
     const skills = profile.value?.freelancer?.skills.map(s => ({
       value: s,
       label: s,
     }))
-    skills.value = skills
+    // skills.value = skills
     skillsValue.value = skills
   })
 }
-const updateProfile = async(profile: any) => {
-  const { data } = await freelancerApi.updateProfile(profile)
-  console.log(data.message)
+const updateProfile = async(profileData: any) => {
+  const { data } = await freelancerApi.updateProfile(profileData)
+  data && message.info(data.message)
+  profile.value = null
+  getFormData()
+}
+const { resetFields, validate, validateInfos } = useForm(modelRefExperience, rulesRef)
+const onSubmit = async() => {
+  validate()
+    .then(async() => {
+      const params = toRaw(modelRefExperience)
+      if (params.id) {
+        const id = params.id
+        delete params.id
+        const { data } = await freelancerApi.updateExperience(id, params)
+        message.info(data.message)
+        visibleModalAddExperience.value = false
+      }
+      else {
+        const { data } = await freelancerApi.addExperience(params)
+        message.info(data.message)
+        visibleModalAddExperience.value = false
+      }
+      profile.value = null
+      getFormData()
+    })
+    .catch((err) => {
+      console.log('error', err)
+    })
+}
+const onFinish = (values: any) => {
+  console.log('Success:', values)
+}
+
+const onFinishFailed = (errorInfo: any) => {
+  console.log('Failed:', errorInfo)
+}
+const updateExperience = (item) => {
+  modelRefExperience.id = item._id
+  modelRefExperience.title = item.title
+  modelRefExperience.society = item.society
+  modelRefExperience.place = item.place
+  modelRefExperience.domain = item.domain
+  modelRefExperience.isFreelancer = item.isFreelancer
+  modelRefExperience.actuallyPost = item.actuallyPost
+  modelRefExperience.dateBegin = item.dateBegin
+  modelRefExperience.dateEnd = item.dateEnd
+  modelRefExperience.skills = item.skills
+  modelRefExperience.description = item.description
+
+  visibleModalAddExperience.value = true
+}
+const deleteExperience = (id: string) => {
+  setTimeout(() => {
+    Modal.confirm({
+      content: 'Delete Experience',
+      icon: h(ExclamationCircleOutlined),
+      onOk() {
+        return freelancerApi.deleteExperience(id).then(({ data }) => {
+          message.info(data.message)
+          profile.value = null
+          getFormData()
+        }).catch(err => message.error(`Oops errors! ${err}`))
+      },
+      cancelText: 'Click to destroy all',
+      onCancel() {
+        Modal.destroyAll()
+      },
+    })
+  })
 }
 onMounted(async() => {
   getFormData()
@@ -195,10 +242,8 @@ onMounted(async() => {
     <!--== Start Login Area Wrapper ==-->
     <section class="account-login-area bg-gray-100">
       <div class="container pt-5">
-        <div class="grid grid-cols-3 gap-2 hidden">
-          {{ props.id }}
-        </div>
-        <div class>
+        <a-skeleton v-if="!profile" avatar active :paragraph="{ rows: 15 }" />
+        <div v-else class>
           <div class="p-2 flex bg-white rounded-sm">
             <div class="mr-5 flex-none">
               <a-avatar
@@ -522,7 +567,10 @@ onMounted(async() => {
                               <template #title>
                                 Add New
                               </template>
-                              <a href="javascript:;" @click="visibleModalAddExperience = true">
+                              <a
+                                href="javascript:;"
+                                @click="() => { resetFields(); modelRefExperience.id = undefined; visibleModalAddExperience = true }"
+                              >
                                 <span class="i-carbon-add-filled inline-block text-green-300" />
                               </a>
                             </a-tooltip>
@@ -533,16 +581,30 @@ onMounted(async() => {
                         </a-timeline-item>
                         <a-timeline-item v-for="item in profile?.experiences" :key="item._id">
                           <template #dot>
-                            <a-tooltip>
-                              <template #title>
-                                edit
-                              </template>
-                              <a href="javascript:;" @click="visibleModalAddExperience = true">
-                                <span
-                                  class="i-carbon-recording-filled-alt inline-block text-green-300"
-                                />
+                            <a-dropdown :trigger="['click', 'hover']">
+                              <a class="ant-dropdown-link" @click.prevent>
+                                <a href="javascript:;">
+                                  <span
+                                    class="i-carbon-recording-filled-alt inline-block text-green-300"
+                                  />
+                                </a>
                               </a>
-                            </a-tooltip>
+                              <template #overlay>
+                                <a-menu>
+                                  <a-menu-item key="0" @click="updateExperience(item)">
+                                    <span class="flex items-center">
+                                      <span class="i-carbon-edit inline-block text-md mr-2" /> Edit
+                                    </span>
+                                  </a-menu-item>
+                                  <a-menu-divider />
+                                  <a-menu-item key="1" @click="deleteExperience(item._id)">
+                                    <span class="flex items-center">
+                                      <span class="i-carbon-delete inline-block text-md mr-2" /> Delete
+                                    </span>
+                                  </a-menu-item>
+                                </a-menu>
+                              </template>
+                            </a-dropdown>
                           </template>
                           <div class="text-left">
                             <h3 class="text-gray-900 text-2xl flex items-center mb-0.5">
@@ -787,7 +849,12 @@ onMounted(async() => {
                         placeholder="Automatic tokenization"
                         :options="skills"
                       />
-                      <a-button class="mt-3" type="primary" block @click="updateProfile({...profile.freelancer, skills: skillsValue})">
+                      <a-button
+                        class="mt-3"
+                        type="primary"
+                        block
+                        @click="updateProfile({ ...profile.freelancer, skills: skillsValue })"
+                      >
                         Primary
                       </a-button>
                     </div>
@@ -935,17 +1002,30 @@ onMounted(async() => {
                                     <a-form-item label="Nationalité">
                                       <a-select placeholder="Nationalité" :options="countries" />
                                     </a-form-item>
-                                    <p>Les informations que vous aurez saisies doivent correspondre exactement avec celles présentes sur le justificatif d'identité déposé. Il ne doit pas s'agir d'un pseudo ni d'un nom d'usage. <b> Une fois les documents validés, si vous êtes amené à modifier l'une des informations précédentes (nom, prénom, date de naissance ou nationalité), vous devrez soumettre à nouveau ces documents légaux pour validation, correspondants à votre nouvelle situation.</b></p>
+                                    <p>
+                                      Les informations que vous aurez saisies doivent correspondre exactement avec celles présentes sur le justificatif d'identité déposé. Il ne doit pas s'agir d'un pseudo ni d'un nom d'usage.
+                                      <b>Une fois les documents validés, si vous êtes amené à modifier l'une des informations précédentes (nom, prénom, date de naissance ou nationalité), vous devrez soumettre à nouveau ces documents légaux pour validation, correspondants à votre nouvelle situation.</b>
+                                    </p>
                                     <a-form-item label="Pièce d'identité (recto/verso)">
                                       <a-form-item name="dragger" no-style>
-                                        <a-upload-dragger v-model:fileList="formState.dragger" name="files" action="/upload.do">
+                                        <a-upload-dragger
+                                          v-model:fileList="formState.dragger"
+                                          name="files"
+                                          action="/upload.do"
+                                        >
                                           <p class="ant-upload-drag-icon">
-                                            <span class="i-carbon-cloud-upload inline-block text-xl" />
+                                            <span
+                                              class="i-carbon-cloud-upload inline-block text-xl"
+                                            />
                                           </p>
-                                          <p class="ant-upload-text">
+                                          <p
+                                            class="ant-upload-text"
+                                          >
                                             Click or drag file to this area to upload
                                           </p>
-                                          <p class="ant-upload-hint">
+                                          <p
+                                            class="ant-upload-hint"
+                                          >
                                             Support for a single or bulk upload.
                                           </p>
                                         </a-upload-dragger>
@@ -968,7 +1048,10 @@ onMounted(async() => {
                                       <a-input placeholder="Basic usage">
                                         <template #suffix>
                                           <a-tooltip title="Extra information">
-                                            <span class="i-carbon-percentage inline-block text-lg" style="color: rgba(0, 0, 0, 0.45)" />
+                                            <span
+                                              class="i-carbon-percentage inline-block text-lg"
+                                              style="color: rgba(0, 0, 0, 0.45)"
+                                            />
                                           </a-tooltip>
                                         </template>
                                       </a-input>
@@ -1015,7 +1098,7 @@ onMounted(async() => {
   <a-modal
     v-model:visible="visibleModalAddExperience"
     width="40%"
-    title="Ajouter Experience"
+    :title="modelRefExperience.id ? 'Modifier Experience' : 'Ajouter Experience'"
     @ok="() => { }"
   >
     <div>
@@ -1023,20 +1106,17 @@ onMounted(async() => {
         <a-form-item label="Nom Expérience :" v-bind="validateInfos.name">
           <a-input
             v-model:value="modelRefExperience.title"
-            @blur="validate('name', { trigger: 'blur' }).catch(() => { })"
+            @blur="validate('title', { trigger: 'blur' }).catch(() => { })"
           />
         </a-form-item>
         <a-form-item label="Société :">
           <a-input
             v-model:value="modelRefExperience.society"
-            @blur="validate('name', { trigger: 'blur' }).catch(() => { })"
+            @blur="validate('society', { trigger: 'blur' }).catch(() => { })"
           />
         </a-form-item>
         <a-form-item label="Localisation :">
-          <a-input
-            v-model:value="modelRefExperience.place"
-            @blur="validate('name', { trigger: 'blur' }).catch(() => { })"
-          />
+          <a-input v-model:value="modelRefExperience.place" />
         </a-form-item>
         <a-form-item label="Choisir un domaine :" v-bind="validateInfos.region">
           <a-select
@@ -1062,9 +1142,6 @@ onMounted(async() => {
             <a-form-item
               name="month-picker"
               label="Start date"
-              v-bind="{
-                rules: [{ type: 'string' as const, required: true, message: 'Please select date!' }],
-              }"
               :wrapper-col="{ span: 24, offset: 0 }"
               :label-col="{
                 sm: { span: 24 }
@@ -1073,8 +1150,7 @@ onMounted(async() => {
               <a-date-picker
                 v-model:value="modelRefExperience.dateBegin"
                 style="width: 100%"
-                value-format="YYYY-MM"
-                picker="month"
+                value-format="YYYY-MM-DD"
               />
             </a-form-item>
           </div>
@@ -1090,8 +1166,7 @@ onMounted(async() => {
               <a-date-picker
                 v-model:value="modelRefExperience.dateEnd"
                 style="width: 100%"
-                value-format="YYYY-MM"
-                picker="month"
+                value-format="YYYY-MM-DD"
               />
             </a-form-item>
           </div>
@@ -1103,7 +1178,7 @@ onMounted(async() => {
             style="width: 100%"
             :token-separators="[',']"
             placeholder="Compétences"
-            :options="[]"
+            :options="skills"
           />
         </a-form-item>
         <a-form-item label="Description :" v-bind="validateInfos.name">
