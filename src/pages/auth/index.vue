@@ -113,7 +113,7 @@ onMounted(() => {
 
                   <a-form-item :wrapper-col="{ offset: 0, span: 24 }">
                     <a-button type="primary" block html-type="submit">
-                      Submit
+                      Connexion
                     </a-button>
                   </a-form-item>
                 </a-form>

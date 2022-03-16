@@ -13,6 +13,7 @@ const jobsApi = {
   legalForms: async() => useFetch(`${BASE_PREFIX}/api/legal-forms`).get().json(),
   iban: async() => useFetch(`${BASE_PREFIX}/api/iban-us-ca-others-countries`).get().json(),
   profile: async(id: string) => useFetch(`https://green-freelance-test.herokuapp.com/freelancer/get/${id}`).get().json(),
+  profileEntreprise: async(id: string) => useFetch(`https://green-freelance-test.herokuapp.com/profil-entreprise/${id}`).get().json(),
 }
 
 export default jobsApi
