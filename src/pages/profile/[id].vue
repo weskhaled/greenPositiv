@@ -82,6 +82,10 @@ const formStateProfile = reactive<Record<string, any>>({
   show_price: false,
   visibility: false,
   greenQuestion: '',
+  url_fb: '',
+  url_github: '',
+  url_twitter: '',
+  url_linkedin: '',
 })
 const formStateContactDetails = reactive<any>({
   address: '',
@@ -955,6 +959,7 @@ const getFormData = async() => {
   Api.profile(props.id).then(({ data }) => {
     if (data.value)
       profile.value = data.value
+    console.log('freelancer ', data.value)
 
     const skills = profile.value?.freelancer?.skills.map(s => ({
       value: s,
@@ -974,6 +979,11 @@ const getFormData = async() => {
     formStateProfile.price_per_day = freelancer.price_per_day
     formStateProfile.show_price = !!freelancer.show_price
     formStateProfile.visibility = !!freelancer.visibility
+    formStateProfile.greenQuestion = !!freelancer.greenQuestion
+    formStateProfile.url_fb = !!freelancer.url_fb
+    formStateProfile.url_github = !!freelancer.url_github
+    formStateProfile.url_twitter = !!freelancer.url_twitter
+    formStateProfile.url_linkedin = !!freelancer.url_linkedin
   })
   /**/
   Api.profileEntreprise(props.id).then(({ data }) => {
@@ -1577,6 +1587,10 @@ onMounted(async() => {
                           @finish-failed="onFinishFailed"
                           @finish="onFinish"
                         >
+                          <h4>Comment le Green fait parti de votre de vie et comment est-il présent dans votre vie ?</h4>
+                          <a-form-item name="Question GREEN" label="Question GREEN">
+                            <a-input v-model:value="formStateProfile.greenQuestion" />
+                          </a-form-item>
                           <a-form-item label="Avatar">
                             <a-form-item name="avatar" no-style>
                               <a-upload-dragger
@@ -1596,8 +1610,8 @@ onMounted(async() => {
                               </a-upload-dragger>
                             </a-form-item>
                           </a-form-item>
-                          <a-form-item name="descriptiont" label="Descriptiont">
-                            <a-input v-model:value="formStateProfile.descriptiont" />
+                          <a-form-item name="description" label="Description">
+                            <a-input v-model:value="formStateProfile.description" />
                           </a-form-item>
                           <a-form-item name="passion" label="Passion">
                             <a-input v-model:value="formStateProfile.passion" />
@@ -1663,10 +1677,21 @@ onMounted(async() => {
                           <a-form-item name="show_price" label="Afficher le tarif">
                             <a-switch v-model:checked="formStateProfile.show_price" />
                           </a-form-item>
-
+                          <a-form-item name="URL FB" label="lien facebook">
+                            <a-input v-model:value="formStateProfile.url_fb" />
+                          </a-form-item>
+                          <a-form-item name="URL GITHUB" label="lien github">
+                            <a-input v-model:value="formStateProfile.url_github" />
+                          </a-form-item>
+                          <a-form-item name="URL TWITTER" label="lien twitter">
+                            <a-input v-model:value="formStateProfile.url_twitter" />
+                          </a-form-item>
+                          <a-form-item name="URL LINKEDIN" label="lien linkedin">
+                            <a-input v-model:value="formStateProfile.url_linkedin" />
+                          </a-form-item>
                           <a-form-item class="mb-0" :wrapper-col="{ span: 2, offset: 20 }">
                             <a-button size="large" type="primary" html-type="submit">
-                              Submit
+                              Enregistrer
                             </a-button>
                           </a-form-item>
                         </a-form>
