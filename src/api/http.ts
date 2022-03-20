@@ -61,8 +61,8 @@ const service = {
   put: (url: string, data?: object) => http.put(url, data),
   patch: (url: string, data?: object) => http.patch(url, data),
   delete: (url: string, data?: object) => http.delete(url, data),
-  upload: (url: string, file: File) =>
-    http.post(url, file, {
+  upload: (url: string, file: FormData) =>
+    http.patch(url, file, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
   download: (url: string, data: instanceObject) => {

@@ -43,6 +43,7 @@ const socials = reactive([{
 }])
 
 const profile = ref(null)
+const profileAvatar = ref('')
 const profileEntreprise = ref(null)
 const skillsValue = ref([])
 const skills = ref([])
@@ -70,6 +71,7 @@ const visibleModalInformationValidated = ref(false)
 // })
 
 const formStateProfile = reactive<Record<string, any>>({
+  avatar: null,
   passion: '',
   email: '',
   username: '',
@@ -218,7 +220,7 @@ const rulesIbanCa = reactive({
         }
         else {
           if (value.length !== 5)
-          // eslint-disable-next-line prefer-promise-reject-errors
+            // eslint-disable-next-line prefer-promise-reject-errors
             return Promise.reject(`${'le numéro doit contenir 5 chiffres'}`)
           else
             return Promise.resolve()
@@ -257,7 +259,7 @@ const rulesIbanCa = reactive({
         }
         else {
           if (value.length !== 8)
-          // eslint-disable-next-line prefer-promise-reject-errors
+            // eslint-disable-next-line prefer-promise-reject-errors
             return Promise.reject(`${'l\iban doit contenir 8 chiffres'}`)
           else
             return Promise.resolve()
@@ -278,7 +280,7 @@ const rulesIbanCa = reactive({
         }
         else {
           if (value.length !== 5)
-          // eslint-disable-next-line prefer-promise-reject-errors
+            // eslint-disable-next-line prefer-promise-reject-errors
             return Promise.reject(`${'iban doit contenir 5 chiffres'}`)
           else
             return Promise.resolve()
@@ -299,7 +301,7 @@ const rulesIbanCa = reactive({
         }
         else {
           if (value.length !== 3)
-          // eslint-disable-next-line prefer-promise-reject-errors
+            // eslint-disable-next-line prefer-promise-reject-errors
             return Promise.reject(`${'le numéro d\institution doit contenir 3 chiffres'}`)
           else
             return Promise.resolve()
@@ -340,7 +342,7 @@ const rulesIbanOthers = reactive({
         }
         else {
           if (value.length !== 5)
-          // eslint-disable-next-line prefer-promise-reject-errors
+            // eslint-disable-next-line prefer-promise-reject-errors
             return Promise.reject(`${'le numéro doit contenir 5 chiffres'}`)
           else
             return Promise.resolve()
@@ -379,7 +381,7 @@ const rulesIbanOthers = reactive({
         }
         else {
           if (value.length !== 8)
-          // eslint-disable-next-line prefer-promise-reject-errors
+            // eslint-disable-next-line prefer-promise-reject-errors
             return Promise.reject(`${'l\iban doit contenir 8 chiffres'}`)
           else
             return Promise.resolve()
@@ -400,7 +402,7 @@ const rulesIbanOthers = reactive({
         }
         else {
           if (value.length !== 8)
-          // eslint-disable-next-line prefer-promise-reject-errors
+            // eslint-disable-next-line prefer-promise-reject-errors
             return Promise.reject(`${'le BIC/SWIFT doit contenir 8 chiffres'}`)
           else
             return Promise.resolve()
@@ -441,7 +443,7 @@ const rulesIbanUs = reactive({
         }
         else {
           if (value.length !== 5)
-          // eslint-disable-next-line prefer-promise-reject-errors
+            // eslint-disable-next-line prefer-promise-reject-errors
             return Promise.reject(`${'le numéro doit contenir 5 chiffres'}`)
           else
             return Promise.resolve()
@@ -480,7 +482,7 @@ const rulesIbanUs = reactive({
         }
         else {
           if (value.length !== 8)
-          // eslint-disable-next-line prefer-promise-reject-errors
+            // eslint-disable-next-line prefer-promise-reject-errors
             return Promise.reject(`${'l\iban doit contenir 8 chiffres'}`)
           else
             return Promise.resolve()
@@ -501,7 +503,7 @@ const rulesIbanUs = reactive({
         }
         else {
           if (value.length !== 9)
-          // eslint-disable-next-line prefer-promise-reject-errors
+            // eslint-disable-next-line prefer-promise-reject-errors
             return Promise.reject(`${'l\iban doit contenir 9 chiffres'}`)
           else
             return Promise.resolve()
@@ -543,7 +545,7 @@ const rulesIban = reactive({
         }
         else {
           if (value.length !== 5)
-          // eslint-disable-next-line prefer-promise-reject-errors
+            // eslint-disable-next-line prefer-promise-reject-errors
             return Promise.reject(`${'le numéro doit contenir 5 chiffres'}`)
           else
             return Promise.resolve()
@@ -576,7 +578,7 @@ const rulesIban = reactive({
         }
         else {
           if (value.length !== 14)
-          // eslint-disable-next-line prefer-promise-reject-errors
+            // eslint-disable-next-line prefer-promise-reject-errors
             return Promise.reject(`${'l\iban doit contenir 14 chiffres'}`)
           else
             return Promise.resolve()
@@ -743,7 +745,7 @@ const rulesLegaleRepresentative = reactive({
         }
         else {
           if (value.length !== 5)
-          // eslint-disable-next-line prefer-promise-reject-errors
+            // eslint-disable-next-line prefer-promise-reject-errors
             return Promise.reject(`${'le numéro doit contenir 5 chiffres'}`)
           else
             return Promise.resolve()
@@ -769,7 +771,7 @@ const rulesTaxe = reactive({
         }
         else {
           if (value > 100 || value < 0)
-          // eslint-disable-next-line prefer-promise-reject-errors
+            // eslint-disable-next-line prefer-promise-reject-errors
             return Promise.reject(`${'le numéro doit être entre 0 et 100'}`)
           else
             return Promise.resolve()
@@ -968,6 +970,7 @@ const getFormData = async() => {
     // skills.value = skills
     skillsValue.value = skills
     const freelancer = profile.value?.freelancer
+    profileAvatar.value = freelancer.image || ''
     formStateProfile.passion = freelancer.passion
     formStateProfile.email = freelancer.email
     formStateProfile.username = freelancer.username
@@ -979,85 +982,86 @@ const getFormData = async() => {
     formStateProfile.price_per_day = freelancer.price_per_day
     formStateProfile.show_price = !!freelancer.show_price
     formStateProfile.visibility = !!freelancer.visibility
-    formStateProfile.greenQuestion = !!freelancer.greenQuestion
-    formStateProfile.url_fb = !!freelancer.url_fb
-    formStateProfile.url_github = !!freelancer.url_github
-    formStateProfile.url_twitter = !!freelancer.url_twitter
-    formStateProfile.url_linkedin = !!freelancer.url_linkedin
+    formStateProfile.greenQuestion = freelancer.greenQuestion
+    formStateProfile.url_fb = freelancer.url_fb
+    formStateProfile.url_github = freelancer.url_github
+    formStateProfile.url_twitter = freelancer.url_twitter
+    formStateProfile.url_linkedin = freelancer.url_linkedin
   })
   /**/
   Api.profileEntreprise(props.id).then(({ data }) => {
-    if (data.value)
+    if (data.value) {
       profileEntreprise.value = data.value
-    console.log('profile ', data.value)
-    const contactDetails = profileEntreprise.value?.contactDetails
-    const legalRepresentative = profileEntreprise.value?.legalRepresentative
-    const legalMention = profileEntreprise.value?.legalMention
-    const ibanModule = profileEntreprise.value?.ibanModule
-    const ibanUsModule = profileEntreprise.value?.ibanUsModule
-    const ibanCaModule = profileEntreprise.value?.ibanCaModule
-    const ibanOthers = profileEntreprise.value?.ibanOthers
+      console.log('profile ', data.value)
+      const contactDetails = profileEntreprise.value?.contactDetails
+      const legalRepresentative = profileEntreprise.value?.legalRepresentative
+      const legalMention = profileEntreprise.value?.legalMention
+      const ibanModule = profileEntreprise.value?.ibanModule
+      const ibanUsModule = profileEntreprise.value?.ibanUsModule
+      const ibanCaModule = profileEntreprise.value?.ibanCaModule
+      const ibanOthers = profileEntreprise.value?.ibanOthers
 
-    formStateContactDetails.address = contactDetails.address
-    formStateContactDetails.address_plus = contactDetails.address_plus
-    formStateContactDetails.legal_form = contactDetails.legal_form
-    formStateContactDetails.name = contactDetails.name
+      formStateContactDetails.address = contactDetails.address
+      formStateContactDetails.address_plus = contactDetails.address_plus
+      formStateContactDetails.legal_form = contactDetails.legal_form
+      formStateContactDetails.name = contactDetails.name
 
-    formStateLegalRepresentative.lastname = legalRepresentative.lastname
-    formStateLegalRepresentative.firstname = legalRepresentative.firstname
-    formStateLegalRepresentative.birthday = legalRepresentative.birthday
-    formStateLegalRepresentative.postal = legalRepresentative.postal
-    formStateLegalRepresentative.city_of_birth = legalRepresentative.city_of_birth
-    formStateLegalRepresentative.country_of_birth = legalRepresentative.country_of_birth
-    formStateLegalRepresentative.nationality = legalRepresentative.nationality
+      formStateLegalRepresentative.lastname = legalRepresentative.lastname
+      formStateLegalRepresentative.firstname = legalRepresentative.firstname
+      formStateLegalRepresentative.birthday = legalRepresentative.birthday
+      formStateLegalRepresentative.postal = legalRepresentative.postal
+      formStateLegalRepresentative.city_of_birth = legalRepresentative.city_of_birth
+      formStateLegalRepresentative.country_of_birth = legalRepresentative.country_of_birth
+      formStateLegalRepresentative.nationality = legalRepresentative.nationality
 
-    formStateTaxe.taxe = profileEntreprise.value.taxe
+      formStateTaxe.taxe = profileEntreprise.value.taxe
 
-    formStateTypeIban.type_iban = profileEntreprise.value.type_iban
+      formStateTypeIban.type_iban = profileEntreprise.value.type_iban
 
-    formStateLegalMention.sas = legalMention.sas
-    formStateLegalMention.siret = legalMention.siret
-    formStateLegalMention.rcs = legalMention.rcs
-    formStateLegalMention.naf = legalMention.naf
-    formStateLegalMention.tva_intracom = legalMention.tva_intracom
-    formStateLegalMention.days = legalMention.days
+      formStateLegalMention.sas = legalMention.sas
+      formStateLegalMention.siret = legalMention.siret
+      formStateLegalMention.rcs = legalMention.rcs
+      formStateLegalMention.naf = legalMention.naf
+      formStateLegalMention.tva_intracom = legalMention.tva_intracom
+      formStateLegalMention.days = legalMention.days
 
-    formStateIbanModule.cb_iban_address_holder = ibanModule.cb_iban_address_holder
-    formStateIbanModule.cb_iban_city = ibanModule.cb_iban_city
-    formStateIbanModule.cb_iban_country = ibanModule.cb_iban_country
-    formStateIbanModule.cb_iban_iban = ibanModule.cb_iban_iban
-    formStateIbanModule.cb_iban_name_lastname = ibanModule.cb_iban_name_lastname
-    formStateIbanModule.cb_iban_postal = ibanModule.cb_iban_postal
+      formStateIbanModule.cb_iban_address_holder = ibanModule.cb_iban_address_holder
+      formStateIbanModule.cb_iban_city = ibanModule.cb_iban_city
+      formStateIbanModule.cb_iban_country = ibanModule.cb_iban_country
+      formStateIbanModule.cb_iban_iban = ibanModule.cb_iban_iban
+      formStateIbanModule.cb_iban_name_lastname = ibanModule.cb_iban_name_lastname
+      formStateIbanModule.cb_iban_postal = ibanModule.cb_iban_postal
 
-    formStateIbanUsModule.cb_iban_address_holder = ibanUsModule.cb_iban_address_holder
-    formStateIbanUsModule.cb_iban_city = ibanUsModule.cb_iban_city
-    formStateIbanUsModule.cb_iban_country = ibanUsModule.cb_iban_country
-    formStateIbanUsModule.cb_iban_name_lastname = ibanUsModule.cb_iban_name_lastname
-    formStateIbanUsModule.cb_iban_postal = ibanUsModule.cb_iban_postal
-    formStateIbanUsModule.cb_iban_region = ibanUsModule.cb_iban_region
-    formStateIbanUsModule.cb_iban_account_number = ibanUsModule.cb_iban_account_number
-    formStateIbanUsModule.cb_iban_aba_transit_number = ibanUsModule.cb_iban_aba_transit_number
-    formStateIbanUsModule.cb_iban_account_type = ibanUsModule.cb_iban_account_type
+      formStateIbanUsModule.cb_iban_address_holder = ibanUsModule.cb_iban_address_holder
+      formStateIbanUsModule.cb_iban_city = ibanUsModule.cb_iban_city
+      formStateIbanUsModule.cb_iban_country = ibanUsModule.cb_iban_country
+      formStateIbanUsModule.cb_iban_name_lastname = ibanUsModule.cb_iban_name_lastname
+      formStateIbanUsModule.cb_iban_postal = ibanUsModule.cb_iban_postal
+      formStateIbanUsModule.cb_iban_region = ibanUsModule.cb_iban_region
+      formStateIbanUsModule.cb_iban_account_number = ibanUsModule.cb_iban_account_number
+      formStateIbanUsModule.cb_iban_aba_transit_number = ibanUsModule.cb_iban_aba_transit_number
+      formStateIbanUsModule.cb_iban_account_type = ibanUsModule.cb_iban_account_type
 
-    formStateIbanCaModule.cb_iban_address_holder = ibanCaModule.cb_iban_address_holder
-    formStateIbanCaModule.cb_iban_city = ibanCaModule.cb_iban_city
-    formStateIbanCaModule.cb_iban_country = ibanCaModule.cb_iban_country
-    formStateIbanCaModule.cb_iban_name_lastname = ibanCaModule.cb_iban_name_lastname
-    formStateIbanCaModule.cb_iban_postal = ibanCaModule.cb_iban_postal
-    formStateIbanCaModule.cb_iban_region = ibanCaModule.cb_iban_region
-    formStateIbanCaModule.cb_iban_branch_code = ibanCaModule.cb_iban_branch_code
-    formStateIbanCaModule.cb_iban_number_institution = ibanCaModule.cb_iban_number_institution
-    formStateIbanCaModule.cb_iban_bank_name = ibanCaModule.cb_iban_bank_name
+      formStateIbanCaModule.cb_iban_address_holder = ibanCaModule.cb_iban_address_holder
+      formStateIbanCaModule.cb_iban_city = ibanCaModule.cb_iban_city
+      formStateIbanCaModule.cb_iban_country = ibanCaModule.cb_iban_country
+      formStateIbanCaModule.cb_iban_name_lastname = ibanCaModule.cb_iban_name_lastname
+      formStateIbanCaModule.cb_iban_postal = ibanCaModule.cb_iban_postal
+      formStateIbanCaModule.cb_iban_region = ibanCaModule.cb_iban_region
+      formStateIbanCaModule.cb_iban_branch_code = ibanCaModule.cb_iban_branch_code
+      formStateIbanCaModule.cb_iban_number_institution = ibanCaModule.cb_iban_number_institution
+      formStateIbanCaModule.cb_iban_bank_name = ibanCaModule.cb_iban_bank_name
 
-    formStateIbanOthers.cb_iban_address_holder = ibanOthers.cb_iban_address_holder
-    formStateIbanOthers.cb_iban_city = ibanOthers.cb_iban_city
-    formStateIbanOthers.cb_iban_country = ibanOthers.cb_iban_country
-    formStateIbanOthers.cb_iban_name_lastname = ibanOthers.cb_iban_name_lastname
-    formStateIbanOthers.cb_iban_postal = ibanOthers.cb_iban_postal
-    formStateIbanOthers.cb_iban_region = ibanOthers.cb_iban_region
-    formStateIbanOthers.cb_iban_account_number = ibanOthers.cb_iban_account_number
-    formStateIbanOthers.cb_iban_bic_swift = ibanOthers.cb_iban_bic_swift
-    formStateIbanOthers.cb_iban_account_country = ibanOthers.cb_iban_account_country
+      formStateIbanOthers.cb_iban_address_holder = ibanOthers.cb_iban_address_holder
+      formStateIbanOthers.cb_iban_city = ibanOthers.cb_iban_city
+      formStateIbanOthers.cb_iban_country = ibanOthers.cb_iban_country
+      formStateIbanOthers.cb_iban_name_lastname = ibanOthers.cb_iban_name_lastname
+      formStateIbanOthers.cb_iban_postal = ibanOthers.cb_iban_postal
+      formStateIbanOthers.cb_iban_region = ibanOthers.cb_iban_region
+      formStateIbanOthers.cb_iban_account_number = ibanOthers.cb_iban_account_number
+      formStateIbanOthers.cb_iban_bic_swift = ibanOthers.cb_iban_bic_swift
+      formStateIbanOthers.cb_iban_account_country = ibanOthers.cb_iban_account_country
+    }
   })
 
   types.value = [{
@@ -1420,8 +1424,37 @@ const deleteCertification = (id: string) => {
   })
 }
 /* end bloc certification */
+const beforeUploadProfileAvatar = async(file: any) => {
+  const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png'
+  if (!isJpgOrPng)
+    message.error('You can only upload JPG file!')
 
-const onFinish = (values: any) => {
+  const isLt2M = file.size / 1024 / 1024 < 2
+  if (!isLt2M)
+    message.error('Image must smaller than 2MB!')
+
+  if (isJpgOrPng && isLt2M) {
+    formStateProfile.avatar = [file]
+    const base64 = await useBase64(file).execute()
+    profileAvatar.value = base64
+  }
+
+  return false
+}
+
+const onFinish = async(values: any) => {
+  console.log(values)
+  if (values.avatar) {
+    console.log(values.avatar)
+    const formData = new FormData()
+    formData.append('image', values.avatar[0].originFileObj)
+    if (profile.value.freelancer?.image)
+      formData.append('old_image', 'test')
+
+    const { data } = await freelancerApi.uploadProfile(formData)
+    console.log(data)
+  }
+
   updateProfile({ ...profile, ...values })
 }
 
@@ -1474,7 +1507,7 @@ onMounted(async() => {
           <div class="p-2 flex bg-white rounded-sm">
             <div class="mr-5 flex-none">
               <a-avatar
-                src="https://preview.keenthemes.com/metronic8/demo1/assets/media/avatars/300-1.jpg"
+                :src="currentUser?.freelancer?.image"
                 shape="square"
                 :size="{ xs: 24, sm: 32, md: 40, lg: 64, xl: 220, xxl: 260 }"
               />
@@ -1594,19 +1627,29 @@ onMounted(async() => {
                           <a-form-item label="Avatar">
                             <a-form-item name="avatar" no-style>
                               <a-upload-dragger
-                                v-model:fileList="formStateProfile.dragger"
-                                name="files"
-                                action="/upload.do"
+                                v-model:fileList="formStateProfile.avatar"
+                                :multiple="false"
+                                :before-upload="beforeUploadProfileAvatar"
+                                name="avtar"
                               >
-                                <p class="ant-upload-drag-icon">
-                                  <span class="i-ant-design-inbox-outlined inline-block text-3xl" />
-                                </p>
-                                <p class="ant-upload-text">
-                                  Click or drag file to this area to upload
-                                </p>
-                                <p class="ant-upload-hint">
-                                  Support for a single or bulk upload.
-                                </p>
+                                <div v-if="profileAvatar.length">
+                                  <img
+                                    ref="image"
+                                    class="w-30 mx-auto"
+                                    :src="profileAvatar"
+                                  >
+                                </div>
+                                <div v-else class="py-3">
+                                  <p class="ant-upload-drag-icon">
+                                    <span class="i-ant-design-inbox-outlined inline-block text-3xl" />
+                                  </p>
+                                  <p class="ant-upload-text">
+                                    Click or drag file to this area to upload
+                                  </p>
+                                  <p class="ant-upload-hint">
+                                    Support for a single or bulk upload.
+                                  </p>
+                                </div>
                               </a-upload-dragger>
                             </a-form-item>
                           </a-form-item>
@@ -1631,12 +1674,10 @@ onMounted(async() => {
                           <a-form-item name="phone" label="Téléphone">
                             <a-input v-model:value="formStateProfile.phone" />
                           </a-form-item>
-                          <a-form-item
-                            name="jobCat"
-                            label="Choisir un Métier"
-                          >
+                          <a-form-item name="jobCat" label="Choisir un Métier">
                             <a-select
-                              v-model:value="formStateProfile.jobCat" placeholder="Please select Métier"
+                              v-model:value="formStateProfile.jobCat"
+                              placeholder="Please select Métier"
                               :options="jobs"
                             />
                           </a-form-item>
@@ -1677,16 +1718,16 @@ onMounted(async() => {
                           <a-form-item name="show_price" label="Afficher le tarif">
                             <a-switch v-model:checked="formStateProfile.show_price" />
                           </a-form-item>
-                          <a-form-item name="URL FB" label="lien facebook">
+                          <a-form-item name="url_fb" label="lien facebook">
                             <a-input v-model:value="formStateProfile.url_fb" />
                           </a-form-item>
-                          <a-form-item name="URL GITHUB" label="lien github">
+                          <a-form-item name="url_github" label="lien github">
                             <a-input v-model:value="formStateProfile.url_github" />
                           </a-form-item>
-                          <a-form-item name="URL TWITTER" label="lien twitter">
+                          <a-form-item name="url_twitter" label="lien twitter">
                             <a-input v-model:value="formStateProfile.url_twitter" />
                           </a-form-item>
-                          <a-form-item name="URL LINKEDIN" label="lien linkedin">
+                          <a-form-item name="url_linkedin" label="lien linkedin">
                             <a-input v-model:value="formStateProfile.url_linkedin" />
                           </a-form-item>
                           <a-form-item class="mb-0" :wrapper-col="{ span: 2, offset: 20 }">
@@ -2230,7 +2271,7 @@ onMounted(async() => {
                   </a-card>
                 </div>
               </a-tab-pane>
-              <a-tab-pane key="7" tab="Profile entreprise" force-render>
+              <a-tab-pane key="7" tab="Ma micro entreprise" force-render>
                 <div class>
                   <a-card title="Profile entreprise" :bordered="false" class="rounded-sm">
                     <div>
@@ -2272,7 +2313,10 @@ onMounted(async() => {
                                       @blur="validate('name', { trigger: 'blur' }).catch(() => { })"
                                     />
                                   </a-form-item>
-                                  <a-form-item label="Adresse" v-bind="validateInfosContactDetails.address">
+                                  <a-form-item
+                                    label="Adresse"
+                                    v-bind="validateInfosContactDetails.address"
+                                  >
                                     <a-input
                                       v-model:value="formStateContactDetails.address"
                                       @blur="validate('address', { trigger: 'blur' }).catch(() => { })"
@@ -2289,13 +2333,18 @@ onMounted(async() => {
                                   </a-form-item>
                                   <a-form-item label="Forme juridique">
                                     <a-select
-                                      v-bind="validateInfosContactDetails.legal_form" v-model:value="formStateContactDetails.legal_form"
+                                      v-bind="validateInfosContactDetails.legal_form"
+                                      v-model:value="formStateContactDetails.legal_form"
                                       placeholder="Forme juridique"
                                       :options="legalForms"
                                     />
                                   </a-form-item>
                                   <a-form-item :wrapper-col="{ span: 24, offset: 0 }">
-                                    <a-button block type="primary" @click.prevent="onSubmitContactDetails">
+                                    <a-button
+                                      block
+                                      type="primary"
+                                      @click.prevent="onSubmitContactDetails"
+                                    >
                                       Enregistrer
                                     </a-button>
                                   </a-form-item>
@@ -2341,7 +2390,7 @@ onMounted(async() => {
                                         name="date-picker"
                                         label="Start date"
                                         :wrapper-col="{ span: 24, offset: 0 }"
-                                        :label-col="{sm: { span: 24 }}"
+                                        :label-col="{ sm: { span: 24 } }"
                                         v-bind="validateInfosLegalRepresentative.birthday"
                                       >
                                         <a-date-picker
@@ -2356,7 +2405,8 @@ onMounted(async() => {
                                     <div class="grid grid-cols-2 gap-3 w-full">
                                       <div>
                                         <a-form-item
-                                          name="switch" label="Ville de naissance"
+                                          name="switch"
+                                          label="Ville de naissance"
                                           v-bind="validateInfosLegalRepresentative.city_of_birth"
                                         >
                                           <a-input
@@ -2367,7 +2417,8 @@ onMounted(async() => {
                                       </div>
                                       <div>
                                         <a-form-item
-                                          name="postal" label="Code postal"
+                                          name="postal"
+                                          label="Code postal"
                                           v-bind="validateInfosLegalRepresentative.postal"
                                         >
                                           <a-input
@@ -2382,7 +2433,8 @@ onMounted(async() => {
                                       v-bind="validateInfosLegalRepresentative.country_of_birth"
                                     >
                                       <a-select
-                                        v-model:value="formStateLegalRepresentative.country_of_birth" placeholder="Pays de naissance"
+                                        v-model:value="formStateLegalRepresentative.country_of_birth"
+                                        placeholder="Pays de naissance"
                                         :options="countries"
                                       />
                                     </a-form-item>
@@ -2391,7 +2443,8 @@ onMounted(async() => {
                                       v-bind="validateInfosLegalRepresentative.nationality"
                                     >
                                       <a-select
-                                        v-model:value="formStateLegalRepresentative.nationality" placeholder="Nationalité"
+                                        v-model:value="formStateLegalRepresentative.nationality"
+                                        placeholder="Nationalité"
                                         :options="countries"
                                       />
                                     </a-form-item>
@@ -2408,10 +2461,7 @@ onMounted(async() => {
                                     </p>
                                     <a-form-item label="Pièce d'identité (recto/verso)">
                                       <a-form-item name="dragger" no-style>
-                                        <a-upload-dragger
-                                          name="files"
-                                          action="/upload.do"
-                                        >
+                                        <a-upload-dragger name="files" action="/upload.do">
                                           <p class="ant-upload-drag-icon">
                                             <span
                                               class="i-carbon-cloud-upload inline-block text-xl"
@@ -2431,7 +2481,11 @@ onMounted(async() => {
                                       </a-form-item>
                                     </a-form-item>
                                     <a-form-item :wrapper-col="{ span: 24, offset: 0 }">
-                                      <a-button block type="primary" @click.prevent="onSubmitLegalRepresentative">
+                                      <a-button
+                                        block
+                                        type="primary"
+                                        @click.prevent="onSubmitLegalRepresentative"
+                                      >
                                         Enregistrer
                                       </a-button>
                                     </a-form-item>
@@ -2444,7 +2498,10 @@ onMounted(async() => {
                                     :wrapper-col="{ span: 24 }"
                                   >
                                     <a-form-item label="Taxe" v-bind="validateInfosTaxe.taxe">
-                                      <a-input v-model:value="formStateTaxe.taxe" placeholder="Taxe">
+                                      <a-input
+                                        v-model:value="formStateTaxe.taxe"
+                                        placeholder="Taxe"
+                                      >
                                         <template #suffix>
                                           <a-tooltip title="Extra information">
                                             <span
@@ -2457,7 +2514,11 @@ onMounted(async() => {
                                     </a-form-item>
 
                                     <a-form-item :wrapper-col="{ span: 24, offset: 0 }">
-                                      <a-button block type="primary" @click.prevent="onSubmitTaxe">
+                                      <a-button
+                                        block
+                                        type="primary"
+                                        @click.prevent="onSubmitTaxe"
+                                      >
                                         Enregistrer
                                       </a-button>
                                     </a-form-item>
@@ -2478,7 +2539,10 @@ onMounted(async() => {
                                         @blur="validate('sas', { trigger: 'blur' }).catch(() => { })"
                                       />
                                     </a-form-item>
-                                    <a-form-item label="siret" v-bind="validateInfosLegalMention.siret">
+                                    <a-form-item
+                                      label="siret"
+                                      v-bind="validateInfosLegalMention.siret"
+                                    >
                                       <a-input
                                         v-model:value="formStateLegalMention.siret"
                                         @blur="validate('siret', { trigger: 'blur' }).catch(() => { })"
@@ -2496,7 +2560,10 @@ onMounted(async() => {
                                         @blur="validate('naf', { trigger: 'blur' }).catch(() => { })"
                                       />
                                     </a-form-item>
-                                    <a-form-item label="TVA" v-bind="validateInfosLegalMention.tva_intracom">
+                                    <a-form-item
+                                      label="TVA"
+                                      v-bind="validateInfosLegalMention.tva_intracom"
+                                    >
                                       <a-input
                                         v-model:value="formStateLegalMention.tva_intracom"
                                         @blur="validate('tva_intracom', { trigger: 'blur' }).catch(() => { })"
@@ -2514,7 +2581,11 @@ onMounted(async() => {
                                       />
                                     </a-form-item>
                                     <a-form-item :wrapper-col="{ span: 24, offset: 0 }">
-                                      <a-button block type="primary" @click.prevent="onSubmitLegalMentions">
+                                      <a-button
+                                        block
+                                        type="primary"
+                                        @click.prevent="onSubmitLegalMentions"
+                                      >
                                         Enregistrer
                                       </a-button>
                                     </a-form-item>
@@ -2524,11 +2595,7 @@ onMounted(async() => {
                             </div>
                           </div>
                         </a-tab-pane>
-                        <a-tab-pane
-                          key="2"
-                          tab="Coordonnées bancaires"
-                          force-render
-                        >
+                        <a-tab-pane key="2" tab="Coordonnées bancaires" force-render>
                           <div>
                             <a-steps
                               v-model:current="currentStepProfileEtBank"
@@ -2539,10 +2606,22 @@ onMounted(async() => {
                                 boxShadow: '0px -1px 0 0 #e8e8e8 inset',
                               }"
                             >
-                              <a-step v-if="formStateTypeIban.type_iban == 'iban' ? 'status : finish' : 'status : process'" title="IBAN" />
-                              <a-step v-if="formStateTypeIban.type_iban == 'iban-us' ? 'status : finish' : 'status : process'" title="Compte bancaire US" />
-                              <a-step v-if="formStateTypeIban.type_iban == 'iban-ca' ? 'status : finish' : 'status : process'" title="Compte bancaire Canadien" />
-                              <a-step v-if="formStateTypeIban.type_iban == 'others' ? 'status : finish' : 'status : process'" title="Autre" />
+                              <a-step
+                                v-if="formStateTypeIban.type_iban == 'iban' ? 'status : finish' : 'status : process'"
+                                title="IBAN"
+                              />
+                              <a-step
+                                v-if="formStateTypeIban.type_iban == 'iban-us' ? 'status : finish' : 'status : process'"
+                                title="Compte bancaire US"
+                              />
+                              <a-step
+                                v-if="formStateTypeIban.type_iban == 'iban-ca' ? 'status : finish' : 'status : process'"
+                                title="Compte bancaire Canadien"
+                              />
+                              <a-step
+                                v-if="formStateTypeIban.type_iban == 'others' ? 'status : finish' : 'status : process'"
+                                title="Autre"
+                              />
                             </a-steps>
                             <div class="p-4">
                               <div class="max-w-md mx-auto">
@@ -2596,7 +2675,8 @@ onMounted(async() => {
                                     v-bind="validateInfosIbanModule.cb_iban_country"
                                   >
                                     <a-select
-                                      v-model:value="formStateIbanModule.cb_iban_country" placeholder="Pays"
+                                      v-model:value="formStateIbanModule.cb_iban_country"
+                                      placeholder="Pays"
                                       :options="countriesIban"
                                     />
                                   </a-form-item>
@@ -2610,7 +2690,11 @@ onMounted(async() => {
                                     />
                                   </a-form-item>
                                   <a-form-item :wrapper-col="{ span: 24, offset: 0 }">
-                                    <a-button block type="primary" @click.prevent="onSubmitIbanModule">
+                                    <a-button
+                                      block
+                                      type="primary"
+                                      @click.prevent="onSubmitIbanModule"
+                                    >
                                       Enregistrer
                                     </a-button>
                                   </a-form-item>
@@ -2657,7 +2741,8 @@ onMounted(async() => {
                                       v-bind="validateInfosIbanUsModule.cb_iban_country"
                                     >
                                       <a-select
-                                        v-model:value="formStateIbanUsModule.cb_iban_country" placeholder="Pays"
+                                        v-model:value="formStateIbanUsModule.cb_iban_country"
+                                        placeholder="Pays"
                                         :options="countriesIbanOthers"
                                       />
                                     </a-form-item>
@@ -2707,7 +2792,11 @@ onMounted(async() => {
                                       />
                                     </a-form-item>
                                     <a-form-item :wrapper-col="{ span: 24, offset: 0 }">
-                                      <a-button block type="primary" @click.prevent="onSubmitIbanUsModule">
+                                      <a-button
+                                        block
+                                        type="primary"
+                                        @click.prevent="onSubmitIbanUsModule"
+                                      >
                                         enregistrer
                                       </a-button>
                                     </a-form-item>
@@ -2755,7 +2844,8 @@ onMounted(async() => {
                                       v-bind="validateInfosIbanCaModule.cb_iban_country"
                                     >
                                       <a-select
-                                        v-model:value="formStateIbanCaModule.cb_iban_country" placeholder="Pays"
+                                        v-model:value="formStateIbanCaModule.cb_iban_country"
+                                        placeholder="Pays"
                                         :options="countriesIbanOthers"
                                       />
                                     </a-form-item>
@@ -2814,7 +2904,11 @@ onMounted(async() => {
                                       />
                                     </a-form-item>
                                     <a-form-item :wrapper-col="{ span: 24, offset: 0 }">
-                                      <a-button block type="primary" @click.prevent="onSubmitIbanCaModule">
+                                      <a-button
+                                        block
+                                        type="primary"
+                                        @click.prevent="onSubmitIbanCaModule"
+                                      >
                                         enregistrer
                                       </a-button>
                                     </a-form-item>
@@ -2857,7 +2951,10 @@ onMounted(async() => {
                                         @blur="validate('cb_iban_postal', { trigger: 'blur' }).catch(() => { })"
                                       />
                                     </a-form-item>
-                                    <a-form-item label="Pays" v-bind="formStateIbanOthers.cb_iban_country">
+                                    <a-form-item
+                                      label="Pays"
+                                      v-bind="formStateIbanOthers.cb_iban_country"
+                                    >
                                       <a-select
                                         v-model:value="formStateIbanOthers.cb_iban_country"
                                         :options="countriesIbanOthers"
@@ -2899,7 +2996,10 @@ onMounted(async() => {
                                         @blur="validate('cb_iban_bic_swift', { trigger: 'blur' }).catch(() => { })"
                                       />
                                     </a-form-item>
-                                    <a-form-item label="Pays du compte:" v-bind="formStateIbanOthers.cb_iban_account_country">
+                                    <a-form-item
+                                      label="Pays du compte:"
+                                      v-bind="formStateIbanOthers.cb_iban_account_country"
+                                    >
                                       <a-select
                                         v-model:value="formStateIbanOthers.cb_iban_account_country"
                                         :options="countriesIbanOthers"
@@ -2907,7 +3007,11 @@ onMounted(async() => {
                                     </a-form-item>
 
                                     <a-form-item :wrapper-col="{ span: 24, offset: 0 }">
-                                      <a-button block type="primary" @click.prevent="onSubmitIbanOthersModule">
+                                      <a-button
+                                        block
+                                        type="primary"
+                                        @click.prevent="onSubmitIbanOthersModule"
+                                      >
                                         enregistrer
                                       </a-button>
                                     </a-form-item>
@@ -3038,7 +3142,10 @@ onMounted(async() => {
       </a-form>
     </div>
     <template #footer>
-      <a-button type="primary" @click.prevent="onSubmit">
+      <a-button
+        type="primary"
+        @click.prevent="onSubmit"
+      >
         {{ modelRefExperience.id ? 'Modifier' : 'Ajouter' }}
       </a-button>
       <a-button
@@ -3199,23 +3306,18 @@ onMounted(async() => {
       </a-button>
     </template>
   </a-modal>
-  <a-modal
-    v-model:visible="visibleModalInformationEmailVerification"
-    width="40%"
-  >
+  <a-modal v-model:visible="visibleModalInformationEmailVerification" width="40%">
     <div>
-      <v-card>
-        <v-card-title class="text-h5 grey lighten-2">
+      <div>
+        <div class="text-h5 grey lighten-2">
           Vérification email
-        </v-card-title>
-        <v-card-text>
+        </div>
+        <div>
           Lors de votre inscription sur Green-positiv, nous vous avons envoyé un emai lde
-          vérification. il faut ouvrir cette email. si vous ne l'avez pas reçu, cliquer sur ce <a
-            class="link-info"
-          >lien</a> pour le reenvoyer.
-        </v-card-text>
-        <v-divider />
-      </v-card>
+          vérification. il faut ouvrir cette email. si vous ne l'avez pas reçu, cliquer sur ce
+          <a class="link-info">lien</a> pour le reenvoyer.
+        </div>
+      </div>
     </div>
     <template #footer>
       <a-button type="primary" @click="visibleModalInformationEmailVerification = false">
@@ -3223,21 +3325,17 @@ onMounted(async() => {
       </a-button>
     </template>
   </a-modal>
-  <a-modal
-    v-model:visible="visibleModalInformationDocumentVal"
-    width="40%"
-  >
+  <a-modal v-model:visible="visibleModalInformationDocumentVal" width="40%">
     <div>
-      <v-card>
-        <v-card-title class="text-h5 grey lighten-2">
+      <div>
+        <div class="text-h5 grey lighten-2">
           Validation des documents
-        </v-card-title>
-        <v-card-text>
+        </div>
+        <div>
           Vous devez nous envoyé vos documents tel que ....
           nous procéderons à une iscpection et les valideront si tout va bien.
-        </v-card-text>
-        <v-divider />
-      </v-card>
+        </div>
+      </div>
     </div>
     <template #footer>
       <a-button type="primary" @click="visibleModalInformationDocumentVal = false">
@@ -3245,25 +3343,20 @@ onMounted(async() => {
       </a-button>
     </template>
   </a-modal>
-  <a-modal
-    v-model:visible="visibleModalInformationSignatureCharte"
-    width="40%"
-  >
+  <a-modal v-model:visible="visibleModalInformationSignatureCharte" width="40%">
     <div>
-      <v-card>
-        <v-card-title class="text-h5 grey lighten-2">
+      <div>
+        <div class="text-h5 grey lighten-2">
           Signature de la charte
-        </v-card-title>
-        <v-card-text>
+        </div>
+        <div>
           Vous devez signer la charte de green_positive selon votre rôle.
           Veuillez l'accepter via
           <router-link to="/charter">
             ce lien
-          </router-link>
-          pour continuez la validation de votre compte.
-        </v-card-text>
-        <v-divider />
-      </v-card>
+          </router-link>pour continuez la validation de votre compte.
+        </div>
+      </div>
     </div>
     <template #footer>
       <a-button type="primary" @click="visibleModalInformationSignatureCharte = false">
@@ -3271,22 +3364,18 @@ onMounted(async() => {
       </a-button>
     </template>
   </a-modal>
-  <a-modal
-    v-model:visible="visibleModalInformationValidated"
-    width="40%"
-  >
+  <a-modal v-model:visible="visibleModalInformationValidated" width="40%">
     <div>
-      <v-card>
-        <v-card-title class="text-h5 grey lighten-2">
+      <div>
+        <div class="text-h5 grey lighten-2">
           Signature de la charte
-        </v-card-title>
-        <v-card-text>
+        </div>
+        <div>
           Si votre compte est non valide, plusieurs cas peuvent causer cette invalidité tel que les
           documents non validés ,une plainte d'une entreprise , des informations saisites non
           adéquates, etc...
-        </v-card-text>
-        <v-divider />
-      </v-card>
+        </div>
+      </div>
     </div>
     <template #footer>
       <a-button type="primary" @click="visibleModalInformationValidated = false">
@@ -3322,5 +3411,5 @@ onMounted(async() => {
 </style>
 <route lang="yaml">
 meta:
-layout: home
+  layout: home
 </route>

@@ -2,6 +2,8 @@ import service from '~/api/http'
 
 const freelancerApi = {
   updateProfile: async(params: object) => service.patch('/freelancer', params),
+  uploadProfile: async(file: FormData) => service.upload('https://vercel-microservices-green-positiv-freelancer.vercel.app/freelancer/upload-profile', file),
+  uploadDocuments: async(file: FormData) => service.upload('/freelancer/documents', file),
   addExperience: async(params: object) => service.post('/freelancer/add-experience', params),
   updateExperience: async(id: string, params: object) => service.patch(`/freelancer/update-experience/${id}`, params),
   deleteExperience: async(id: string) => service.patch(`/freelancer/delete-experience/${id}`),
