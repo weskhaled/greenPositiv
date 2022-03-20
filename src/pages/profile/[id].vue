@@ -44,6 +44,7 @@ const socials = reactive([{
 
 const profile = ref(null)
 const profileAvatar = ref('')
+const userDocument = ref(null)
 const profileEntreprise = ref(null)
 const skillsValue = ref([])
 const skills = ref([])
@@ -912,7 +913,7 @@ const rulesCert = reactive({
 const getFormData = async() => {
   Api.languages().then(({ data }) => {
     data.value && (languages.value = data.value.map(l => ({
-      value: l.code,
+      value: l.name,
       label: l.name,
     })))
   })
@@ -958,41 +959,43 @@ const getFormData = async() => {
       label: a.name,
     })))
   })
+  profile.value = null
   Api.profile(props.id).then(({ data }) => {
-    if (data.value)
+    if (data.value) {
       profile.value = data.value
-    console.log('freelancer ', data.value)
 
-    const skills = profile.value?.freelancer?.skills.map(s => ({
-      value: s,
-      label: s,
-    }))
-    // skills.value = skills
-    skillsValue.value = skills
-    const freelancer = profile.value?.freelancer
-    profileAvatar.value = freelancer.image || ''
-    formStateProfile.passion = freelancer.passion
-    formStateProfile.email = freelancer.email
-    formStateProfile.username = freelancer.username
-    formStateProfile.firstName = freelancer.firstName
-    formStateProfile.lastName = freelancer.lastName
-    formStateProfile.jobCat = freelancer.jobCat
-    formStateProfile.localisation = freelancer.localisation
-    formStateProfile.phone = freelancer.phone
-    formStateProfile.price_per_day = freelancer.price_per_day
-    formStateProfile.show_price = !!freelancer.show_price
-    formStateProfile.visibility = !!freelancer.visibility
-    formStateProfile.greenQuestion = freelancer.greenQuestion
-    formStateProfile.url_fb = freelancer.url_fb
-    formStateProfile.url_github = freelancer.url_github
-    formStateProfile.url_twitter = freelancer.url_twitter
-    formStateProfile.url_linkedin = freelancer.url_linkedin
+      const skills = profile.value?.freelancer?.skills.map(s => ({
+        value: s,
+        label: s,
+      }))
+
+      skillsValue.value = skills
+      const freelancer = profile.value?.freelancer
+      profileAvatar.value = freelancer.image || ''
+      formStateProfile.passion = freelancer.passion
+      formStateProfile.email = freelancer.email
+      formStateProfile.username = freelancer.username
+      formStateProfile.firstName = freelancer.firstName
+      formStateProfile.lastName = freelancer.lastName
+      formStateProfile.jobCat = freelancer.jobCat
+      formStateProfile.localisation = freelancer.localisation
+      formStateProfile.phone = freelancer.phone
+      formStateProfile.price_per_day = freelancer.price_per_day
+      formStateProfile.show_price = !!freelancer.show_price
+      formStateProfile.visibility = !!freelancer.visibility
+      formStateProfile.greenQuestion = freelancer.greenQuestion
+      formStateProfile.url_fb = freelancer.url_fb
+      formStateProfile.url_github = freelancer.url_github
+      formStateProfile.url_twitter = freelancer.url_twitter
+      formStateProfile.url_linkedin = freelancer.url_linkedin
+    }
   })
   /**/
+  profileEntreprise.value = null
   Api.profileEntreprise(props.id).then(({ data }) => {
     if (data.value) {
       profileEntreprise.value = data.value
-      console.log('profile ', data.value)
+
       const contactDetails = profileEntreprise.value?.contactDetails
       const legalRepresentative = profileEntreprise.value?.legalRepresentative
       const legalMention = profileEntreprise.value?.legalMention
@@ -1078,6 +1081,29 @@ const getFormData = async() => {
     value: 'Compte courant',
     label: 'Compte courant',
   }]
+}
+const getScore = () => {
+  if (!profile.value?.freelancer)
+    return 0
+
+  let value = 0
+  profile.value.freelancer?.email_verification && (value += 10)
+
+  profile.value.freelancer?.documents_val && (value += 30)
+
+  profile.value.freelancer?.validated && (value += 10)
+
+  profile.value.freelancer?.signed_client && (value += 10)
+
+  profile.value.freelancer.description?.length !== 0 && (value += 10)
+
+  profile.value.freelancer?.skills?.length >= 7 && (value += 10)
+
+  profile.value.freelancer?.languages?.length >= 1 && (value += 10)
+
+  profile.value.freelancer?.greenQuestion?.length >= 1 && (value += 10)
+
+  return value
 }
 
 const updateProfile = async(profileData: any) => {
@@ -1192,6 +1218,14 @@ const validateLegalRepresentative = useFormLegalRepresentative.validate
 const validateInfosLegalRepresentative = useFormLegalRepresentative.validateInfos
 
 const onSubmitLegalRepresentative = async() => {
+  if (userDocument.value) {
+    const formData = new FormData()
+    formData.append('documents', userDocument.value)
+    profile.value?.freelancer?.documents?.length && formData.append('old_documents', profile.value?.freelancer?.documents[0])
+
+    freelancerApi.uploadDocuments(formData).catch(err => message.error(`${err}`))
+  }
+
   validateLegalRepresentative()
     .then(async() => {
       const params = toRaw(formStateLegalRepresentative)
@@ -1443,16 +1477,13 @@ const beforeUploadProfileAvatar = async(file: any) => {
 }
 
 const onFinish = async(values: any) => {
-  console.log(values)
   if (values.avatar) {
-    console.log(values.avatar)
     const formData = new FormData()
     formData.append('image', values.avatar[0].originFileObj)
     if (profile.value.freelancer?.image)
       formData.append('old_image', 'test')
 
-    const { data } = await freelancerApi.uploadProfile(formData)
-    console.log(data)
+    await freelancerApi.uploadProfile(formData)
   }
 
   updateProfile({ ...profile, ...values })
@@ -1460,6 +1491,28 @@ const onFinish = async(values: any) => {
 
 const onFinishFailed = (errorInfo: any) => {
   console.log('Failed:', errorInfo)
+}
+
+const removeLanguage = async(lang: any) => {
+  const { data } = await freelancerApi.deleteLanguage(lang).catch(err => message.error(err.message))
+  if (data) {
+    message.info(data.message)
+    getFormData()
+  }
+}
+const updateLanguage = async(lang: any) => {
+  const { data } = await freelancerApi.updateLanguage(lang).catch(err => message.error(err.message))
+  if (data) {
+    message.info(data.message)
+    getFormData()
+  }
+}
+const addLanguage = async(lang: any) => {
+  const { data } = await freelancerApi.addLanguage(lang).catch(err => message.error(err.message))
+  if (data) {
+    message.info(data.message)
+    getFormData()
+  }
 }
 
 onMounted(async() => {
@@ -1569,7 +1622,7 @@ onMounted(async() => {
                     </a-statistic>
                   </a-card>
                   <a-card :bordered="false" class="bg-white" body-style="padding: 5px">
-                    <a-progress type="circle" :percent="30" :width="80" />
+                    <a-progress type="circle" :percent="getScore()" :width="80" />
                   </a-card>
                 </div>
                 <div class>
@@ -2080,6 +2133,27 @@ onMounted(async() => {
                         </a-button>
                       </template>
                     </a-result>
+                    <div>
+                      <h3 class="text-dark-50 mb-1 text-lg">
+                        Competences:
+                      </h3>
+                      <a-select
+                        v-model:value="skillsValue"
+                        mode="tags"
+                        style="width: 100%"
+                        :token-separators="[',']"
+                        placeholder="Automatic tokenization"
+                        :options="skills"
+                      />
+                      <a-button
+                        class="mt-3"
+                        type="primary"
+                        block
+                        @click="updateProfile({ ...profile.freelancer, skills: skillsValue })"
+                      >
+                        Primary
+                      </a-button>
+                    </div>
                   </a-card>
                 </div>
               </a-tab-pane>
@@ -2190,30 +2264,6 @@ onMounted(async() => {
                   </a-card>
                 </div>
               </a-tab-pane>
-              <a-tab-pane key="5" tab="Competences Professionelle" force-render>
-                <div class>
-                  <a-card title="Competences" :bordered="false" class="rounded-sm">
-                    <div>
-                      <a-select
-                        v-model:value="skillsValue"
-                        mode="tags"
-                        style="width: 100%"
-                        :token-separators="[',']"
-                        placeholder="Automatic tokenization"
-                        :options="skills"
-                      />
-                      <a-button
-                        class="mt-3"
-                        type="primary"
-                        block
-                        @click="updateProfile({ ...profile.freelancer, skills: skillsValue })"
-                      >
-                        Primary
-                      </a-button>
-                    </div>
-                  </a-card>
-                </div>
-              </a-tab-pane>
               <a-tab-pane key="6" tab="Centre d'interet + passions + langues" force-render>
                 <div class>
                   <a-card title="Centre d'interet" :bordered="false" class="rounded-sm">
@@ -2246,8 +2296,16 @@ onMounted(async() => {
                         <div class="text-dark-50 mb-1 text-lg">
                           Langues
                         </div>
+                        <LanguagesLevel
+                          v-model="profile.freelancer.languages"
+                          :languages="languages"
+                          @remove-language="removeLanguage"
+                          @add-language="addLanguage"
+                          @update-language="updateLanguage"
+                        />
                         <a-select
                           mode="multiple"
+                          class="hidden"
                           placeholder="Please select a langues"
                           :options="languages"
                           style="width: 100%"
@@ -2287,11 +2345,26 @@ onMounted(async() => {
                                 boxShadow: '0px -1px 0 0 #e8e8e8 inset',
                               }"
                             >
-                              <a-step status="finish" title="Coordonnées" />
-                              <a-step status="finish" title="Représentant" />
-                              <a-step status="process" title="Taxes" />
-                              <a-step status="wait" title="Mentions" />
-                              <a-step status="process" title="Documents légaux" />
+                              <a-step
+                                :status="(profileEntreprise?.contactDetails?.name && profileEntreprise?.contactDetails?.address) ? 'finish' : (currentStepProfileEtprs === 0 ? 'process' : 'wait')"
+                                title="Coordonnées"
+                              />
+                              <a-step
+                                :disabled="!(profileEntreprise?.contactDetails?.name && profileEntreprise?.contactDetails?.address)"
+                                :status="profileEntreprise?.legalRepresentative?.firstname ? 'finish' : (currentStepProfileEtprs === 1 ? 'process' : 'wait')"
+                                title="Représentant"
+                              />
+                              <a-step
+                                :disabled="!(profileEntreprise?.legalRepresentative?.firstname && profileEntreprise?.legalRepresentative?.lastname)"
+                                :status="(profileEntreprise?.taxe) ? 'finish' : (currentStepProfileEtprs === 2 ? 'process' : 'wait')"
+                                title="Taxes"
+                              />
+                              <a-step
+                                :disabled="!(profileEntreprise?.legalMention.naf && profileEntreprise?.legalMention.siret)"
+                                :status="(profileEntreprise?.legalMention?.sas && profileEntreprise?.legalMention?.siret) ? 'finish' : (currentStepProfileEtprs === 3 ? 'process' : 'wait')"
+                                title="Mentions"
+                              />
+                              <a-step :disabled="true" status="wait" title="Documents légaux" />
                             </a-steps>
                             <div class="p-4">
                               <div class="max-w-md mx-auto">
@@ -2461,22 +2534,45 @@ onMounted(async() => {
                                     </p>
                                     <a-form-item label="Pièce d'identité (recto/verso)">
                                       <a-form-item name="dragger" no-style>
-                                        <a-upload-dragger name="files" action="/upload.do">
-                                          <p class="ant-upload-drag-icon">
-                                            <span
-                                              class="i-carbon-cloud-upload inline-block text-xl"
-                                            />
-                                          </p>
-                                          <p
-                                            class="ant-upload-text"
-                                          >
-                                            Click or drag file to this area to upload
-                                          </p>
-                                          <p
-                                            class="ant-upload-hint"
-                                          >
-                                            Support for a single or bulk upload.
-                                          </p>
+                                        <a-upload-dragger
+                                          name="files"
+                                          :file-list="profile?.freelancer?.documents.map(f => ({
+                                            uid: f.uid || f,
+                                            name: f.name || f,
+                                            status: f.status || 'done',
+                                            url: f,
+                                          })) || []"
+                                          :before-upload="(file: any) => {
+                                            if (file.type === 'application/pdf') {
+                                              userDocument = file;
+                                            }
+                                            else {
+                                              message.error('type should be pdf')
+                                            }
+
+                                            return false;
+                                          }"
+                                        >
+                                          <template v-if="!userDocument">
+                                            <p class="ant-upload-drag-icon">
+                                              <span
+                                                class="i-carbon-cloud-upload inline-block text-xl"
+                                              />
+                                            </p>
+                                            <p
+                                              class="ant-upload-text"
+                                            >
+                                              Click or drag file to this area to upload
+                                            </p>
+                                            <p
+                                              class="ant-upload-hint"
+                                            >
+                                              Support for a single or bulk upload.
+                                            </p>
+                                          </template>
+                                          <template v-else>
+                                            <p>{{ userDocument?.name }}</p>
+                                          </template>
                                         </a-upload-dragger>
                                       </a-form-item>
                                     </a-form-item>

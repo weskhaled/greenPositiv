@@ -48,7 +48,6 @@ http.interceptors.response.use(
         token.value = null
 
       message.error(showCodeMessage(response.status))
-      console.log('"here')
       return Promise.reject(response.data)
     }
     message.warning('The network connection is abnormal, please try again later!')
