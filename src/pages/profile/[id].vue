@@ -1633,17 +1633,17 @@ onMounted(async() => {
                                 name="avtar"
                               >
                                 <div v-if="profileAvatar.length">
-                                  <img
-                                    ref="image"
-                                    class="w-30 mx-auto"
-                                    :src="profileAvatar"
-                                  >
+                                  <img ref="image" class="w-30 mx-auto" :src="profileAvatar">
                                 </div>
                                 <div v-else class="py-3">
                                   <p class="ant-upload-drag-icon">
-                                    <span class="i-ant-design-inbox-outlined inline-block text-3xl" />
+                                    <span
+                                      class="i-ant-design-inbox-outlined inline-block text-3xl"
+                                    />
                                   </p>
-                                  <p class="ant-upload-text">
+                                  <p
+                                    class="ant-upload-text"
+                                  >
                                     Click or drag file to this area to upload
                                   </p>
                                   <p class="ant-upload-hint">
@@ -2895,7 +2895,7 @@ onMounted(async() => {
                                       />
                                     </a-form-item>
                                     <a-form-item
-                                      label="Numéro d\institution"
+                                      label="Numéro d\'institution"
                                       v-bind="validateInfosIbanCaModule.cb_iban_number_institution"
                                     >
                                       <a-input
@@ -2953,7 +2953,7 @@ onMounted(async() => {
                                     </a-form-item>
                                     <a-form-item
                                       label="Pays"
-                                      v-bind="formStateIbanOthers.cb_iban_country"
+                                      v-bind="validateInfosIbanOthersModule.cb_iban_country"
                                     >
                                       <a-select
                                         v-model:value="formStateIbanOthers.cb_iban_country"
@@ -2998,7 +2998,7 @@ onMounted(async() => {
                                     </a-form-item>
                                     <a-form-item
                                       label="Pays du compte:"
-                                      v-bind="formStateIbanOthers.cb_iban_account_country"
+                                      v-bind="validateInfosIbanOthersModule.cb_iban_account_country"
                                     >
                                       <a-select
                                         v-model:value="formStateIbanOthers.cb_iban_account_country"
@@ -3315,7 +3315,9 @@ onMounted(async() => {
         <div>
           Lors de votre inscription sur Green-positiv, nous vous avons envoyé un emai lde
           vérification. il faut ouvrir cette email. si vous ne l'avez pas reçu, cliquer sur ce
-          <a class="link-info">lien</a> pour le reenvoyer.
+          <a
+            class="link-info"
+          >lien</a> pour le reenvoyer.
         </div>
       </div>
     </div>
