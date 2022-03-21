@@ -20,27 +20,28 @@ const formItemLayout = {
   labelCol: { span: 6 },
   wrapperCol: { span: 16 },
 }
-const socials = ref([{
-  name: 'facebook',
-  icon: 'i-mdi-facebook-box',
-  link: 'www.facebook.com',
-  classes: 'text-green-600',
-}, {
-  name: 'twitter',
-  icon: 'i-mdi-twitter-box',
-  link: 'www.twitter.com',
-  classes: 'text-green-600',
-}, {
-  name: 'linkedin',
-  icon: 'i-mdi-linkedin',
-  link: 'www.linkedin.com',
-  classes: 'text-green-600',
-}, {
-  name: 'github',
-  icon: 'i-mdi-github-box',
-  link: 'www.github.com',
-  classes: 'text-green-600',
-}])
+const socials = reactive({
+  facebook: {
+    icon: 'i-mdi-facebook-box',
+    link: '',
+    classes: 'text-green-600',
+  },
+  twitter: {
+    icon: 'i-mdi-twitter-box',
+    link: '',
+    classes: 'text-green-600',
+  },
+  linkedin: {
+    icon: 'i-mdi-linkedin',
+    link: '',
+    classes: 'text-green-600',
+  },
+  github: {
+    icon: 'i-mdi-github-box',
+    link: '',
+    classes: 'text-green-600',
+  },
+})
 
 const profile = ref(null)
 const profileAvatar = ref('')
@@ -910,6 +911,36 @@ const rulesCert = reactive({
     },
   ],
 })
+const calcDisponibilityFreq = (params: number, toSlide = true) => {
+  if (toSlide) {
+    if (params === 0)
+      return 0
+    else if (params === 1)
+      return 15
+    else if (params === 2)
+      return 30
+    else if (params === 3)
+      return 50
+    else if (params === 4)
+      return 70
+    else
+      return 100
+  }
+  else {
+    if (params === 0)
+      return 0
+    else if (params === 15)
+      return 1
+    else if (params === 30)
+      return 2
+    else if (params === 50)
+      return 3
+    else if (params === 70)
+      return 4
+    else
+      return 5
+  }
+}
 const getFormData = async() => {
   Api.languages().then(({ data }) => {
     data.value && (languages.value = data.value.map(l => ({
@@ -988,7 +1019,12 @@ const getFormData = async() => {
       formStateProfile.url_github = freelancer.url_github
       formStateProfile.url_twitter = freelancer.url_twitter
       formStateProfile.url_linkedin = freelancer.url_linkedin
-      // socials.
+      formStateProfile.disponibility_freq = calcDisponibilityFreq(+freelancer.disponibility_freq)
+
+      socials.facebook.link = freelancer.url_fb
+      socials.twitter.link = freelancer.url_twitter
+      socials.linkedin.link = freelancer.url_linkedin
+      socials.github.link = freelancer.url_github
     }
   })
   /**/
@@ -1108,6 +1144,7 @@ const getScore = () => {
 }
 
 const updateProfile = async(profileData: any) => {
+  profileData.disponibility_freq = calcDisponibilityFreq(+formStateProfile.disponibility_freq, false)
   const { data } = await freelancerApi.updateProfile(profileData)
   data && message.info(data.message)
   getFormData()
@@ -1622,11 +1659,16 @@ onMounted(async() => {
                     </a-statistic>
                   </a-card>
                   <a-card :bordered="false" class="bg-white" body-style="padding: 5px">
-                    <a-progress type="circle" :percent="getScore()" :width="80" />
+                    <a-progress
+                      type="circle" :stroke-color="{
+                        '0%': '#108ee9',
+                        '100%': '#87d068',
+                      }" :percent="getScore()" :width="80"
+                    />
                   </a-card>
                 </div>
                 <div class>
-                  <social-media :in-edit="true" :socials="socials" />
+                  <social-media :socials="socials" />
                 </div>
               </div>
               <div class="mt-2">
@@ -1739,9 +1781,9 @@ onMounted(async() => {
                             <a-switch v-model:checked="formStateProfile.visibility" />
                           </a-form-item>
 
-                          <a-form-item name="price_per_day" label="Fréquence / semaine">
+                          <a-form-item name="disponibility_freq" label="Fréquence / semaine">
                             <a-slider
-                              v-model:value="formStateProfile.price_per_day"
+                              v-model:value="formStateProfile.disponibility_freq"
                               :step="null"
                               :tip-formatter="null"
                               :marks="{
@@ -2360,7 +2402,7 @@ onMounted(async() => {
                                 title="Taxes"
                               />
                               <a-step
-                                :disabled="!(profileEntreprise?.legalMention.naf && profileEntreprise?.legalMention.siret)"
+                                :disabled="!(profileEntreprise?.taxe)"
                                 :status="(profileEntreprise?.legalMention?.sas && profileEntreprise?.legalMention?.siret) ? 'finish' : (currentStepProfileEtprs === 3 ? 'process' : 'wait')"
                                 title="Mentions"
                               />
