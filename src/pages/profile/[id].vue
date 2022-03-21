@@ -20,7 +20,7 @@ const formItemLayout = {
   labelCol: { span: 6 },
   wrapperCol: { span: 16 },
 }
-const socials = reactive([{
+const socials = ref([{
   name: 'facebook',
   icon: 'i-mdi-facebook-box',
   link: 'www.facebook.com',
@@ -988,6 +988,7 @@ const getFormData = async() => {
       formStateProfile.url_github = freelancer.url_github
       formStateProfile.url_twitter = freelancer.url_twitter
       formStateProfile.url_linkedin = freelancer.url_linkedin
+      // socials.
     }
   })
   /**/
@@ -1109,7 +1110,6 @@ const getScore = () => {
 const updateProfile = async(profileData: any) => {
   const { data } = await freelancerApi.updateProfile(profileData)
   data && message.info(data.message)
-  profile.value = null
   getFormData()
 }
 /* bloc iban others modules */
