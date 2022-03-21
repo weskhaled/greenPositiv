@@ -1637,7 +1637,7 @@ onMounted(async() => {
                           @finish="onFinish"
                         >
                           <h4>Comment le Green fait parti de votre de vie et comment est-il présent dans votre vie ?</h4>
-                          <a-form-item name="Question GREEN" label="Question GREEN">
+                          <a-form-item name="greenQuestion" label="Question GREEN">
                             <a-input v-model:value="formStateProfile.greenQuestion" />
                           </a-form-item>
                           <a-form-item label="Avatar">
