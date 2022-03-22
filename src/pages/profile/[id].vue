@@ -1507,10 +1507,10 @@ onMounted(async() => {
                           <a-form-item name="phone" label="Téléphone">
                             <a-input v-model:value="formStateProfile.phone" />
                           </a-form-item>
-                          <a-form-item name="jobCat" label="Choisir un Métier">
+                          <a-form-item name="jobCat" label="Choisir une catégorie de métier">
                             <a-select
                               v-model:value="formStateProfile.jobCat"
-                              placeholder="Choisir un Métier"
+                              placeholder="Choisir une catégorie de métier"
                               :options="jobs"
                             />
                           </a-form-item>
@@ -2054,7 +2054,7 @@ onMounted(async() => {
                   </a-card>
                 </div>
               </a-tab-pane>
-              <a-tab-pane key="6" tab="Centre d'interet + passions + langues" force-render>
+              <a-tab-pane key="6" tab="Centres d'intérets" force-render>
                 <div class>
                   <a-card title="Centre d'interet" :bordered="false" class="rounded-sm">
                     <div>
