@@ -53,9 +53,9 @@ onMounted(() => {
         <div class="grid grid-cols-3 gap-2">
           <div v-for="(post, index) in posts" :key="index" class="post-item">
             <div class="thumb">
-              <a href="blog-details.html">
+              <router-link :to="`/blog/${post._id}`">
                 <img :src="post.image" alt="Image" width="370" height="270">
-              </a>
+              </router-link>
             </div>
             <div class="content">
               <div class="author">
