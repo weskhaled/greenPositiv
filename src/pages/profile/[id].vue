@@ -45,8 +45,10 @@ const profile = ref(null)
 const profileAvatar = ref('')
 const userDocument = ref(null)
 const profileEntreprise = ref(null)
-const skillsValue = ref([])
 const skills = ref([])
+const skillsValue = ref([])
+const passionValue = ref('')
+const interestValue = ref([])
 const legalForms = ref([])
 const languages = ref([])
 const countries = ref([])
@@ -823,6 +825,7 @@ const getFormData = async() => {
         label: s,
       }))
       skillsValue.value = skills
+      passionValue.value = profile.value.freelancer?.passion
       const freelancer = profile.value?.freelancer
       profileAvatar.value = freelancer.image || ''
       formStateProfile.description = freelancer.description
@@ -928,9 +931,6 @@ const getFormData = async() => {
           break
         }
         default: {
-          console.log('default here')
-          message.error('error in getting iban modules')
-
           break
         }
       }
@@ -1001,6 +1001,7 @@ const resetModuleIban = () => {
 }
 const updateProfile = async(profileData: any) => {
   profileData.disponibility_freq = calcDisponibilityFreq(+formStateProfile.disponibility_freq, false)
+
   const { data } = await freelancerApi.updateProfile(profileData)
   data && message.info(data.message)
   getFormData()
@@ -2063,25 +2064,33 @@ onMounted(async() => {
                         </div>
                         <div>
                           <a-textarea
+                            v-model:value="passionValue"
                             placeholder="Passion"
                             :auto-size="{ minRows: 3, maxRows: 5 }"
                           />
                         </div>
                       </div>
-                      <div class="mb-3">
+                      <div class="mb-1">
                         <div class="text-dark-50 mb-1 text-lg">
                           Centre d'intéréts
                         </div>
                         <a-select
-                          v-model:value="skillsValue"
+                          v-model:value="interestValue"
                           mode="tags"
                           style="width: 100%"
-                          :token-separators="[',']"
                           placeholder="Choisissez les compétences proposés ou rédigez ceux propre à vous"
-                          :options="skills"
+                          :options="profile.freelancer?.interest?.map(i => ({label: i, value: i})) || []"
                         />
                       </div>
-                      <div class="mb-3">
+                      <a-button
+                        class="mt-3"
+                        type="primary"
+
+                        @click="updateProfile({ passion: passionValue, interest: interestValue})"
+                      >
+                        Modifier
+                      </a-button>
+                      <div class="mb-3 mt-4">
                         <div class="text-dark-50 mb-1 text-lg">
                           Langues
                         </div>
