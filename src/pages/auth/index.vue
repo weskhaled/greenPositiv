@@ -131,10 +131,6 @@ onMounted(() => {
   </main>
 </template>
 <style lang="scss">
-.ant-input, .ant-input-affix-wrapper {
-  @apply px-2 py-3;
-}
-
 .ant-btn {
   @apply px-2 !h-auto;
 }
