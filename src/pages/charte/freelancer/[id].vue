@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { message } from 'ant-design-vue'
-import Api from '~/api/modules/jobs'
 import freelancerApi from '~/api/modules/freelancer'
 
 import signCharter from '~/assets/img/charter/signCharter.png'
@@ -19,7 +18,7 @@ const formStateCharte = reactive<Record<string, any>>({
 })
 
 const getFormData = async() => {
-  Api.profile(props.id).then(({ data }) => {
+  freelancerApi.profile(props.id).then(({ data }) => {
     if (data.value)
       profile.value = data.value
     const freelancer = profile.value?.freelancer
@@ -191,7 +190,7 @@ onMounted(async() => {
         <div v-if="formStateCharte.role === 'Freelancer'">
           <button
             v-if="!formStateCharte.signed_client" class="btn-theme center m-2"
-            @click="updateProfile({ ...profile.freelancer, signed_client: true })"
+            @click="updateProfile({ signed_client: true })"
           >
             Signez notre charte
           </button>

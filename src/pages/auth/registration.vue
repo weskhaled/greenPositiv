@@ -2,8 +2,8 @@
 import type { RuleObject } from 'ant-design-vue/es/form'
 import { message } from 'ant-design-vue'
 import { currentUser, token } from '~/stores'
-import jobsApi from '~/api/modules/jobs'
-import authApi from '~/api/modules/auth'
+import adminApi from '~/api/modules/admin'
+import freelancerApi from '~/api/modules/freelancer'
 import logoLight from '~/assets/img/logo-light.png'
 import logoLightTheme from '~/assets/img/logo-light-theme.png'
 
@@ -81,7 +81,7 @@ const nextStep = async() => {
   else {
     if (currentStep.value > 1) {
       try {
-        const { data } = await authApi.register({ ...formRegisterState, role: 'Freelancer' })
+        const { data } = await freelancerApi.register({ ...formRegisterState, role: 'Freelancer' })
 
         if (data) {
           message.success('compte créé')
@@ -99,7 +99,7 @@ const nextStep = async() => {
 onMounted(async() => {
   if (route.query.agence === 'true')
     activeTabKey.value = '2'
-  const { data } = await jobsApi.jobs()
+  const { data } = await adminApi.jobs()
 
   data && (jobs.value = data.value.filter(j => j._id && j.name).map(j => ({
     value: j._id,

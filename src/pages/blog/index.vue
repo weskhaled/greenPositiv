@@ -1,17 +1,13 @@
 <script setup lang="ts">
 import dayjs, { Dayjs } from 'dayjs'
-import { message } from 'ant-design-vue'
-import { currentUser, token } from '~/stores'
-import postsApi from '~/api/modules/jobs'
-import logoLight from '~/assets/img/logo-light.png'
-import logoLightTheme from '~/assets/img/logo-light-theme.png'
+import adminApi from '~/api/modules/admin'
 
 const router = useRouter()
 const { t } = useI18n()
 const posts: Ref<any> = ref([])
 
 const getPosts = async() => {
-  const { data } = await postsApi.posts()
+  const { data } = await adminApi.posts()
   posts.value = data.value
 }
 onMounted(() => {

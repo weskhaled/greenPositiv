@@ -3,8 +3,10 @@ import { ExclamationCircleOutlined } from '@ant-design/icons-vue'
 import dayjs, { Dayjs } from 'dayjs'
 import { Form, Modal, message } from 'ant-design-vue'
 import type { RuleObject } from 'ant-design-vue/es/form'
-import Api from '~/api/modules/jobs'
+import adminApi from '~/api/modules/admin'
+import globalApi from '~/api/modules/global'
 import freelancerApi from '~/api/modules/freelancer'
+import profileEntrepriseApi from '~/api/modules/profil-entreprise'
 import { currentUser } from '~/stores'
 const useForm = Form.useForm
 const props = defineProps<{ id: string }>()
@@ -13,7 +15,6 @@ const { t } = useI18n()
 const activeKey = ref('1')
 const activeKeyProfileEtprs = ref('1')
 const currentStepProfileEtprs = ref(0)
-const currentStepProfileEtBank = ref(0)
 const formItemLayout = {
   labelCol: { span: 6 },
   wrapperCol: { span: 16 },
@@ -54,6 +55,7 @@ const countriesIbanOthers = ref([])
 const jobs = ref([])
 const types = ref([])
 const typesAccount = ref([])
+const typesIban = ref([])
 const activities = ref([])
 const visibleModalAddExperience = ref(false)
 const visibleModalAddFormation = ref(false)
@@ -61,6 +63,7 @@ const visibleModalAddCertification = ref(false)
 const visibleModalInformationEmailVerification = ref(false)
 const visibleModalInformationDocumentVal = ref(false)
 const visibleModalInformationSignatureCharte = ref(false)
+const visibleModalGreenQuestion = ref(false)
 const visibleModalInformationValidated = ref(false)
 // const formState = reactive<Record<string, any>>({
 //   'input-number': 3,
@@ -115,51 +118,22 @@ const formStateLegalMention = reactive<any>({
   tva_intracom: '',
   days: undefined,
 })
-const formStateIbanOthers = reactive<any>({
+const formStateIbanModule = reactive<any>({
   cb_iban_address_holder: '',
-  cb_iban_city: '',
-  cb_iban_country: '',
   cb_iban_name_lastname: '',
   cb_iban_postal: '',
-  type_iban: 'others',
-  cb_iban_region: '',
-  cb_iban_account_number: '',
-  cb_iban_bic_swift: '',
-  cb_iban_account_country: '',
-})
-const formStateIbanCaModule = reactive<any>({
-  cb_iban_address_holder: '',
   cb_iban_city: '',
   cb_iban_country: '',
-  cb_iban_name_lastname: '',
-  cb_iban_postal: '',
-  type_iban: 'iban-ca',
-  cb_iban_region: '',
-  cb_iban_account_number: '',
-  cb_iban_branch_code: '',
-  cb_iban_number_institution: '',
-  cb_iban_bank_name: '',
-})
-const formStateIbanUsModule = reactive<any>({
-  cb_iban_address_holder: '',
-  cb_iban_city: '',
-  cb_iban_country: '',
-  cb_iban_name_lastname: '',
-  cb_iban_postal: '',
-  type_iban: 'iban-us',
+  cb_iban_iban: '',
   cb_iban_region: '',
   cb_iban_account_number: '',
   cb_iban_aba_transit_number: '',
   cb_iban_account_type: '',
-})
-const formStateIbanModule = reactive<any>({
-  cb_iban_address_holder: '',
-  cb_iban_city: '',
-  cb_iban_country: '',
-  cb_iban_iban: '',
-  cb_iban_name_lastname: '',
-  cb_iban_postal: '',
-  type_iban: 'iban',
+  cb_iban_branch_code: '',
+  cb_iban_number_institution: '',
+  cb_iban_bank_name: '',
+  cb_iban_bic_swift: '',
+  cb_iban_account_country: '',
 })
 const modelRefExperience = reactive({
   id: undefined,
@@ -192,320 +166,7 @@ const modelRefFormation = reactive({
   year: undefined,
   description: '',
 })
-const rulesIbanCa = reactive({
-  cb_iban_name_lastname: [
-    {
-      required: true,
-      message: 'Saisir le nom et prénom',
-    },
-  ],
-  cb_iban_address_holder: [
-    {
-      required: true,
-      message: 'Saisir \'adresse du titulaire',
-    },
-  ],
-  cb_iban_postal: [
-    {
-      required: true,
-      validator: async(_rule: RuleObject, value: string) => {
-        if (!value)
-          return Promise.reject(new Error('Veuillez saisir un code postal'))
-        if (!Number.isInteger(+value)) {
-          return Promise.reject(new Error('Veuillez saisir que des chiffres'))
-        }
-        else {
-          if (value.length !== 5)
-            // eslint-disable-next-line prefer-promise-reject-errors
-            return Promise.reject(`${'le numéro doit contenir 5 chiffres'}`)
-          else
-            return Promise.resolve()
-        }
-      },
-      trigger: 'blur',
-    },
-  ],
-  cb_iban_city: [
-    {
-      required: true,
-      message: 'Saisissez la Ville',
-    },
-  ],
-  cb_iban_country: [
-    {
-      required: true,
-      message: 'Saisir le Pays',
-    },
-  ],
-  cb_iban_region: [
-    {
-      required: true,
-      message: 'Saisir la région',
-    },
-  ],
-  cb_iban_account_number: [
-    {
-      required: true,
-      validator: async(_rule: RuleObject, value: string) => {
-        if (!value)
-          return Promise.reject(new Error('Veuillez saisir votre numéro de compte'))
-        if (!Number.isInteger(+value)) {
-          return Promise.reject(new Error('Veuillez saisir que des chiffres'))
-        }
-        else {
-          if (value.length !== 8)
-            // eslint-disable-next-line prefer-promise-reject-errors
-            return Promise.reject(`${'l\iban doit contenir 8 chiffres'}`)
-          else
-            return Promise.resolve()
-        }
-      },
-      trigger: 'blur',
-    },
-  ],
-  cb_iban_branch_code: [
-    {
-      required: true,
-      validator: async(_rule: RuleObject, value: string) => {
-        if (!value)
-          return Promise.reject(new Error('Veuillez saisir votre numéro de compte'))
-        if (!Number.isInteger(+value)) {
-          return Promise.reject(new Error('Veuillez saisir que des chiffres'))
-        }
-        else {
-          if (value.length !== 5)
-            // eslint-disable-next-line prefer-promise-reject-errors
-            return Promise.reject(`${'iban doit contenir 5 chiffres'}`)
-          else
-            return Promise.resolve()
-        }
-      },
-      trigger: 'blur',
-    },
-  ],
-  cb_iban_number_institution: [
-    {
-      required: true,
-      validator: async(_rule: RuleObject, value: string) => {
-        if (!value)
-          return Promise.reject(new Error('Veuillez saisir votre numéro d\institution '))
-        if (!Number.isInteger(+value)) {
-          return Promise.reject(new Error('Veuillez saisir que des chiffres'))
-        }
-        else {
-          if (value.length !== 3)
-            // eslint-disable-next-line prefer-promise-reject-errors
-            return Promise.reject(`${'le numéro d\institution doit contenir 3 chiffres'}`)
-          else
-            return Promise.resolve()
-        }
-      },
-      trigger: 'blur',
-    },
-  ],
-  cb_iban_bank_name: [
-    {
-      required: true,
-      message: 'Saisir le no mde votre banque',
-    },
-  ],
-})
-const rulesIbanOthers = reactive({
-  cb_iban_name_lastname: [
-    {
-      required: true,
-      message: 'Saisir le nom et prénom',
-    },
-  ],
-  cb_iban_address_holder: [
-    {
-      required: true,
-      message: 'Saisir \'adresse du titulaire',
-    },
-  ],
-  cb_iban_postal: [
-    {
-      required: true,
-      validator: async(_rule: RuleObject, value: string) => {
-        if (!value)
-          return Promise.reject(new Error('Veuillez saisir un code postal'))
-        if (!Number.isInteger(+value)) {
-          return Promise.reject(new Error('Veuillez saisir que des chiffres'))
-        }
-        else {
-          if (value.length !== 5)
-            // eslint-disable-next-line prefer-promise-reject-errors
-            return Promise.reject(`${'le numéro doit contenir 5 chiffres'}`)
-          else
-            return Promise.resolve()
-        }
-      },
-      trigger: 'blur',
-    },
-  ],
-  cb_iban_city: [
-    {
-      required: true,
-      message: 'Saisissez la Ville',
-    },
-  ],
-  cb_iban_country: [
-    {
-      required: true,
-      message: 'Saisir le Pays',
-    },
-  ],
-  cb_iban_region: [
-    {
-      required: true,
-      message: 'Saisir la région',
-    },
-  ],
-  cb_iban_account_number: [
-    {
-      required: true,
-      validator: async(_rule: RuleObject, value: string) => {
-        if (!value)
-          return Promise.reject(new Error('Veuillez saisir votre numéro de compte'))
-        if (!Number.isInteger(+value)) {
-          return Promise.reject(new Error('Veuillez saisir que des chiffres'))
-        }
-        else {
-          if (value.length !== 8)
-            // eslint-disable-next-line prefer-promise-reject-errors
-            return Promise.reject(`${'l\iban doit contenir 8 chiffres'}`)
-          else
-            return Promise.resolve()
-        }
-      },
-      trigger: 'blur',
-    },
-  ],
-  cb_iban_bic_swift: [
-    {
-      required: true,
-      validator: async(_rule: RuleObject, value: string) => {
-        if (!value)
-          return Promise.reject(new Error('Veuillez saisir le BIC/SWIFT'))
-        if (!value.match('^[A-Z]+$')) {
-          return Promise.reject(new Error('Veuillez saisir que des caractères'))
-        }
-        else {
-          if (value.length !== 8)
-            // eslint-disable-next-line prefer-promise-reject-errors
-            return Promise.reject(`${'le BIC/SWIFT doit contenir 8 chiffres'}`)
-          else
-            return Promise.resolve()
-        }
-      },
-      trigger: 'blur',
-    },
-  ],
-  cb_iban_account_country: [
-    {
-      required: true,
-      message: 'Saisir la pays du compte',
-    },
-  ],
-})
-const rulesIbanUs = reactive({
-  cb_iban_name_lastname: [
-    {
-      required: true,
-      message: 'Saisir le nom et prénom',
-    },
-  ],
-  cb_iban_address_holder: [
-    {
-      required: true,
-      message: 'Saisir \'adresse du titulaire',
-    },
-  ],
-  cb_iban_postal: [
-    {
-      required: true,
-      validator: async(_rule: RuleObject, value: string) => {
-        if (!value)
-          return Promise.reject(new Error('Veuillez saisir un code postal'))
-        if (!Number.isInteger(+value)) {
-          return Promise.reject(new Error('Veuillez saisir que des chiffres'))
-        }
-        else {
-          if (value.length !== 5)
-            // eslint-disable-next-line prefer-promise-reject-errors
-            return Promise.reject(`${'le numéro doit contenir 5 chiffres'}`)
-          else
-            return Promise.resolve()
-        }
-      },
-      trigger: 'blur',
-    },
-  ],
-  cb_iban_city: [
-    {
-      required: true,
-      message: 'Saisissez la Ville',
-    },
-  ],
-  cb_iban_country: [
-    {
-      required: true,
-      message: 'Saisir le Pays',
-    },
-  ],
-  cb_iban_region: [
-    {
-      required: true,
-      message: 'Saisir la région',
-    },
-  ],
-  cb_iban_account_number: [
-    {
-      required: true,
-      validator: async(_rule: RuleObject, value: string) => {
-        if (!value)
-          return Promise.reject(new Error('Veuillez saisir votre numéro de compte'))
-        if (!Number.isInteger(+value)) {
-          return Promise.reject(new Error('Veuillez saisir que des chiffres'))
-        }
-        else {
-          if (value.length !== 8)
-            // eslint-disable-next-line prefer-promise-reject-errors
-            return Promise.reject(`${'l\iban doit contenir 8 chiffres'}`)
-          else
-            return Promise.resolve()
-        }
-      },
-      trigger: 'blur',
-    },
-  ],
-  cb_iban_aba_transit_number: [
-    {
-      required: true,
-      validator: async(_rule: RuleObject, value: string) => {
-        if (!value)
-          return Promise.reject(new Error('Veuillez saisir votre ABA Transit number'))
-        if (!Number.isInteger(+value)) {
-          return Promise.reject(new Error('Veuillez saisir que des chiffres'))
-        }
-        else {
-          if (value.length !== 9)
-            // eslint-disable-next-line prefer-promise-reject-errors
-            return Promise.reject(`${'l\iban doit contenir 9 chiffres'}`)
-          else
-            return Promise.resolve()
-        }
-      },
-      trigger: 'blur',
-    },
-  ],
-  cb_iban_account_type: [
-    {
-      required: true,
-      message: 'Choisir le type de compte',
-    },
-  ],
-})
+
 const rulesIban = reactive({
   cb_iban_name_lastname: [
     {
@@ -516,7 +177,7 @@ const rulesIban = reactive({
   cb_iban_address_holder: [
     {
       required: true,
-      message: 'Saisir \'adresse du titulaire',
+      message: 'Saisir l\'adresse du titulaire',
     },
   ],
   cb_iban_postal: [
@@ -555,17 +216,207 @@ const rulesIban = reactive({
     {
       required: true,
       validator: async(_rule: RuleObject, value: string) => {
-        if (!value)
-          return Promise.reject(new Error('Veuillez saisir votre iban'))
-        if (!Number.isInteger(+value)) {
-          return Promise.reject(new Error('Veuillez saisir que des chiffres'))
-        }
-        else {
-          if (value.length !== 14)
+        if (formStateIbanModule.type_iban === 'iban') {
+          if (!value)
+            return Promise.reject(new Error('Veuillez saisir votre iban'))
+          if (!Number.isInteger(+value)) {
+            return Promise.reject(new Error('Veuillez saisir que des chiffres'))
+          }
+          else {
+            if (value.length !== 14)
             // eslint-disable-next-line prefer-promise-reject-errors
-            return Promise.reject(`${'l\iban doit contenir 14 chiffres'}`)
+              return Promise.reject(`${'l\iban doit contenir 14 chiffres'}`)
+            else
+              return Promise.resolve()
+          }
+        }
+        else { return Promise.resolve() }
+      },
+      trigger: 'blur',
+    },
+  ],
+  cb_iban_region: [
+    {
+      required: true,
+      validator: async(_rule: RuleObject, value: string) => {
+        if (formStateTypeIban.type_iban === 'iban-us' || formStateTypeIban.type_iban === 'iban-ca' || formStateTypeIban.type_iban === 'others') {
+          if (!value)
+            return Promise.reject(new Error('Veuillez saisir la région'))
           else
             return Promise.resolve()
+        }
+        else { return Promise.resolve() }
+      },
+      trigger: 'blur',
+    },
+  ],
+  cb_iban_account_number: [
+    {
+      required: true,
+      validator: async(_rule: RuleObject, value: string) => {
+        if (formStateTypeIban.type_iban === 'iban-us' || formStateTypeIban.type_iban === 'iban-ca' || formStateTypeIban.type_iban === 'others') {
+          if (!value)
+            return Promise.reject(new Error('Veuillez saisir votre numéro de compte'))
+          if (!Number.isInteger(+value)) {
+            return Promise.reject(new Error('Veuillez saisir que des chiffres'))
+          }
+          else {
+            if (value.length !== 8)
+            // eslint-disable-next-line prefer-promise-reject-errors
+              return Promise.reject(`${'l\iban doit contenir 8 chiffres'}`)
+            else
+              return Promise.resolve()
+          }
+        }
+        else {
+          return Promise.resolve()
+        }
+      },
+      trigger: 'blur',
+    },
+  ],
+  cb_iban_aba_transit_number: [
+    {
+      required: true,
+      validator: async(_rule: RuleObject, value: string) => {
+        if (formStateTypeIban.type_iban === 'iban-us') {
+          if (!value)
+            return Promise.reject(new Error('Veuillez saisir votre ABA Transit number'))
+          if (!Number.isInteger(+value)) {
+            return Promise.reject(new Error('Veuillez saisir que des chiffres'))
+          }
+          else {
+            if (value.length !== 9)
+            // eslint-disable-next-line prefer-promise-reject-errors
+              return Promise.reject(`${'l\iban doit contenir 9 chiffres'}`)
+            else
+              return Promise.resolve()
+          }
+        }
+        else {
+          return Promise.resolve()
+        }
+      },
+      trigger: 'blur',
+    },
+  ],
+  cb_iban_account_type: [
+    {
+      required: true,
+      validator: async(_rule: RuleObject, value: string) => {
+        if (formStateTypeIban.type_iban === 'iban-us') {
+          if (!value)
+            return Promise.reject(new Error('Choisir le type de compte'))
+          else return Promise.resolve()
+        }
+        else { return Promise.resolve() }
+      },
+      trigger: 'blur',
+    },
+  ],
+  cb_iban_branch_code: [
+    {
+      required: true,
+      validator: async(_rule: RuleObject, value: string) => {
+        if (formStateTypeIban.type_iban === 'iban-ca') {
+          if (!value)
+            return Promise.reject(new Error('Veuillez saisir votre numéro de compte'))
+          if (!Number.isInteger(+value)) {
+            return Promise.reject(new Error('Veuillez saisir que des chiffres'))
+          }
+          else {
+            if (value.length !== 5)
+            // eslint-disable-next-line prefer-promise-reject-errors
+              return Promise.reject(`${'iban doit contenir 5 chiffres'}`)
+            else
+              return Promise.resolve()
+          }
+        }
+        else {
+          return Promise.resolve()
+        }
+      },
+      trigger: 'blur',
+    },
+  ],
+  cb_iban_number_institution: [
+    {
+      required: true,
+      validator: async(_rule: RuleObject, value: string) => {
+        if (formStateTypeIban.type_iban === 'iban-ca') {
+          if (!value)
+            return Promise.reject(new Error('Veuillez saisir le numéro de votre institution '))
+          if (!Number.isInteger(+value)) {
+            return Promise.reject(new Error('Veuillez saisir que des chiffres'))
+          }
+          else {
+            if (value.length !== 3)
+            // eslint-disable-next-line prefer-promise-reject-errors
+              return Promise.reject(`${'le numéro d\institution doit contenir 3 chiffres'}`)
+            else
+              return Promise.resolve()
+          }
+        }
+        else {
+          return Promise.resolve()
+        }
+      },
+      trigger: 'blur',
+    },
+  ],
+  cb_iban_bank_name: [
+    {
+      required: true,
+      validator: async(_rule: RuleObject, value: string) => {
+        if (formStateTypeIban.type_iban === 'iban-ca') {
+          if (!value)
+            return Promise.reject(new Error('Veuillez saisir le nom de votre banque '))
+
+          else
+            return Promise.resolve()
+        }
+        else {
+          return Promise.resolve()
+        }
+      },
+      trigger: 'blur',
+    },
+  ],
+  cb_iban_bic_swift: [
+    {
+      required: true,
+      validator: async(_rule: RuleObject, value: string) => {
+        if (formStateTypeIban.type_iban === 'others') {
+          if (!value)
+            return Promise.reject(new Error('Veuillez saisir le BIC/SWIFT'))
+          if (!value.match('^[A-Z]+$')) {
+            return Promise.reject(new Error('Veuillez saisir que des caractères'))
+          }
+          else {
+            if (value.length !== 8)
+            // eslint-disable-next-line prefer-promise-reject-errors
+              return Promise.reject(`${'le BIC/SWIFT doit contenir 8 chiffres'}`)
+            else
+              return Promise.resolve()
+          }
+        }
+        else {
+          return Promise.resolve()
+        }
+      },
+      trigger: 'blur',
+    },
+  ],
+  cb_iban_account_country: [
+    {
+      required: true,
+      validator: async(_rule: RuleObject, value: string) => {
+        if (formStateTypeIban.type_iban === 'others') {
+          if (!value)
+            return Promise.reject(new Error('Veuillez saisir le pays du compte'))
+        }
+        else {
+          return Promise.resolve()
         }
       },
       trigger: 'blur',
@@ -915,56 +766,56 @@ const calcDisponibilityFreq = (params: number, toSlide = true) => {
   }
 }
 const getFormData = async() => {
-  Api.languages().then(({ data }) => {
+  globalApi.languages().then(({ data }) => {
     data.value && (languages.value = data.value.map(l => ({
       value: l.name,
       label: l.name,
     })))
   })
-  Api.skills().then(({ data }) => {
+  adminApi.skills().then(({ data }) => {
     data.value && (skills.value = data.value.map(l => ({
       value: l.name,
       label: l.name,
     })))
   })
-  Api.countries().then(({ data }) => {
+  globalApi.countries().then(({ data }) => {
     data.value && (countries.value = data.value.map(l => ({
       value: l,
       label: l,
     })))
   })
-  Api.iban().then(({ data }) => {
+  globalApi.iban().then(({ data }) => {
     data.value && (countriesIban.value = data.value.map(l => ({
       value: l.name,
       label: l.name,
     })))
   })
-  Api.ibanOthers().then(({ data }) => {
+  globalApi.ibanOthers().then(({ data }) => {
     data.value && (countriesIbanOthers.value = data.value.map(l => ({
       value: l.name,
       label: l.name,
     })))
   })
-  Api.jobs().then(({ data }) => {
+  adminApi.jobs().then(({ data }) => {
     data.value && (jobs.value = data.value.filter(j => j._id && j.name).map(j => ({
       value: j._id,
       label: j.name,
     })))
   })
-  Api.activities().then(({ data }) => {
+  globalApi.activities().then(({ data }) => {
     data.value && (activities.value = data.value.filter(a => a.code && a.name).map(a => ({
       value: a.code,
       label: a.name,
     })))
   })
-  Api.legalForms().then(({ data }) => {
+  globalApi.legalForms().then(({ data }) => {
     data.value && (legalForms.value = data.value.filter(a => a.index && a.name).map(a => ({
       value: a.name,
       label: a.name,
     })))
   })
   profile.value = null
-  Api.profile(props.id).then(({ data }) => {
+  await freelancerApi.profile(props.id).then(({ data }) => {
     if (data.value) {
       profile.value = data.value
       const skills = profile.value?.freelancer?.skills.map(s => ({
@@ -974,7 +825,7 @@ const getFormData = async() => {
       skillsValue.value = skills
       const freelancer = profile.value?.freelancer
       profileAvatar.value = freelancer.image || ''
-      formStateProfile.passion = freelancer.passion
+      formStateProfile.description = freelancer.description
       formStateProfile.email = freelancer.email
       formStateProfile.username = freelancer.username
       formStateProfile.firstName = freelancer.firstName
@@ -999,9 +850,9 @@ const getFormData = async() => {
   })
   /**/
   profileEntreprise.value = null
-  Api.profileEntreprise(props.id).then(({ data }) => {
-    if (data.value) {
-      profileEntreprise.value = data.value
+  await profileEntrepriseApi.profileEntreprise(props.id).then(async({ data }) => {
+    if (data) {
+      profileEntreprise.value = data
       const contactDetails = profileEntreprise.value?.contactDetails
       const legalRepresentative = profileEntreprise.value?.legalRepresentative
       const legalMention = profileEntreprise.value?.legalMention
@@ -1028,39 +879,64 @@ const getFormData = async() => {
       formStateLegalMention.naf = legalMention.naf
       formStateLegalMention.tva_intracom = legalMention.tva_intracom
       formStateLegalMention.days = legalMention.days
-      formStateIbanModule.cb_iban_address_holder = ibanModule.cb_iban_address_holder
-      formStateIbanModule.cb_iban_city = ibanModule.cb_iban_city
-      formStateIbanModule.cb_iban_country = ibanModule.cb_iban_country
-      formStateIbanModule.cb_iban_iban = ibanModule.cb_iban_iban
-      formStateIbanModule.cb_iban_name_lastname = ibanModule.cb_iban_name_lastname
-      formStateIbanModule.cb_iban_postal = ibanModule.cb_iban_postal
-      formStateIbanUsModule.cb_iban_address_holder = ibanUsModule.cb_iban_address_holder
-      formStateIbanUsModule.cb_iban_city = ibanUsModule.cb_iban_city
-      formStateIbanUsModule.cb_iban_country = ibanUsModule.cb_iban_country
-      formStateIbanUsModule.cb_iban_name_lastname = ibanUsModule.cb_iban_name_lastname
-      formStateIbanUsModule.cb_iban_postal = ibanUsModule.cb_iban_postal
-      formStateIbanUsModule.cb_iban_region = ibanUsModule.cb_iban_region
-      formStateIbanUsModule.cb_iban_account_number = ibanUsModule.cb_iban_account_number
-      formStateIbanUsModule.cb_iban_aba_transit_number = ibanUsModule.cb_iban_aba_transit_number
-      formStateIbanUsModule.cb_iban_account_type = ibanUsModule.cb_iban_account_type
-      formStateIbanCaModule.cb_iban_address_holder = ibanCaModule.cb_iban_address_holder
-      formStateIbanCaModule.cb_iban_city = ibanCaModule.cb_iban_city
-      formStateIbanCaModule.cb_iban_country = ibanCaModule.cb_iban_country
-      formStateIbanCaModule.cb_iban_name_lastname = ibanCaModule.cb_iban_name_lastname
-      formStateIbanCaModule.cb_iban_postal = ibanCaModule.cb_iban_postal
-      formStateIbanCaModule.cb_iban_region = ibanCaModule.cb_iban_region
-      formStateIbanCaModule.cb_iban_branch_code = ibanCaModule.cb_iban_branch_code
-      formStateIbanCaModule.cb_iban_number_institution = ibanCaModule.cb_iban_number_institution
-      formStateIbanCaModule.cb_iban_bank_name = ibanCaModule.cb_iban_bank_name
-      formStateIbanOthers.cb_iban_address_holder = ibanOthers.cb_iban_address_holder
-      formStateIbanOthers.cb_iban_city = ibanOthers.cb_iban_city
-      formStateIbanOthers.cb_iban_country = ibanOthers.cb_iban_country
-      formStateIbanOthers.cb_iban_name_lastname = ibanOthers.cb_iban_name_lastname
-      formStateIbanOthers.cb_iban_postal = ibanOthers.cb_iban_postal
-      formStateIbanOthers.cb_iban_region = ibanOthers.cb_iban_region
-      formStateIbanOthers.cb_iban_account_number = ibanOthers.cb_iban_account_number
-      formStateIbanOthers.cb_iban_bic_swift = ibanOthers.cb_iban_bic_swift
-      formStateIbanOthers.cb_iban_account_country = ibanOthers.cb_iban_account_country
+      switch (formStateTypeIban.type_iban) {
+        case 'iban': {
+          formStateIbanModule.cb_iban_address_holder = ibanModule.cb_iban_address_holder
+          formStateIbanModule.cb_iban_city = ibanModule.cb_iban_city
+          formStateIbanModule.cb_iban_country = ibanModule.cb_iban_country
+          formStateIbanModule.cb_iban_iban = ibanModule.cb_iban_iban
+          formStateIbanModule.cb_iban_name_lastname = ibanModule.cb_iban_name_lastname
+          formStateIbanModule.cb_iban_postal = ibanModule.cb_iban_postal
+          break
+        }
+        case 'iban-us': {
+          formStateIbanModule.cb_iban_address_holder = ibanUsModule.cb_iban_address_holder
+          formStateIbanModule.cb_iban_city = ibanUsModule.cb_iban_city
+          formStateIbanModule.cb_iban_country = ibanUsModule.cb_iban_country
+          formStateIbanModule.cb_iban_name_lastname = ibanUsModule.cb_iban_name_lastname
+          formStateIbanModule.cb_iban_postal = ibanUsModule.cb_iban_postal
+          formStateIbanModule.cb_iban_region = ibanUsModule.cb_iban_region
+          formStateIbanModule.cb_iban_account_number = ibanUsModule.cb_iban_account_number
+          formStateIbanModule.cb_iban_aba_transit_number = ibanUsModule.cb_iban_aba_transit_number
+          formStateIbanModule.cb_iban_account_type = ibanUsModule.cb_iban_account_type
+
+          break
+        }
+        case 'iban-ca': {
+          formStateIbanModule.cb_iban_address_holder = ibanCaModule.cb_iban_address_holder
+          formStateIbanModule.cb_iban_city = ibanCaModule.cb_iban_city
+          formStateIbanModule.cb_iban_country = ibanCaModule.cb_iban_country
+          formStateIbanModule.cb_iban_name_lastname = ibanCaModule.cb_iban_name_lastname
+          formStateIbanModule.cb_iban_postal = ibanCaModule.cb_iban_postal
+          formStateIbanModule.cb_iban_region = ibanCaModule.cb_iban_region
+          formStateIbanModule.cb_iban_account_number = ibanCaModule.cb_iban_account_number
+          formStateIbanModule.cb_iban_branch_code = ibanCaModule.cb_iban_branch_code
+          formStateIbanModule.cb_iban_number_institution = ibanCaModule.cb_iban_number_institution
+          formStateIbanModule.cb_iban_bank_name = ibanCaModule.cb_iban_bank_name
+          break
+        }
+        case 'others': {
+          formStateIbanModule.cb_iban_address_holder = ibanOthers.cb_iban_address_holder
+          formStateIbanModule.cb_iban_city = ibanOthers.cb_iban_city
+          formStateIbanModule.cb_iban_country = ibanOthers.cb_iban_country
+          formStateIbanModule.cb_iban_name_lastname = ibanOthers.cb_iban_name_lastname
+          formStateIbanModule.cb_iban_postal = ibanOthers.cb_iban_postal
+          formStateIbanModule.cb_iban_region = ibanOthers.cb_iban_region
+          formStateIbanModule.cb_iban_account_number = ibanOthers.cb_iban_account_number
+          formStateIbanModule.cb_iban_aba_transit_number = ibanOthers.cb_iban_bic_swift
+          formStateIbanModule.cb_iban_account_type = ibanOthers.cb_iban_account_country
+          break
+        }
+        default: {
+          console.log('default here')
+          message.error('error in getting iban modules')
+
+          break
+        }
+      }
+    }
+    else {
+      message.error('profil entreprise non chargé')
     }
   })
   types.value = [{
@@ -1077,6 +953,25 @@ const getFormData = async() => {
     value: 'Compte courant',
     label: 'Compte courant',
   }]
+  typesIban.value = [{
+    value: 'iban',
+    label: 'IBAN',
+  }, {
+    value: 'iban-us',
+    label: 'Compte bancaire US',
+  },
+  {
+    value: 'iban-ca',
+    label: 'Compte bancaire CA',
+  },
+  {
+    value: 'others',
+    label: 'BIC/SWIFT',
+  },
+  {
+    value: 'empty',
+    label: 'pas encore choisi',
+  }]
 }
 const getScore = () => {
   if (!profile.value?.freelancer)
@@ -1092,66 +987,25 @@ const getScore = () => {
   profile.value.freelancer?.greenQuestion?.length >= 1 && (value += 10)
   return value
 }
+const resetModuleIban = () => {
+  formStateIbanModule.cb_iban_country = ''
+  formStateIbanModule.cb_iban_region = ''
+  formStateIbanModule.cb_iban_account_number = ''
+  formStateIbanModule.cb_iban_aba_transit_number = ''
+  formStateIbanModule.cb_iban_account_type = ''
+  formStateIbanModule.cb_iban_branch_code = ''
+  formStateIbanModule.cb_iban_number_institution = ''
+  formStateIbanModule.cb_iban_bank_name = ''
+  formStateIbanModule.cb_iban_bic_swift = ''
+  formStateIbanModule.cb_iban_account_country = ''
+}
 const updateProfile = async(profileData: any) => {
   profileData.disponibility_freq = calcDisponibilityFreq(+formStateProfile.disponibility_freq, false)
   const { data } = await freelancerApi.updateProfile(profileData)
   data && message.info(data.message)
   getFormData()
 }
-/* bloc iban others modules */
-const useFormIbanOthersModule = useForm(formStateIbanOthers, rulesIbanOthers)
-const validateIbanOthersModule = useFormIbanOthersModule.validate
-const validateInfosIbanOthersModule = useFormIbanOthersModule.validateInfos
-const onSubmitIbanOthersModule = async() => {
-  validateIbanOthersModule()
-    .then(async() => {
-      const params = toRaw(formStateIbanOthers)
-      const { data } = await freelancerApi.updatePaymentModule(params)
-      message.info(data.message)
-      profileEntreprise.value = null
-      getFormData()
-    })
-    .catch((err) => {
-      console.log('error', err)
-    })
-}
-/* bloc end iban others modules */
-/* bloc iban ca modules */
-const useFormIbanCaModule = useForm(formStateIbanCaModule, rulesIbanCa)
-const validateIbanCaModule = useFormIbanCaModule.validate
-const validateInfosIbanCaModule = useFormIbanCaModule.validateInfos
-const onSubmitIbanCaModule = async() => {
-  validateIbanCaModule()
-    .then(async() => {
-      const params = toRaw(formStateIbanCaModule)
-      const { data } = await freelancerApi.updatePaymentModule(params)
-      message.info(data.message)
-      profileEntreprise.value = null
-      getFormData()
-    })
-    .catch((err) => {
-      console.log('error', err)
-    })
-}
-/* bloc end iban ca modules */
-/* bloc iban us modules */
-const useFormIbanUsModule = useForm(formStateIbanUsModule, rulesIbanUs)
-const validateIbanUsModule = useFormIbanUsModule.validate
-const validateInfosIbanUsModule = useFormIbanUsModule.validateInfos
-const onSubmitIbanUsModule = async() => {
-  validateIbanUsModule()
-    .then(async() => {
-      const params = toRaw(formStateIbanUsModule)
-      const { data } = await freelancerApi.updatePaymentModule(params)
-      message.info(data.message)
-      profileEntreprise.value = null
-      getFormData()
-    })
-    .catch((err) => {
-      console.log('error', err)
-    })
-}
-/* bloc end iban us modules */
+
 /* bloc iban modules */
 const useFormIbanModule = useForm(formStateIbanModule, rulesIban)
 const validateIbanModule = useFormIbanModule.validate
@@ -1160,7 +1014,9 @@ const onSubmitIbanModule = async() => {
   validateIbanModule()
     .then(async() => {
       const params = toRaw(formStateIbanModule)
-      const { data } = await freelancerApi.updatePaymentModule(params)
+      params.id_freelancer = props.id
+      params.type_iban = formStateTypeIban.type_iban
+      const { data } = await profileEntrepriseApi.updatePaymentModule(params)
       message.info(data.message)
       profileEntreprise.value = null
       getFormData()
@@ -1178,7 +1034,8 @@ const onSubmitContactDetails = async() => {
   validateContactDetails()
     .then(async() => {
       const params = toRaw(formStateContactDetails)
-      const { data } = await freelancerApi.updateContactDetails(params)
+      params.id_freelancer = props.id
+      const { data } = await profileEntrepriseApi.updateContactDetails(params)
       message.info(data.message)
       profileEntreprise.value = null
       getFormData()
@@ -1202,7 +1059,8 @@ const onSubmitLegalRepresentative = async() => {
   validateLegalRepresentative()
     .then(async() => {
       const params = toRaw(formStateLegalRepresentative)
-      const { data } = await freelancerApi.updateLegalRepresentative(params)
+      params.id_freelancer = props.id
+      const { data } = await profileEntrepriseApi.updateLegalRepresentative(params)
       message.info(data.message)
       profileEntreprise.value = null
       getFormData()
@@ -1220,7 +1078,8 @@ const onSubmitTaxe = async() => {
   validateTaxe()
     .then(async() => {
       const params = toRaw(formStateTaxe)
-      const { data } = await freelancerApi.updateTaxe(params)
+      params.id_freelancer = props.id
+      const { data } = await profileEntrepriseApi.updateTaxe(params)
       message.info(data.message)
       profileEntreprise.value = null
       getFormData()
@@ -1239,7 +1098,8 @@ const onSubmitLegalMentions = async() => {
   validateLegalMention()
     .then(async() => {
       const params = toRaw(formStateLegalMention)
-      const { data } = await freelancerApi.updateLegalMention(params)
+      params.id_freelancer = props.id
+      const { data } = await profileEntrepriseApi.updateLegalMention(params)
       message.info(data.message)
       profileEntreprise.value = null
       getFormData()
@@ -1474,6 +1334,7 @@ const addLanguage = async(lang: any) => {
   }
 }
 onMounted(async() => {
+  console.log('props id ', props.id)
   getFormData()
 })
 </script>
@@ -1518,7 +1379,7 @@ onMounted(async() => {
           <div class="p-2 flex bg-white rounded-sm">
             <div class="mr-5 flex-none">
               <a-avatar
-                :src="currentUser?.freelancer?.image"
+                :src="profile?.freelancer?.image"
                 shape="square"
                 :size="{ xs: 24, sm: 32, md: 40, lg: 64, xl: 220, xxl: 260 }"
               />
@@ -1531,15 +1392,15 @@ onMounted(async() => {
                     <a
                       href="#"
                       class="text-gray-900 text-hover-primary fs-4"
-                    >{{ `${currentUser?.freelancer?.lastName} ${currentUser?.freelancer?.firstName}` }}</a>
+                    >{{ `${profile?.freelancer?.lastName} ${profile?.freelancer?.firstName}` }}</a>
                     <a href="#" class="flex items-center mr-3 ml-1">
                       <span
-                        v-if="currentUser?.freelancer?.validated"
+                        v-if="profile?.freelancer?.validated"
                         class="i-carbon-checkmark-filled text-xl inline-block"
                       />
                       <span v-else class="i-carbon-close-filled text-red-600 text-xl inline-block" />
                     </a>
-                    <a-rate class="h-[42px]" :value="3.5" allow-half />
+                    <a-rate class="h-[42px]" :value="0" allow-half />
                   </div>
                   <!--end::Name-->
                   <!--begin::Info-->
@@ -1549,36 +1410,23 @@ onMounted(async() => {
                       class="d-flex align-items-center text-gray-400 text-hover-primary me-5 mb-2"
                     >
                       <span class="i-carbon-user-avatar-filled-alt text-xl inline-block mr-1" />
-                      {{ currentUser?.freelancer?.title_profile }}
+                      {{ profile?.freelancer?.title_profile }}
                     </a>
                     <a
                       href="#"
                       class="flex items-center text-gray-400 text-hover-primary me-5 mb-2"
                     >
                       <span class="i-carbon-location-filled text-xl inline-block mr-1" />
-                      {{ currentUser?.freelancer?.localisation }}
+                      {{ profile?.freelancer?.localisation }}
                     </a>
                     <a href="#" class="flex items-center text-gray-400 text-hover-primary mb-2">
                       <span class="i-carbon-email text-xl inline-block mr-1" />
-                      {{ currentUser?.freelancer?.email }}
+                      {{ currentUser?.email }}
                     </a>
                   </div>
                   <!--end::Info-->
                 </div>
                 <div class="flex">
-                  <a-card class="bg-gray-50/50 mr-4" body-style="padding: 5px 15px">
-                    <a-statistic
-                      title="Feedback"
-                      :value="11.28"
-                      :precision="2"
-                      suffix="%"
-                      :value-style="{ color: '#3f8600' }"
-                    >
-                      <template #prefix>
-                        <span class="i-ant-design-arrow-up-outlined inline-block text-xl" />
-                      </template>
-                    </a-statistic>
-                  </a-card>
                   <a-card :bordered="false" class="bg-white" body-style="padding: 5px">
                     <a-progress
                       type="circle" :stroke-color="{
@@ -1591,35 +1439,6 @@ onMounted(async() => {
                 <div class>
                   <social-media :socials="socials" />
                 </div>
-              </div>
-              <div class="mt-2">
-                <a-button type="primary" class="mr-2">
-                  Primary
-                </a-button>
-                <a-button class="mr-2">
-                  secondary
-                </a-button>
-                <a-dropdown class="mr-2">
-                  <template #overlay>
-                    <a-menu>
-                      <a-menu-item key="1">
-                        1st item
-                      </a-menu-item>
-                      <a-menu-item key="2">
-                        2nd item
-                      </a-menu-item>
-                      <a-menu-item key="3">
-                        3rd item
-                      </a-menu-item>
-                    </a-menu>
-                  </template>
-                  <a-button>
-                    <span class="flex items-center">
-                      Actions
-                      <div class="i-carbon-chevron-down inline-block" />
-                    </span>
-                  </a-button>
-                </a-dropdown>
               </div>
             </div>
           </div>
@@ -1672,9 +1491,6 @@ onMounted(async() => {
                           <a-form-item name="description" label="Description">
                             <a-input v-model:value="formStateProfile.description" />
                           </a-form-item>
-                          <a-form-item name="passion" label="Passion">
-                            <a-input v-model:value="formStateProfile.passion" />
-                          </a-form-item>
                           <a-form-item name="firstName" label="Prénom">
                             <a-input v-model:value="formStateProfile.firstName" />
                           </a-form-item>
@@ -1693,7 +1509,7 @@ onMounted(async() => {
                           <a-form-item name="jobCat" label="Choisir un Métier">
                             <a-select
                               v-model:value="formStateProfile.jobCat"
-                              placeholder="Please select Métier"
+                              placeholder="Choisir un Métier"
                               :options="jobs"
                             />
                           </a-form-item>
@@ -1760,8 +1576,22 @@ onMounted(async() => {
                             </div>
                             <div class="w-[40%]">
                               <span
-                                :class="`px-3 py-1 bg-${currentUser?.freelancer?.visibility ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ currentUser?.freelancer?.visibility ? 'Visible' : 'Invisible' }}</span>
+                                :class="`px-3 py-1 bg-${profile?.freelancer?.visibility ? 'green' : 'red'}-600 rounded-lg text-light-50`"
+                              >{{ profile?.freelancer?.visibility ? 'Visible' : 'Invisible' }}</span>
+                            </div>
+                          </div>
+                          <div class="flex mb-4">
+                            <div class="w-[60%]">
+                              Réponse Question Green
+                            </div>
+                            <div class="w-[40%]">
+                              <span
+                                :class="`px-3 py-1 bg-${profile?.freelancer?.greenQuestion.length ? 'green' : 'red'}-600 rounded-lg text-light-50`"
+                              >{{ profile?.freelancer?.greenQuestion ? 'Oui' : 'Non' }}</span>
+                              <span
+                                class="i-carbon-help-filled inline-block text-green-600 leading-2 text-sm ml-2 mr-0.5"
+                                @click="visibleModalGreenQuestion = true"
+                              />
                             </div>
                           </div>
                           <div class="flex mb-4">
@@ -1770,8 +1600,8 @@ onMounted(async() => {
                             </div>
                             <div class="w-[40%]">
                               <span
-                                :class="`px-3 py-1 bg-${currentUser?.freelancer?.description?.length ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ currentUser?.freelancer?.description?.length ? 'Oui' : 'Non' }}</span>
+                                :class="`px-3 py-1 bg-${profile?.freelancer?.description?.length ? 'green' : 'red'}-600 rounded-lg text-light-50`"
+                              >{{ profile?.freelancer?.description?.length ? 'Oui' : 'Non' }}</span>
                             </div>
                           </div>
                           <div class="flex mb-4">
@@ -1780,8 +1610,8 @@ onMounted(async() => {
                             </div>
                             <div class="w-[40%]">
                               <span
-                                :class="`px-3 py-1 bg-${currentUser?.freelancer?.skills.length ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ currentUser?.freelancer?.skills.length ? 'Oui' : 'Non' }}</span>
+                                :class="`px-3 py-1 bg-${profile?.freelancer?.skills.length ? 'green' : 'red'}-600 rounded-lg text-light-50`"
+                              >{{ profile?.freelancer?.skills.length ? 'Oui' : 'Non' }}</span>
                             </div>
                           </div>
                           <div class="flex mb-4">
@@ -1790,8 +1620,8 @@ onMounted(async() => {
                             </div>
                             <div class="w-[40%]">
                               <span
-                                :class="`px-3 py-1 bg-${currentUser?.freelancer?.languages.length ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ currentUser?.freelancer?.languages.length ? 'Oui' : 'Non' }}</span>
+                                :class="`px-3 py-1 bg-${profile?.freelancer?.languages.length ? 'green' : 'red'}-600 rounded-lg text-light-50`"
+                              >{{ profile?.freelancer?.languages.length ? 'Oui' : 'Non' }}</span>
                             </div>
                           </div>
                           <div class="flex mb-4">
@@ -1800,8 +1630,8 @@ onMounted(async() => {
                             </div>
                             <div class="w-[40%]">
                               <span
-                                :class="`px-3 py-1 bg-${currentUser?.freelancer?.email_verification ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ currentUser?.freelancer?.email_verification ? 'Oui' : 'Non' }}</span>
+                                :class="`px-3 py-1 bg-${profile?.freelancer?.email_verification ? 'green' : 'red'}-600 rounded-lg text-light-50`"
+                              >{{ profile?.freelancer?.email_verification ? 'Oui' : 'Non' }}</span>
                               <span
                                 class="i-carbon-help-filled inline-block text-green-600 leading-2 text-sm ml-2 mr-0.5"
                                 @click="visibleModalInformationEmailVerification = true"
@@ -1814,8 +1644,8 @@ onMounted(async() => {
                             </div>
                             <div class="w-[40%]">
                               <span
-                                :class="`px-3 py-1 bg-${currentUser?.freelancer?.confidentiality ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ currentUser?.freelancer?.confidentiality ? 'Oui' : 'Non' }}</span>
+                                :class="`px-3 py-1 bg-${profile?.freelancer?.confidentiality ? 'green' : 'red'}-600 rounded-lg text-light-50`"
+                              >{{ profile?.freelancer?.confidentiality ? 'Oui' : 'Non' }}</span>
                             </div>
                           </div>
                           <div class="flex mb-4">
@@ -1824,8 +1654,8 @@ onMounted(async() => {
                             </div>
                             <div class="w-[40%]">
                               <span
-                                :class="`px-3 py-1 bg-${currentUser?.freelancer?.documents_val ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ currentUser?.freelancer?.documents_val ? 'Oui' : 'Non' }}</span>
+                                :class="`px-3 py-1 bg-${profile?.freelancer?.documents_val ? 'green' : 'red'}-600 rounded-lg text-light-50`"
+                              >{{ profile?.freelancer?.documents_val ? 'Oui' : 'Non' }}</span>
                               <span
                                 class="i-carbon-help-filled inline-block text-green-600 leading-2 text-sm ml-2 mr-0.5"
                                 @click="visibleModalInformationDocumentVal = true"
@@ -1838,8 +1668,8 @@ onMounted(async() => {
                             </div>
                             <div class="w-[40%]">
                               <span
-                                :class="`px-3 py-1 bg-${currentUser?.freelancer?.signed_client ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ currentUser?.freelancer?.signed_client ? 'Oui' : 'Non' }}</span>
+                                :class="`px-3 py-1 bg-${profile?.freelancer?.signed_client ? 'green' : 'red'}-600 rounded-lg text-light-50`"
+                              >{{ profile?.freelancer?.signed_client ? 'Oui' : 'Non' }}</span>
                               <span
                                 class="i-carbon-help-filled inline-block text-green-600 leading-2 text-sm ml-2 mr-0.5"
                                 @click="visibleModalInformationSignatureCharte = true"
@@ -1852,8 +1682,8 @@ onMounted(async() => {
                             </div>
                             <div class="w-[40%]">
                               <span
-                                :class="`px-3 py-1 bg-${currentUser?.freelancer?.validated ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ currentUser?.freelancer?.validated ? 'Oui' : 'Non' }}</span>
+                                :class="`px-3 py-1 bg-${profile?.freelancer?.validated ? 'green' : 'red'}-600 rounded-lg text-light-50`"
+                              >{{ profile?.freelancer?.validated ? 'Oui' : 'Non' }}</span>
                               <span
                                 class="i-carbon-help-filled inline-block text-green-600 leading-2 text-sm ml-2 mr-0.5"
                                 @click="visibleModalInformationValidated = true"
@@ -2094,14 +1924,14 @@ onMounted(async() => {
                     </a-result>
                     <div>
                       <h3 class="text-dark-50 mb-1 text-lg">
-                        Competences:
+                        Compétences:
                       </h3>
                       <a-select
                         v-model:value="skillsValue"
                         mode="tags"
                         style="width: 100%"
                         :token-separators="[',']"
-                        placeholder="Automatic tokenization"
+                        placeholder="Choisissez les compétences proposés ou rédigez ceux propre à vous"
                         :options="skills"
                       />
                       <a-button
@@ -2110,7 +1940,7 @@ onMounted(async() => {
                         block
                         @click="updateProfile({ ...profile.freelancer, skills: skillsValue })"
                       >
-                        Primary
+                        Ajouter vos compétences
                       </a-button>
                     </div>
                   </a-card>
@@ -2247,7 +2077,7 @@ onMounted(async() => {
                           mode="tags"
                           style="width: 100%"
                           :token-separators="[',']"
-                          placeholder="Automatic tokenization"
+                          placeholder="Choisissez les compétences proposés ou rédigez ceux propre à vous"
                           :options="skills"
                         />
                       </div>
@@ -2265,7 +2095,7 @@ onMounted(async() => {
                         <a-select
                           mode="multiple"
                           class="hidden"
-                          placeholder="Please select a langues"
+                          placeholder="Choisir une langue"
                           :options="languages"
                           style="width: 100%"
                         >
@@ -2420,7 +2250,7 @@ onMounted(async() => {
                                     <a-form-item name="date-picker" label="Date de naissance">
                                       <a-form-item
                                         name="date-picker"
-                                        label="Start date"
+                                        label="Date de naissance"
                                         :wrapper-col="{ span: 24, offset: 0 }"
                                         :label-col="{ sm: { span: 24 } }"
                                         v-bind="validateInfosLegalRepresentative.birthday"
@@ -2651,9 +2481,9 @@ onMounted(async() => {
                         <a-tab-pane key="2" tab="Coordonnées bancaires" force-render>
                           <div>
                             <div class="p-4">
+                              <h3>Saisissez les champs selon le type de votre compte IBAN</h3>
                               <div class="max-w-md mx-auto">
                                 <a-form
-                                  v-if="currentStepProfileEtBank === 0"
                                   layout="vertical"
                                   :label-col="{ span: 24 }"
                                   :wrapper-col="{ span: 24 }"
@@ -2697,216 +2527,219 @@ onMounted(async() => {
                                       @blur="validate('cb_iban_city', { trigger: 'blur' }).catch(() => { })"
                                     />
                                   </a-form-item>
-                                  <!-- form items iban -->
-                                  <a-form-item
-                                    label="Pays"
-                                    v-bind="validateInfosIbanModule.cb_iban_country"
-                                  >
-                                    <a-select
-                                      v-model:value="formStateIbanModule.cb_iban_country"
-                                      placeholder="Pays"
-                                      :options="countriesIban"
-                                    />
-                                  </a-form-item>
-                                  <a-form-item
-                                    label="IBAN"
-                                    v-bind="validateInfosIbanModule.cb_iban_iban"
-                                  >
-                                    <a-input
-                                      v-model:value="formStateIbanModule.cb_iban_iban"
-                                      @blur="validate('cb_iban_iban', { trigger: 'blur' }).catch(() => { })"
-                                    />
-                                  </a-form-item>
-                                  <!-- end form items iban -->
-                                  <!-- here select type_iban  values { type_iban: iban / iban-us /iban-ca / others} -->
-                                  <!-- form items iban US -->
-                                  <a-form-item
-                                    label="Pays"
-                                    v-bind="validateInfosIbanUsModule.cb_iban_country"
-                                  >
-                                    <a-select
-                                      v-model:value="formStateIbanUsModule.cb_iban_country"
-                                      placeholder="Pays"
-                                      :options="countriesIbanOthers"
-                                    />
-                                  </a-form-item>
-                                  <a-form-item
-                                    label="Région"
-                                    v-bind="validateInfosIbanUsModule.cb_iban_region"
-                                  >
-                                    <a-input
-                                      v-model:value="formStateIbanUsModule.cb_iban_region"
-                                      @blur="validate('cb_iban_region', { trigger: 'blur' }).catch(() => { })"
-                                    />
-                                  </a-form-item>
-                                  <a-form-item
-                                    label="Ville"
-                                    v-bind="validateInfosIbanUsModule.cb_iban_city"
-                                  >
-                                    <a-input
-                                      v-model:value="formStateIbanUsModule.cb_iban_city"
-                                      @blur="validate('cb_iban_city', { trigger: 'blur' }).catch(() => { })"
-                                    />
-                                  </a-form-item>
-                                  <a-form-item
-                                    label="Numéro de compte"
-                                    v-bind="validateInfosIbanUsModule.cb_iban_account_number"
-                                  >
-                                    <a-input
-                                      v-model:value="formStateIbanUsModule.cb_iban_account_number"
-                                      @blur="validate('cb_iban_account_number', { trigger: 'blur' }).catch(() => { })"
-                                    />
-                                  </a-form-item>
-                                  <a-form-item
-                                    label="ABA Transit number"
-                                    v-bind="validateInfosIbanUsModule.cb_iban_aba_transit_number"
-                                  >
-                                    <a-input
-                                      v-model:value="formStateIbanUsModule.cb_iban_aba_transit_number"
-                                      @blur="validate('cb_iban_aba_transit_number', { trigger: 'blur' }).catch(() => { })"
-                                    />
-                                  </a-form-item>
                                   <a-form-item
                                     label="Type de compte"
-                                    v-bind="validateInfosIbanUsModule.cb_iban_account_type"
                                   >
                                     <a-select
-                                      v-model:value="formStateIbanUsModule.cb_iban_account_type"
-                                      :options="typesAccount"
+                                      v-model:value="formStateTypeIban.type_iban"
+                                      :options="typesIban" @change="resetModuleIban()"
                                     />
                                   </a-form-item>
+                                  <!-- form items iban -->
+                                  <div v-if="formStateTypeIban.type_iban === 'iban'">
+                                    <a-form-item
+                                      label="Pays"
+                                      v-bind="validateInfosIbanModule.cb_iban_country"
+                                    >
+                                      <a-select
+                                        v-model:value="formStateIbanModule.cb_iban_country"
+                                        placeholder="Pays"
+                                        :options="countriesIban"
+                                      />
+                                    </a-form-item>
+                                    <a-form-item
+                                      label="IBAN"
+                                      v-bind="validateInfosIbanModule.cb_iban_iban"
+                                    >
+                                      <a-input
+                                        v-model:value="formStateIbanModule.cb_iban_iban"
+                                        @blur="validate('cb_iban_iban', { trigger: 'blur' }).catch(() => { })"
+                                      />
+                                    </a-form-item>
+                                  </div>
+                                  <!-- end form items iban -->
+                                  <!-- form items iban US -->
+                                  <div v-if="formStateTypeIban.type_iban === 'iban-us'">
+                                    <a-form-item
+                                      label="Pays"
+                                      v-bind="validateInfosIbanModule.cb_iban_country"
+                                    >
+                                      <a-select
+                                        v-model:value="formStateIbanModule.cb_iban_country"
+                                        placeholder="Pays"
+                                        :options="countriesIbanOthers"
+                                      />
+                                    </a-form-item>
+                                    <a-form-item
+                                      label="Région"
+                                      v-bind="validateInfosIbanModule.cb_iban_region"
+                                    >
+                                      <a-input
+                                        v-model:value="formStateIbanModule.cb_iban_region"
+                                        @blur="validate('cb_iban_region', { trigger: 'blur' }).catch(() => { })"
+                                      />
+                                    </a-form-item>
+                                    <a-form-item
+                                      label="Numéro de compte"
+                                      v-bind="validateInfosIbanModule.cb_iban_account_number"
+                                    >
+                                      <a-input
+                                        v-model:value="formStateIbanModule.cb_iban_account_number"
+                                        @blur="validate('cb_iban_account_number', { trigger: 'blur' }).catch(() => { })"
+                                      />
+                                    </a-form-item>
+                                    <a-form-item
+                                      label="ABA Transit number"
+                                      v-bind="validateInfosIbanModule.cb_iban_aba_transit_number"
+                                    >
+                                      <a-input
+                                        v-model:value="formStateIbanModule.cb_iban_aba_transit_number"
+                                        @blur="validate('cb_iban_aba_transit_number', { trigger: 'blur' }).catch(() => { })"
+                                      />
+                                    </a-form-item>
+                                    <a-form-item
+                                      label="Type de compte"
+                                      v-bind="validateInfosIbanModule.cb_iban_account_type"
+                                    >
+                                      <a-select
+                                        v-model:value="formStateIbanModule.cb_iban_account_type"
+                                        :options="typesAccount"
+                                      />
+                                    </a-form-item>
+                                  </div>
                                   <!-- end form items iban us-->
                                   <!-- form items iban ca  -->
-                                  <a-form-item
-                                    label="Pays"
-                                    v-bind="validateInfosIbanCaModule.cb_iban_country"
-                                  >
-                                    <a-select
-                                      v-model:value="formStateIbanCaModule.cb_iban_country"
-                                      placeholder="Pays"
-                                      :options="countriesIbanOthers"
-                                    />
-                                  </a-form-item>
-                                  <a-form-item
-                                    label="Région"
-                                    v-bind="validateInfosIbanCaModule.cb_iban_region"
-                                  >
-                                    <a-input
-                                      v-model:value="formStateIbanCaModule.cb_iban_region"
-                                      @blur="validate('cb_iban_region', { trigger: 'blur' }).catch(() => { })"
-                                    />
-                                  </a-form-item>
-                                  <a-form-item
-                                    label="Ville"
-                                    v-bind="validateInfosIbanCaModule.cb_iban_city"
-                                  >
-                                    <a-input
-                                      v-model:value="formStateIbanCaModule.cb_iban_city"
-                                      @blur="validate('cb_iban_city', { trigger: 'blur' }).catch(() => { })"
-                                    />
-                                  </a-form-item>
-                                  <a-form-item
-                                    label="Nom de la banque"
-                                    v-bind="validateInfosIbanCaModule.cb_iban_bank_name"
-                                  >
-                                    <a-input
-                                      v-model:value="formStateIbanCaModule.cb_iban_bank_name"
-                                      @blur="validate('cb_iban_bank_name', { trigger: 'blur' }).catch(() => { })"
-                                    />
-                                  </a-form-item>
-                                  <a-form-item
-                                    label="Numéro de compte"
-                                    v-bind="validateInfosIbanCaModule.cb_iban_account_number"
-                                  >
-                                    <a-input
-                                      v-model:value="formStateIbanCaModule.cb_iban_account_number"
-                                      @blur="validate('cb_iban_account_number', { trigger: 'blur' }).catch(() => { })"
-                                    />
-                                  </a-form-item>
-                                  <a-form-item
-                                    label="Code guichet"
-                                    v-bind="validateInfosIbanCaModule.cb_iban_branch_code"
-                                  >
-                                    <a-input
-                                      v-model:value="formStateIbanCaModule.cb_iban_branch_code"
-                                      @blur="validate('cb_iban_branch_code', { trigger: 'blur' }).catch(() => { })"
-                                    />
-                                  </a-form-item>
-                                  <a-form-item
-                                    label="Numéro d\'institution"
-                                    v-bind="validateInfosIbanCaModule.cb_iban_number_institution"
-                                  >
-                                    <a-input
-                                      v-model:value="formStateIbanCaModule.cb_iban_number_institution"
-                                      @blur="validate('cb_iban_number_institution', { trigger: 'blur' }).catch(() => { })"
-                                    />
-                                  </a-form-item>
+                                  <div v-if="formStateTypeIban.type_iban === 'iban-ca'">
+                                    <a-form-item
+                                      label="Pays"
+                                      v-bind="validateInfosIbanModule.cb_iban_country"
+                                    >
+                                      <a-select
+                                        v-model:value="formStateIbanModule.cb_iban_country"
+                                        placeholder="Pays"
+                                        :options="countriesIbanOthers"
+                                      />
+                                    </a-form-item>
+                                    <a-form-item
+                                      label="Région"
+                                      v-bind="validateInfosIbanModule.cb_iban_region"
+                                    >
+                                      <a-input
+                                        v-model:value="formStateIbanModule.cb_iban_region"
+                                        @blur="validate('cb_iban_region', { trigger: 'blur' }).catch(() => { })"
+                                      />
+                                    </a-form-item>
+                                    <a-form-item
+                                      label="Nom de la banque"
+                                      v-bind="validateInfosIbanModule.cb_iban_bank_name"
+                                    >
+                                      <a-input
+                                        v-model:value="formStateIbanModule.cb_iban_bank_name"
+                                        @blur="validate('cb_iban_bank_name', { trigger: 'blur' }).catch(() => { })"
+                                      />
+                                    </a-form-item>
+                                    <a-form-item
+                                      label="Numéro de compte"
+                                      v-bind="validateInfosIbanModule.cb_iban_account_number"
+                                    >
+                                      <a-input
+                                        v-model:value="formStateIbanModule.cb_iban_account_number"
+                                        @blur="validate('cb_iban_account_number', { trigger: 'blur' }).catch(() => { })"
+                                      />
+                                    </a-form-item>
+                                    <a-form-item
+                                      label="Code guichet"
+                                      v-bind="validateInfosIbanModule.cb_iban_branch_code"
+                                    >
+                                      <a-input
+                                        v-model:value="formStateIbanModule.cb_iban_branch_code"
+                                        @blur="validate('cb_iban_branch_code', { trigger: 'blur' }).catch(() => { })"
+                                      />
+                                    </a-form-item>
+                                    <a-form-item
+                                      label="Numéro institution"
+                                      v-bind="validateInfosIbanModule.cb_iban_number_institution"
+                                    >
+                                      <a-input
+                                        v-model:value="formStateIbanModule.cb_iban_number_institution"
+                                        @blur="validate('cb_iban_number_institution', { trigger: 'blur' }).catch(() => { })"
+                                      />
+                                    </a-form-item>
+                                  </div>
                                   <!-- end form items iban ca -->
                                   <!-- form items iban BIC SWIFT -->
-                                  <a-form-item
-                                    label="Pays"
-                                    v-bind="validateInfosIbanOthersModule.cb_iban_country"
-                                  >
-                                    <a-select
-                                      v-model:value="formStateIbanOthers.cb_iban_country"
-                                      :options="countriesIbanOthers"
-                                    />
-                                  </a-form-item>
-                                  <a-form-item
-                                    label="Région"
-                                    v-bind="validateInfosIbanOthersModule.cb_iban_region"
-                                  >
-                                    <a-input
-                                      v-model:value="formStateIbanOthers.cb_iban_region"
-                                      @blur="validate('cb_iban_region', { trigger: 'blur' }).catch(() => { })"
-                                    />
-                                  </a-form-item>
-                                  <a-form-item
-                                    label="Ville"
-                                    v-bind="validateInfosIbanOthersModule.cb_iban_city"
-                                  >
-                                    <a-input
-                                      v-model:value="formStateIbanOthers.cb_iban_city"
-                                      @blur="validate('cb_iban_city', { trigger: 'blur' }).catch(() => { })"
-                                    />
-                                  </a-form-item>
-                                  <a-form-item
-                                    label="Numéro de compte"
-                                    v-bind="validateInfosIbanOthersModule.cb_iban_account_number"
-                                  >
-                                    <a-input
-                                      v-model:value="formStateIbanOthers.cb_iban_account_number"
-                                      @blur="validate('cb_iban_account_number', { trigger: 'blur' }).catch(() => { })"
-                                    />
-                                  </a-form-item>
-                                  <a-form-item
-                                    label="Numéro BIC/SWIFT"
-                                    v-bind="validateInfosIbanOthersModule.cb_iban_bic_swift"
-                                  >
-                                    <a-input
-                                      v-model:value="formStateIbanOthers.cb_iban_bic_swift"
-                                      @blur="validate('cb_iban_bic_swift', { trigger: 'blur' }).catch(() => { })"
-                                    />
-                                  </a-form-item>
-                                  <a-form-item
-                                    label="Pays du compte:"
-                                    v-bind="validateInfosIbanOthersModule.cb_iban_account_country"
-                                  >
-                                    <a-select
-                                      v-model:value="formStateIbanOthers.cb_iban_account_country"
-                                      :options="countriesIbanOthers"
-                                    />
-                                  </a-form-item>
-                                  <!-- end form items BIC SWIFT -->
-                                  <a-form-item :wrapper-col="{ span: 24, offset: 0 }">
-                                    <a-button
-                                      block
-                                      type="primary"
-                                      @click.prevent="onSubmitIbanModule"
+                                  <div v-if="formStateTypeIban.type_iban === 'others'">
+                                    <a-form-item
+                                      label="Pays"
+                                      v-bind="validateInfosIbanModule.cb_iban_country"
                                     >
-                                      Enregistrer
-                                    </a-button>
-                                  </a-form-item>
+                                      <a-select
+                                        v-model:value="formStateIbanModule.cb_iban_country"
+                                        :options="countriesIbanOthers"
+                                      />
+                                    </a-form-item>
+                                    <a-form-item
+                                      label="Région"
+                                      v-bind="validateInfosIbanModule.cb_iban_region"
+                                    >
+                                      <a-input
+                                        v-model:value="formStateIbanModule.cb_iban_region"
+                                        @blur="validate('cb_iban_region', { trigger: 'blur' }).catch(() => { })"
+                                      />
+                                    </a-form-item>
+                                    <a-form-item
+                                      label="Numéro de compte"
+                                      v-bind="validateInfosIbanModule.cb_iban_account_number"
+                                    >
+                                      <a-input
+                                        v-model:value="formStateIbanModule.cb_iban_account_number"
+                                        @blur="validate('cb_iban_account_number', { trigger: 'blur' }).catch(() => { })"
+                                      />
+                                    </a-form-item>
+                                    <a-form-item
+                                      label="Numéro BIC/SWIFT"
+                                      v-bind="validateInfosIbanModule.cb_iban_bic_swift"
+                                    >
+                                      <a-input
+                                        v-model:value="formStateIbanModule.cb_iban_bic_swift"
+                                        @blur="validate('cb_iban_bic_swift', { trigger: 'blur' }).catch(() => { })"
+                                      />
+                                    </a-form-item>
+                                    <a-form-item
+                                      label="Pays du compte:"
+                                      v-bind="validateInfosIbanModule.cb_iban_account_country"
+                                    >
+                                      <a-select
+                                        v-model:value="formStateIbanModule.cb_iban_account_country"
+                                        :options="countriesIbanOthers"
+                                      />
+                                    </a-form-item>
+                                  </div>
+                                  <!-- end form items BIC SWIFT -->
+                                  <div v-if="formStateTypeIban.type_iban != 'empty'">
+                                    <a-form-item :wrapper-col="{ span: 24, offset: 0 }">
+                                      <a-button
+                                        v-if="formStateTypeIban.type_iban !== 'empty'"
+                                        block
+                                        type="primary"
+                                        @click.prevent="onSubmitIbanModule"
+                                      >
+                                        Enregistrer
+                                      </a-button>
+                                    </a-form-item>
+                                  </div>
+                                  <div v-else>
+                                    <a-form-item :wrapper-col="{ span: 24, offset: 0 }">
+                                      <a-button
+                                        block
+                                        type="primary"
+                                        disabled
+                                        @click.prevent="onSubmitIbanModule"
+                                      >
+                                        Choisir un type de compte
+                                      </a-button>
+                                    </a-form-item>
+                                  </div>
                                 </a-form>
                               </div>
                             </div>
@@ -2977,7 +2810,7 @@ onMounted(async() => {
           <div class>
             <a-form-item
               name="month-picker"
-              label="Start date"
+              label="Date Début"
               :wrapper-col="{ span: 24, offset: 0 }"
               :label-col="{
                 sm: { span: 24 }
@@ -3000,7 +2833,7 @@ onMounted(async() => {
               }"
               :wrapper-col="{ span: 24, offset: 0 }"
               name="month-picker"
-              label="End date"
+              label="Date de fin"
               v-bind="experienceValidateInfos.dateEnd"
             >
               <a-date-picker
@@ -3232,6 +3065,23 @@ onMounted(async() => {
     </div>
     <template #footer>
       <a-button type="primary" @click="visibleModalInformationDocumentVal = false">
+        Retour
+      </a-button>
+    </template>
+  </a-modal>
+  <a-modal v-model:visible="visibleModalGreenQuestion" width="40%">
+    <div>
+      <div>
+        <div class="text-h5 grey lighten-2">
+          <h3>Répondre à la question Green</h3>
+        </div>
+        <div>
+          Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+        </div>
+      </div>
+    </div>
+    <template #footer>
+      <a-button type="primary" @click="visibleModalGreenQuestion = false">
         Retour
       </a-button>
     </template>

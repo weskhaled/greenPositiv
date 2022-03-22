@@ -2,8 +2,6 @@
 import { message } from 'ant-design-vue'
 import { currentUser, token } from '~/stores'
 import authApi from '~/api/modules/auth'
-import logoLight from '~/assets/img/logo-light.png'
-import logoLightTheme from '~/assets/img/logo-light-theme.png'
 
 const router = useRouter()
 const { t } = useI18n()

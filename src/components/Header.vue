@@ -38,7 +38,11 @@ onClickOutside(asideOffcanvasMenu.value, () => {
                   <li class="has-submenu">
                     <a href="#/"><span>Ressources</span></a>
                     <ul class="submenu-nav">
-                      <li><a href="job.html"><span>Freelance</span></a></li>
+                      <li>
+                        <router-link class="nav-link" :to="`/charte/freelancer/${currentUser?.idUser}`">
+                          <span>Freelance</span>
+                        </router-link>
+                      </li>
                       <li><a href="job-details.html"><span>Agence</span></a></li>
                       <li><a href="job-details.html"><span>Entreprise</span></a></li>
                     </ul>
@@ -66,7 +70,7 @@ onClickOutside(asideOffcanvasMenu.value, () => {
                     </router-link>
                     <ul class="submenu-nav">
                       <li v-if="currentUser">
-                        <router-link class="nav-link" :to="`/profile/${currentUser?.freelancer?._id}`">
+                        <router-link class="nav-link" :to="`/profile/${currentUser?.idUser}`">
                           <span>Modifier mon profil</span>
                         </router-link>
                       </li>
@@ -78,11 +82,6 @@ onClickOutside(asideOffcanvasMenu.value, () => {
                       <li>
                         <router-link class="nav-link" to="#">
                           <span>Créer un devis </span>
-                        </router-link>
-                      </li>
-                      <li>
-                        <router-link class="nav-link" :to="`/profile-entreprise/${currentUser?.username}`">
-                          <span>Paramètre de mon entreprise</span>
                         </router-link>
                       </li>
                       <li>
