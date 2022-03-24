@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import type { RuleObject } from 'ant-design-vue/es/form'
 import { message } from 'ant-design-vue'
-import { currentUser, token } from '~/stores'
 import adminApi from '~/api/modules/admin'
 import freelancerApi from '~/api/modules/freelancer'
-import logoLight from '~/assets/img/logo-light.png'
-import logoLightTheme from '~/assets/img/logo-light-theme.png'
+import agenceApi from '~/api/modules/agence'
 
 const router = useRouter()
 const route = useRoute()
@@ -29,18 +27,44 @@ const formRegisterState = reactive<any>({
   show_price: false,
   confidentiality: false,
 })
+const formRegisterAgenceState = reactive<any>({
+  username: '',
+  nameAgence: '',
+  lastName: '',
+  firstName: '',
+  email: '',
+  phone: undefined,
+  password: '',
+  repeatPassword: '',
+
+  jobCat: undefined,
+  localisation: '',
+  confidentiality: false,
+})
 
 const formRegisterRef: any = ref(null)
+const formRegisterAgenceRef: any = ref(null)
 const activeTabKey = ref('1')
 const currentStep = ref(0)
+const currentAgenceStep = ref(0)
 const jobs = ref([])
 
 const validaterePassword = async(_rule: RuleObject, value: string) => {
   if (value === '')
-    return Promise.reject(new Error('Please input the password again'))
+    return Promise.reject(new Error('veuillez resaisir votre mot de passe'))
 
   else if (value !== formRegisterState.password)
-    return Promise.reject(new Error('two inputs don\'t match!'))
+    return Promise.reject(new Error('les mots de passes ne sont pas les mêmes'))
+
+  else
+    return Promise.resolve()
+}
+const validaterePasswordAgence = async(_rule: RuleObject, value: string) => {
+  if (value === '')
+    return Promise.reject(new Error('veuillez resaisir votre mot de passe'))
+
+  else if (value !== formRegisterAgenceState.password)
+    return Promise.reject(new Error('les mots de passes ne sont pas les mêmes'))
 
   else
     return Promise.resolve()
@@ -82,6 +106,34 @@ const nextStep = async() => {
     if (currentStep.value > 1) {
       try {
         const { data } = await freelancerApi.register({ ...formRegisterState, role: 'Freelancer' })
+
+        if (data) {
+          message.success('compte créé')
+          await router.push('/')
+        }
+      }
+      catch (error: any) {
+        message.destroy()
+        message.error(`${error.message}`)
+      }
+    }
+  }
+}
+const nextAgenceStep = async() => {
+  if (formRegisterAgenceRef.value) {
+    try {
+      const values = await formRegisterAgenceRef.value.validateFields()
+      if (values)
+        currentAgenceStep.value = ++currentAgenceStep.value
+    }
+    catch (errorInfo: any) {
+      console.error(errorInfo.errorFields)
+    }
+  }
+  else {
+    if (currentAgenceStep.value > 1) {
+      try {
+        const { data } = await agenceApi.register({ ...formRegisterAgenceState, role: 'Agence' })
 
         if (data) {
           message.success('compte créé')
@@ -358,7 +410,163 @@ onMounted(async() => {
                           Agence
                         </span>
                       </template>
-                      Content of Tab Pane 2
+                      <div class="px-2">
+                        <a-steps size="small" :current="currentAgenceStep">
+                          <a-step title="premiére étape" @click="currentAgenceStep > 0 && (currentAgenceStep= 0)" />
+                          <a-step title="deuxiéme étape" @click="currentAgenceStep > 0 && (currentAgenceStep= 1)" />
+                          <a-step title="Validation" @click="currentAgenceStep > 1 && (currentAgenceStep= 2)" />
+                        </a-steps>
+                        <div v-if="currentAgenceStep === 0" class="mt-4">
+                          <a-form
+                            ref="formRegisterAgenceRef"
+                            :model="formRegisterAgenceState"
+                            name="basic"
+                            :label-col="{ span: 0 }"
+                            :wrapper-col="{ span: 24 }"
+                            autocomplete="on"
+                          >
+                            <a-form-item
+                              name="username"
+                              :rules="[{ required: true, message: 'Veuillez saisir votre identifiant', trigger: 'change' }]"
+                            >
+                              <a-input v-model:value="formRegisterAgenceState.username" placeholder="Identifant" />
+                            </a-form-item>
+                            <a-form-item
+                              name="nameAgence"
+                              :rules="[{ required: true, message: 'Veuillez saisir le nom de votre agence', trigger: 'change' }]"
+                            >
+                              <a-input v-model:value="formRegisterAgenceState.nameAgence" placeholder="Nom agence" />
+                            </a-form-item>
+
+                            <a-form-item
+                              name="firstName"
+                              :rules="[{ required: true, message: 'Veuillez saisir votre prénom', trigger: 'change' }]"
+                            >
+                              <a-input v-model:value="formRegisterAgenceState.firstName" placeholder="Nom" />
+                            </a-form-item>
+
+                            <a-form-item
+                              name="lastName"
+                              :rules="[{ required: true, message: 'Veuillez saisir votre nom', trigger: 'change' }]"
+                            >
+                              <a-input v-model:value="formRegisterAgenceState.lastName" placeholder="Prénom" />
+                            </a-form-item>
+
+                            <a-form-item
+                              name="email"
+                              :rules="[{ required: true, message: 'Veuillez saisir votre adresse mail', type: 'email', trigger: 'change' }]"
+                            >
+                              <a-input v-model:value="formRegisterAgenceState.email" placeholder="Email" />
+                            </a-form-item>
+
+                            <a-form-item
+                              name="phone"
+                              :rules="[{ required: true, validator: validatePhone, trigger: 'change' }]"
+                            >
+                              <a-input v-model:value="formRegisterAgenceState.phone" placeholder="votre numéro de téléphone" />
+                            </a-form-item>
+
+                            <a-form-item
+                              name="password"
+                              :rules="[{ required: true, min: 8, trigger: 'change' }]"
+                            >
+                              <a-input-password v-model:value="formRegisterAgenceState.password" placeholder="mot de passe" />
+                            </a-form-item>
+
+                            <a-form-item
+                              name="repeatPassword"
+                              :rules="[{ required: true, validator: validaterePasswordAgence, trigger: 'change' }]"
+                            >
+                              <a-input-password v-model:value="formRegisterAgenceState.repeatPassword" autocomplete="off" placeholder="répéter votre mot de passe" />
+                            </a-form-item>
+
+                            <a-form-item :wrapper-col="{ offset: 0, span: 24 }">
+                              <a-button type="primary" block @click="nextAgenceStep">
+                                Continuez
+                              </a-button>
+                            </a-form-item>
+                          </a-form>
+                        </div>
+                        <div v-else-if="currentAgenceStep === 1" class="mt-4">
+                          <a-form
+                            ref="formRegisterAgenceRef"
+                            :model="formRegisterAgenceState"
+                            name="basic"
+                            :label-col="{ span: 0 }"
+                            :wrapper-col="{ span: 24 }"
+                            autocomplete="on"
+                          >
+                            <a-form-item
+                              name="jobCat"
+                              has-feedback
+                              :rules="[{ required: true, message: 'Veuillez choisir une catégorie de métier' }]"
+                            >
+                              <label for="level">Choisissez votre catégorie de métier :</label>
+                              <a-select
+                                v-model:value="formRegisterAgenceState.jobCat" :options="jobs" placeholder="Veuillez choisir une catégorie de métier"
+                              />
+                            </a-form-item>
+                            <a-form-item
+                              name="localisation"
+                              :rules="[{ required: true, message: 'Veuillez saisir votre localisation', trigger: 'change' }]"
+                            >
+                              <label for="level">Votre localisation :</label>
+                              <a-input v-model:value="formRegisterAgenceState.localisation" placeholder="Paris, 13éme arrondissement, ..." />
+                            </a-form-item>
+
+                            <a-form-item name="confidentiality" :rules="[{ required: true, message: 'Recevez des notifications par emails' }]">
+                              <a-checkbox v-model:checked="formRegisterAgenceState.confidentiality">
+                                Acceptez de recevoir des notifications de Green-positiv.
+                              </a-checkbox>
+                            </a-form-item>
+
+                            <a-form-item :wrapper-col="{ offset: 0, span: 24 }">
+                              <a-button type="primary" block @click="nextAgenceStep">
+                                Continuez
+                              </a-button>
+                            </a-form-item>
+                          </a-form>
+                        </div>
+                        <div v-else-if="currentAgenceStep === 2">
+                          <a-descriptions title="Vos informations" layout="vertical">
+                            <a-descriptions-item>
+                              <template #label>
+                                <span class="text-md">Identifiant</span>
+                              </template>
+                              {{ formRegisterAgenceState.username }}
+                            </a-descriptions-item>
+                            <a-descriptions-item>
+                              <template #label>
+                                <span class="text-md">Nom de l'agence</span>
+                              </template>
+                              {{ formRegisterAgenceState.nameAgence }}
+                            </a-descriptions-item>
+                            <a-descriptions-item>
+                              <template #label>
+                                <span class="text-md">Téléphone</span>
+                              </template>
+                              {{ formRegisterAgenceState.phone }}
+                            </a-descriptions-item>
+                            <a-descriptions-item>
+                              <template #label>
+                                <span class="text-md">localisation</span>
+                              </template>
+                              {{ formRegisterAgenceState.localisation }}
+                            </a-descriptions-item>
+                            <a-descriptions-item :span="2">
+                              <template #label>
+                                <span class="text-md">localisation</span>
+                              </template>
+                              {{ formRegisterAgenceState.localisation }}
+                            </a-descriptions-item>
+                          </a-descriptions>
+                          <a-form-item :wrapper-col="{ offset: 0, span: 24 }">
+                            <a-button type="primary" block @click="nextAgenceStep">
+                              Continuez
+                            </a-button>
+                          </a-form-item>
+                        </div>
+                      </div>
                     </a-tab-pane>
                   </a-tabs>
                 </div>

@@ -5,7 +5,7 @@ import { Form, Modal, message } from 'ant-design-vue'
 import type { RuleObject } from 'ant-design-vue/es/form'
 import adminApi from '~/api/modules/admin'
 import globalApi from '~/api/modules/global'
-import freelancerApi from '~/api/modules/freelancer'
+import agenceApi from '~/api/modules/agence'
 import profileEntrepriseApi from '~/api/modules/profil-entreprise'
 import { currentUser } from '~/stores'
 const useForm = Form.useForm
@@ -13,6 +13,7 @@ const props = defineProps<{ id: string }>()
 const router = useRouter()
 const { t } = useI18n()
 const activeKey = ref('1')
+const typesAccount = ref([])
 const activeKeyProfileEtprs = ref('1')
 const currentStepProfileEtprs = ref(0)
 const formItemLayout = {
@@ -45,23 +46,15 @@ const profile = ref(null)
 const profileAvatar = ref('')
 const userDocument = ref(null)
 const profileEntreprise = ref(null)
-const skills = ref([])
-const skillsValue = ref([])
-const passionValue = ref('')
-const interestValue = ref([])
 const legalForms = ref([])
-const languages = ref([])
 const countries = ref([])
 const countriesIban = ref([])
 const countriesIbanOthers = ref([])
 const jobs = ref([])
-const types = ref([])
-const typesAccount = ref([])
 const typesIban = ref([])
 const activities = ref([])
-const visibleModalAddExperience = ref(false)
-const visibleModalAddFormation = ref(false)
-const visibleModalAddCertification = ref(false)
+const visibleModalAddReference = ref(false)
+const visibleModalAddOffer = ref(false)
 const visibleModalInformationEmailVerification = ref(false)
 const visibleModalInformationDocumentVal = ref(false)
 const visibleModalInformationSignatureCharte = ref(false)
@@ -72,9 +65,15 @@ const visibleModalInformationValidated = ref(false)
 //   'checkbox-group': ['A', 'B'],
 //   'rate': 3.5,
 // })
+typesAccount.value = [{
+  value: 'epargne',
+  label: 'epargne',
+}, {
+  value: 'Compte courant',
+  label: 'Compte courant',
+}]
 const formStateProfile = reactive<Record<string, any>>({
   avatar: null,
-  passion: '',
   email: '',
   username: '',
   firstName: '',
@@ -82,8 +81,6 @@ const formStateProfile = reactive<Record<string, any>>({
   jobCat: undefined,
   localisation: '',
   phone: '',
-  price_per_day: undefined,
-  show_price: false,
   visibility: false,
   greenQuestion: '',
   url_fb: '',
@@ -137,35 +134,22 @@ const formStateIbanModule = reactive<any>({
   cb_iban_bic_swift: '',
   cb_iban_account_country: '',
 })
-const modelRefExperience = reactive({
+const modelRefReference = reactive({
   id: undefined,
   title: '',
-  society: '',
+  client: '',
   place: '',
   domain: undefined,
-  isFreelancer: false,
-  actuallyPost: false,
   dateBegin: undefined,
   dateEnd: undefined,
-  skills: [],
-  description: '',
+  confidential: false,
 })
-const modelRefCertification = reactive({
+const modelRefOffer = reactive({
   id: undefined,
   name: '',
-  organism: '',
-  type: '',
-  year: undefined,
-  description: '',
-  place: '',
-})
-/**/
-const modelRefFormation = reactive({
-  id: undefined,
-  name: '',
-  institute: '',
-  type: '',
-  year: undefined,
+  domain: undefined,
+  price: undefined,
+  show_price: undefined,
   description: '',
 })
 
@@ -426,6 +410,17 @@ const rulesIban = reactive({
   ],
 })
 const rulesRef = reactive({
+  client: [
+    {
+      required: true,
+      message: 'Saisir le nom du client',
+    },
+    {
+      min: 3,
+      message: 'la longueur minimale est de 3',
+      trigger: 'blur',
+    },
+  ],
   title: [
     {
       required: true,
@@ -435,12 +430,6 @@ const rulesRef = reactive({
       min: 3,
       message: 'la longueur minimale est de 3',
       trigger: 'blur',
-    },
-  ],
-  society: [
-    {
-      required: true,
-      message: 'Saisir la société',
     },
   ],
   place: [
@@ -463,49 +452,35 @@ const rulesRef = reactive({
   ],
   dateEnd: [
     {
-      validator: async(_rule: RuleObject, value: string) => {
-        if (modelRefExperience.actuallyPost)
-          return Promise.resolve()
-        else if (!value)
-          return Promise.reject('Choisissez la date de fin')
-        else
-          return Promise.resolve()
-      },
-      trigger: 'blur',
-      message: 'S',
+      required: true,
+      message: 'Choisissez la date de fin',
     },
   ],
 })
 /**/
-const rulesForm = reactive({
+const rulesOffer = reactive({
   name: [
     {
       required: true,
       message: 'Saisir un nom',
     },
   ],
-  institute: [
+  domain: [
     {
       required: true,
-      message: 'Saisir une institution',
+      message: 'Choisissez un domaine',
     },
   ],
-  type: [
+  price: [
     {
       required: true,
-      message: 'choisir un type',
-    },
-  ],
-  year: [
-    {
-      required: true,
-      message: 'Saisissez l\'année d\'obtention',
+      message: 'Veuillez choisir un prix',
     },
   ],
   description: [
     {
       required: true,
-      message: 'Rédigez une description',
+      message: 'Rédigez la description',
     },
   ],
 })
@@ -699,87 +674,8 @@ const rulesLegaleMention = reactive({
     },
   ],
 })
-const rulesCert = reactive({
-  name: [
-    {
-      required: true,
-      message: 'Saisir un nom',
-    },
-  ],
-  organism: [
-    {
-      required: true,
-      message: 'Saisir l\'organisme',
-    },
-  ],
-  type: [
-    {
-      required: true,
-      message: 'choisir un type',
-    },
-  ],
-  year: [
-    {
-      required: true,
-      message: 'Saisissez l\'année d\'obtention',
-    },
-  ],
-  description: [
-    {
-      required: true,
-      message: 'Rédigez une description',
-    },
-  ],
-  place: [
-    {
-      required: true,
-      message: 'Saisir le lieu',
-    },
-  ],
-})
-const calcDisponibilityFreq = (params: number, toSlide = true) => {
-  if (toSlide) {
-    if (params === 0)
-      return 0
-    else if (params === 1)
-      return 15
-    else if (params === 2)
-      return 30
-    else if (params === 3)
-      return 50
-    else if (params === 4)
-      return 70
-    else
-      return 100
-  }
-  else {
-    if (params === 0)
-      return 0
-    else if (params === 15)
-      return 1
-    else if (params === 30)
-      return 2
-    else if (params === 50)
-      return 3
-    else if (params === 70)
-      return 4
-    else
-      return 5
-  }
-}
+
 const getFormData = async() => {
-  globalApi.languages().then(({ data }) => {
-    data.value && (languages.value = data.value.map(l => ({
-      value: l.name,
-      label: l.name,
-    })))
-  })
-  adminApi.skills().then(({ data }) => {
-    data.value && (skills.value = data.value.map(l => ({
-      value: l.name,
-      label: l.name,
-    })))
-  })
   globalApi.countries().then(({ data }) => {
     data.value && (countries.value = data.value.map(l => ({
       value: l,
@@ -817,43 +713,36 @@ const getFormData = async() => {
     })))
   })
   profile.value = null
-  await freelancerApi.profile(props.id).then(({ data }) => {
+  await agenceApi.profile(props.id).then(({ data }) => {
     if (data.value) {
       profile.value = data.value
-      const skills = profile.value?.freelancer?.skills.map(s => ({
-        value: s,
-        label: s,
-      }))
-      skillsValue.value = skills
-      passionValue.value = profile.value.freelancer?.passion
-      const freelancer = profile.value?.freelancer
-      profileAvatar.value = freelancer.image || ''
-      formStateProfile.description = freelancer.description
-      formStateProfile.email = freelancer.email
-      formStateProfile.username = freelancer.username
-      formStateProfile.firstName = freelancer.firstName
-      formStateProfile.lastName = freelancer.lastName
-      formStateProfile.jobCat = freelancer.jobCat
-      formStateProfile.localisation = freelancer.localisation
-      formStateProfile.phone = freelancer.phone
-      formStateProfile.price_per_day = freelancer.price_per_day
-      formStateProfile.show_price = !!freelancer.show_price
-      formStateProfile.visibility = !!freelancer.visibility
-      formStateProfile.greenQuestion = freelancer.greenQuestion
-      formStateProfile.url_fb = freelancer.url_fb
-      formStateProfile.url_github = freelancer.url_github
-      formStateProfile.url_twitter = freelancer.url_twitter
-      formStateProfile.url_linkedin = freelancer.url_linkedin
-      formStateProfile.disponibility_freq = calcDisponibilityFreq(+freelancer.disponibility_freq)
-      socials.facebook.link = freelancer.url_fb
-      socials.twitter.link = freelancer.url_twitter
-      socials.linkedin.link = freelancer.url_linkedin
-      socials.github.link = freelancer.url_github
+      const agence = profile.value?.agence
+      profileAvatar.value = agence.image || ''
+      formStateProfile.description = agence.description
+      formStateProfile.email = agence.email
+      formStateProfile.username = agence.username
+      formStateProfile.nameAgence = agence.nameAgence
+      formStateProfile.firstName = agence.firstName
+      formStateProfile.lastName = agence.lastName
+      formStateProfile.jobCat = agence.jobCat
+      formStateProfile.localisation = agence.localisation
+      formStateProfile.phone = agence.phone
+      formStateProfile.price_per_day = agence.price_per_day
+      formStateProfile.visibility = !!agence.visibility
+      formStateProfile.greenQuestion = agence.greenQuestion
+      formStateProfile.url_fb = agence.url_fb
+      formStateProfile.url_github = agence.url_github
+      formStateProfile.url_twitter = agence.url_twitter
+      formStateProfile.url_linkedin = agence.url_linkedin
+      socials.facebook.link = agence.url_fb
+      socials.twitter.link = agence.url_twitter
+      socials.linkedin.link = agence.url_linkedin
+      socials.github.link = agence.url_github
     }
   })
   /**/
   profileEntreprise.value = null
-  await profileEntrepriseApi.profileEntreprise(props.id).then(async({ data }) => {
+  await profileEntrepriseApi.profileEntrepriseAgence(props.id).then(async({ data }) => {
     if (data) {
       profileEntreprise.value = data
       const contactDetails = profileEntreprise.value?.contactDetails
@@ -939,20 +828,6 @@ const getFormData = async() => {
       message.error('profil entreprise non chargé')
     }
   })
-  types.value = [{
-    value: 'en cours',
-    label: 'en cours',
-  }, {
-    value: 'terminé',
-    label: 'terminé',
-  }]
-  typesAccount.value = [{
-    value: 'epargne',
-    label: 'epargne',
-  }, {
-    value: 'Compte courant',
-    label: 'Compte courant',
-  }]
   typesIban.value = [{
     value: 'iban',
     label: 'IBAN',
@@ -974,17 +849,17 @@ const getFormData = async() => {
   }]
 }
 const getScore = () => {
-  if (!profile.value?.freelancer)
+  if (!profile.value?.agence)
     return 0
   let value = 0
-  profile.value.freelancer?.email_verification && (value += 10)
-  profile.value.freelancer?.documents_val && (value += 30)
-  profile.value.freelancer?.validated && (value += 10)
-  profile.value.freelancer?.signed_client && (value += 10)
-  profile.value.freelancer.description?.length !== 0 && (value += 10)
-  profile.value.freelancer?.skills?.length >= 7 && (value += 10)
-  profile.value.freelancer?.languages?.length >= 1 && (value += 10)
-  profile.value.freelancer?.greenQuestion?.length >= 1 && (value += 10)
+  profile.value.agence?.email_verification && (value += 10)
+  profile.value.agence?.documents_val && (value += 30)
+  profile.value.agence?.validated && (value += 10)
+  profile.value.agence?.signed_client && (value += 10)
+  profile.value.agence.description?.length !== 0 && (value += 10)
+  profile.value.agence?.references?.length >= 1 && (value += 10)
+  profile.value.agence?.offers?.length >= 1 && (value += 10)
+  profile.value.agence?.greenQuestion?.length >= 1 && (value += 10)
   return value
 }
 const resetModuleIban = () => {
@@ -1000,9 +875,7 @@ const resetModuleIban = () => {
   formStateIbanModule.cb_iban_account_country = ''
 }
 const updateProfile = async(profileData: any) => {
-  profileData.disponibility_freq = calcDisponibilityFreq(+formStateProfile.disponibility_freq, false)
-
-  const { data } = await freelancerApi.updateProfile(profileData)
+  const { data } = await agenceApi.updateProfile(profileData)
   data && message.info(data.message)
   getFormData()
 }
@@ -1015,9 +888,9 @@ const onSubmitIbanModule = async() => {
   validateIbanModule()
     .then(async() => {
       const params = toRaw(formStateIbanModule)
-      params.id_freelancer = props.id
+      params.id_agence = props.id
       params.type_iban = formStateTypeIban.type_iban
-      const { data } = await profileEntrepriseApi.updatePaymentModule(params)
+      const { data } = await profileEntrepriseApi.updatePaymentModuleAgence(params)
       message.info(data.message)
       profileEntreprise.value = null
       getFormData()
@@ -1035,8 +908,8 @@ const onSubmitContactDetails = async() => {
   validateContactDetails()
     .then(async() => {
       const params = toRaw(formStateContactDetails)
-      params.id_freelancer = props.id
-      const { data } = await profileEntrepriseApi.updateContactDetails(params)
+      params.id_agence = props.id
+      const { data } = await profileEntrepriseApi.updateContactDetailsAgence(params)
       message.info(data.message)
       profileEntreprise.value = null
       getFormData()
@@ -1054,14 +927,14 @@ const onSubmitLegalRepresentative = async() => {
   if (userDocument.value) {
     const formData = new FormData()
     formData.append('documents', userDocument.value)
-    profile.value?.freelancer?.documents?.length && formData.append('old_documents', profile.value?.freelancer?.documents[0])
-    freelancerApi.uploadDocuments(formData).catch(err => message.error(`${err}`))
+    profile.value?.agence?.documents?.length && formData.append('old_documents', profile.value?.agence?.documents[0])
+    agenceApi.uploadDocuments(formData).catch(err => message.error(`${err}`))
   }
   validateLegalRepresentative()
     .then(async() => {
       const params = toRaw(formStateLegalRepresentative)
-      params.id_freelancer = props.id
-      const { data } = await profileEntrepriseApi.updateLegalRepresentative(params)
+      params.id_agence = props.id
+      const { data } = await profileEntrepriseApi.updateLegalRepresentativeAgence(params)
       message.info(data.message)
       profileEntreprise.value = null
       getFormData()
@@ -1079,8 +952,8 @@ const onSubmitTaxe = async() => {
   validateTaxe()
     .then(async() => {
       const params = toRaw(formStateTaxe)
-      params.id_freelancer = props.id
-      const { data } = await profileEntrepriseApi.updateTaxe(params)
+      params.id_agence = props.id
+      const { data } = await profileEntrepriseApi.updateTaxeAgence(params)
       message.info(data.message)
       profileEntreprise.value = null
       getFormData()
@@ -1099,8 +972,8 @@ const onSubmitLegalMentions = async() => {
   validateLegalMention()
     .then(async() => {
       const params = toRaw(formStateLegalMention)
-      params.id_freelancer = props.id
-      const { data } = await profileEntrepriseApi.updateLegalMention(params)
+      params.id_agence = props.id
+      const { data } = await profileEntrepriseApi.updateLegalMentionAgence(params)
       message.info(data.message)
       profileEntreprise.value = null
       getFormData()
@@ -1111,24 +984,24 @@ const onSubmitLegalMentions = async() => {
     })
 }
 /* end bloc legal mention */
-/* bloc experience */
-const { resetFields, validate, validateInfos: experienceValidateInfos } = useForm(modelRefExperience, rulesRef)
+/* bloc reference */
+const { resetFields, validate, validateInfos: referenceValidateInfos } = useForm(modelRefReference, rulesRef)
 const onSubmit = async() => {
   validate()
     .then(async() => {
-      const params = toRaw(modelRefExperience)
+      const params = toRaw(modelRefReference)
+      console.log('reference ', params)
       if (params.id) {
         const id = params.id
         delete params.id
-        modelRefExperience.actuallyPost && (modelRefExperience.dateEnd = undefined)
-        const { data } = await freelancerApi.updateExperience(id, params)
+        const { data } = await agenceApi.updateReference(id, params)
         message.info(data.message)
-        visibleModalAddExperience.value = false
+        visibleModalAddReference.value = false
       }
       else {
-        const { data } = await freelancerApi.addExperience(params)
+        const { data } = await agenceApi.addReference(params)
         message.info(data.message)
-        visibleModalAddExperience.value = false
+        visibleModalAddReference.value = false
       }
       profile.value = null
       getFormData()
@@ -1137,27 +1010,24 @@ const onSubmit = async() => {
       console.log('error', err)
     })
 }
-const updateExperience = (item) => {
-  modelRefExperience.id = item._id
-  modelRefExperience.title = item.title
-  modelRefExperience.society = item.society
-  modelRefExperience.place = item.place
-  modelRefExperience.domain = item.domain
-  modelRefExperience.isFreelancer = item.isFreelancer
-  modelRefExperience.actuallyPost = item.actuallyPost
-  modelRefExperience.dateBegin = item.dateBegin
-  modelRefExperience.dateEnd = item.dateEnd
-  modelRefExperience.skills = item.skills
-  modelRefExperience.description = item.description
-  visibleModalAddExperience.value = true
+const updateReference = (item) => {
+  modelRefReference.id = item._id
+  modelRefReference.client = item.title
+  modelRefReference.title = item.society
+  modelRefReference.place = item.place
+  modelRefReference.domain = item.domain
+  modelRefReference.dateBegin = item.dateBegin
+  modelRefReference.dateEnd = item.dateEnd
+  modelRefReference.confidential = item.confidential
+  visibleModalAddReference.value = true
 }
-const deleteExperience = (id: string) => {
+const deleteReference = (id: string) => {
   setTimeout(() => {
     Modal.confirm({
-      content: 'Delete Experience',
+      content: 'Supprimer la référence client',
       icon: h(ExclamationCircleOutlined),
       onOk() {
-        return freelancerApi.deleteExperience(id).then(({ data }) => {
+        return agenceApi.deleteReference(id).then(({ data }) => {
           message.info(data.message)
           profile.value = null
           getFormData()
@@ -1170,27 +1040,29 @@ const deleteExperience = (id: string) => {
     })
   })
 }
-/* end bloc experience */
-/* bloc formation */
-const useFormFormation = useForm(modelRefFormation, rulesForm)
-const resetFieldsFormation = useFormFormation.resetFields
-const validateFormation = useFormFormation.validate
-const validateInfosFormation = useFormFormation.validateInfos
-const onSubmitForm = async() => {
-  validateFormation()
+/* end bloc reference */
+
+/* bloc offer */
+const useFormOffer = useForm(modelRefOffer, rulesOffer)
+const resetFieldsOffer = useFormOffer.resetFields
+const validateOffer = useFormOffer.validate
+const validateInfosOffer = useFormOffer.validateInfos
+const onSubmitOffer = async() => {
+  validateOffer()
     .then(async() => {
-      const params = toRaw(modelRefFormation)
+      const params = toRaw(modelRefOffer)
+      console.log('offer ', params)
       if (params.id) {
         const id = params.id
         delete params.id
-        const { data } = await freelancerApi.updateFormation(id, params)
+        const { data } = await agenceApi.updateOffer(id, params)
         message.info(data.message)
-        visibleModalAddFormation.value = false
+        visibleModalAddOffer.value = false
       }
       else {
-        const { data } = await freelancerApi.addFormation(params)
+        const { data } = await agenceApi.addOffer(params)
         message.info(data.message)
-        visibleModalAddFormation.value = false
+        visibleModalAddOffer.value = false
       }
       profile.value = null
       getFormData()
@@ -1199,93 +1071,35 @@ const onSubmitForm = async() => {
       console.log('error', err)
     })
 }
-const updateFormation = (item) => {
-  modelRefFormation.id = item._id
-  modelRefFormation.name = item.name
-  modelRefFormation.institute = item.institute
-  modelRefFormation.type = item.type
-  modelRefFormation.year = item.year
-  modelRefFormation.description = item.description
-  visibleModalAddFormation.value = true
+const updateOffer = (item) => {
+  modelRefOffer.id = item._id
+  modelRefOffer.name = item.name
+  modelRefOffer.price = item.price
+  modelRefOffer.show_price = item.show_price
+  modelRefOffer.domain = item.domain
+  modelRefOffer.description = item.description
+  visibleModalAddOffer.value = true
 }
-const deleteFormation = (id: string) => {
+const deleteOffer = (id: string) => {
   setTimeout(() => {
     Modal.confirm({
-      content: 'Supprimer une formation',
+      content: 'Supprimer l\'offre',
       icon: h(ExclamationCircleOutlined),
       onOk() {
-        return freelancerApi.deleteFormation(id).then(({ data }) => {
+        return agenceApi.deleteOffer(id).then(({ data }) => {
           message.info(data.message)
           profile.value = null
           getFormData()
         }).catch(err => message.error(`Oops errors! ${err}`))
       },
-      cancelText: 'Retour',
+      cancelText: 'Click to destroy all',
       onCancel() {
         Modal.destroyAll()
       },
     })
   })
 }
-/* end bloc formation */
-/* bloc certification */
-const useFormCertification = useForm(modelRefCertification, rulesCert)
-const resetFieldsCertification = useFormCertification.resetFields
-const validateCertification = useFormCertification.validate
-const validateInfosCertification = useFormCertification.validateInfos
-const onSubmitCert = async() => {
-  validateCertification()
-    .then(async() => {
-      const params = toRaw(modelRefCertification)
-      if (params.id) {
-        const id = params.id
-        delete params.id
-        const { data } = await freelancerApi.updateCertification(id, params)
-        message.info(data.message)
-        visibleModalAddCertification.value = false
-      }
-      else {
-        const { data } = await freelancerApi.addCertification(params)
-        message.info(data.message)
-        visibleModalAddCertification.value = false
-      }
-      profile.value = null
-      getFormData()
-    })
-    .catch((err) => {
-      console.log('error', err)
-    })
-}
-const updateCertification = (item) => {
-  modelRefCertification.id = item._id
-  modelRefCertification.name = item.name
-  modelRefCertification.organism = item.organism
-  modelRefCertification.type = item.type
-  modelRefCertification.year = item.year
-  modelRefCertification.description = item.description
-  modelRefCertification.place = item.place
-  visibleModalAddCertification.value = true
-}
-const deleteCertification = (id: string) => {
-  setTimeout(() => {
-    Modal.confirm({
-      content: 'Supprimer une certification',
-      icon: h(ExclamationCircleOutlined),
-      onOk() {
-        return freelancerApi.deleteCertification(id).then(({ data }) => {
-          message.info(data.message)
-          profile.value = null
-          getFormData()
-        }).catch(err => message.error(`Oops errors! ${err}`))
-      },
-      cancelText: 'Retour',
-      onCancel() {
-        Modal.destroyAll()
-      },
-    })
-  })
-}
-/* end bloc certification */
+/* end bloc offer */
 const beforeUploadProfileAvatar = async(file: any) => {
   const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png'
   if (!isJpgOrPng)
@@ -1304,35 +1118,14 @@ const onFinish = async(values: any) => {
   if (values.avatar) {
     const formData = new FormData()
     formData.append('image', values.avatar[0].originFileObj)
-    if (profile.value.freelancer?.image)
+    if (profile.value.agence?.image)
       formData.append('old_image', 'test')
-    await freelancerApi.uploadProfile(formData)
+    await agenceApi.uploadProfile(formData)
   }
   updateProfile({ ...profile, ...values })
 }
 const onFinishFailed = (errorInfo: any) => {
   console.log('Failed:', errorInfo)
-}
-const removeLanguage = async(lang: any) => {
-  const { data } = await freelancerApi.deleteLanguage(lang).catch(err => message.error(err.message))
-  if (data) {
-    message.info(data.message)
-    getFormData()
-  }
-}
-const updateLanguage = async(lang: any) => {
-  const { data } = await freelancerApi.updateLanguage(lang).catch(err => message.error(err.message))
-  if (data) {
-    message.info(data.message)
-    getFormData()
-  }
-}
-const addLanguage = async(lang: any) => {
-  const { data } = await freelancerApi.addLanguage(lang).catch(err => message.error(err.message))
-  if (data) {
-    message.info(data.message)
-    getFormData()
-  }
 }
 onMounted(async() => {
   console.log('props id ', props.id)
@@ -1357,12 +1150,12 @@ onMounted(async() => {
               <nav class="breadcrumb-area">
                 <ul class="breadcrumb justify-content-center">
                   <li>
-                    <a href="index.html">Home</a>
+                    <a href="index.html">Accueil</a>
                   </li>
                   <li class="breadcrumb-sep">
                     //
                   </li>
-                  <li>Pages</li>
+                  <li>Profil</li>
                 </ul>
               </nav>
             </div>
@@ -1380,7 +1173,7 @@ onMounted(async() => {
           <div class="p-2 flex bg-white rounded-sm">
             <div class="mr-5 flex-none">
               <a-avatar
-                :src="profile?.freelancer?.image"
+                :src="profile?.agence?.image"
                 shape="square"
                 :size="{ xs: 24, sm: 32, md: 40, lg: 64, xl: 220, xxl: 260 }"
               />
@@ -1393,10 +1186,10 @@ onMounted(async() => {
                     <a
                       href="#"
                       class="text-gray-900 text-hover-primary fs-4"
-                    >{{ `${profile?.freelancer?.lastName} ${profile?.freelancer?.firstName}` }}</a>
+                    >{{ `${profile?.agence?.lastName} ${profile?.agence?.firstName}` }}</a>
                     <a href="#" class="flex items-center mr-3 ml-1">
                       <span
-                        v-if="profile?.freelancer?.validated"
+                        v-if="profile?.agence?.validated"
                         class="i-carbon-checkmark-filled text-xl inline-block"
                       />
                       <span v-else class="i-carbon-close-filled text-red-600 text-xl inline-block" />
@@ -1411,14 +1204,14 @@ onMounted(async() => {
                       class="d-flex align-items-center text-gray-400 text-hover-primary me-5 mb-2"
                     >
                       <span class="i-carbon-user-avatar-filled-alt text-xl inline-block mr-1" />
-                      {{ profile?.freelancer?.title_profile }}
+                      {{ profile?.agence?.nameAgence }}
                     </a>
                     <a
                       href="#"
                       class="flex items-center text-gray-400 text-hover-primary me-5 mb-2"
                     >
                       <span class="i-carbon-location-filled text-xl inline-block mr-1" />
-                      {{ profile?.freelancer?.localisation }}
+                      {{ profile?.agence?.localisation }}
                     </a>
                     <a href="#" class="flex items-center text-gray-400 text-hover-primary mb-2">
                       <span class="i-carbon-email text-xl inline-block mr-1" />
@@ -1492,6 +1285,9 @@ onMounted(async() => {
                           <a-form-item name="description" label="Description">
                             <a-input v-model:value="formStateProfile.description" />
                           </a-form-item>
+                          <a-form-item name="description" label="Nom Agence">
+                            <a-input v-model:value="formStateProfile.nameAgence" />
+                          </a-form-item>
                           <a-form-item name="firstName" label="Prénom">
                             <a-input v-model:value="formStateProfile.firstName" />
                           </a-form-item>
@@ -1513,39 +1309,6 @@ onMounted(async() => {
                               placeholder="Choisir une catégorie de métier"
                               :options="jobs"
                             />
-                          </a-form-item>
-                          <a-form-item name="visibility" label="Disponibilité">
-                            <a-switch v-model:checked="formStateProfile.visibility" />
-                          </a-form-item>
-                          <a-form-item name="disponibility_freq" label="Fréquence / semaine">
-                            <a-slider
-                              v-model:value="formStateProfile.disponibility_freq"
-                              :step="null"
-                              :tip-formatter="null"
-                              :marks="{
-                                0: '1 jour',
-                                15: '2 jours',
-                                30: '3 jours',
-                                50: '4 jours',
-                                70: 'Soirs & week-ends',
-                                100: 'Temps plein',
-                              }"
-                            />
-                          </a-form-item>
-                          <a-form-item
-                            name="price_per_day"
-                            label="Définissez votre tarif"
-                            :rules="[{ required: true, message: 'Please select your price_per_day!' }]"
-                          >
-                            <a-input-number
-                              v-model:value="formStateProfile.price_per_day"
-                              step="50"
-                              :min="50"
-                              :max="9999"
-                            />
-                          </a-form-item>
-                          <a-form-item name="show_price" label="Afficher le tarif">
-                            <a-switch v-model:checked="formStateProfile.show_price" />
                           </a-form-item>
                           <a-form-item name="url_fb" label="lien facebook">
                             <a-input v-model:value="formStateProfile.url_fb" />
@@ -1577,8 +1340,8 @@ onMounted(async() => {
                             </div>
                             <div class="w-[40%]">
                               <span
-                                :class="`px-3 py-1 bg-${profile?.freelancer?.visibility ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ profile?.freelancer?.visibility ? 'Visible' : 'Invisible' }}</span>
+                                :class="`px-3 py-1 bg-${profile?.agence?.visibility ? 'green' : 'red'}-600 rounded-lg text-light-50`"
+                              >{{ profile?.agence?.visibility ? 'Visible' : 'Invisible' }}</span>
                             </div>
                           </div>
                           <div class="flex mb-4">
@@ -1587,8 +1350,8 @@ onMounted(async() => {
                             </div>
                             <div class="w-[40%]">
                               <span
-                                :class="`px-3 py-1 bg-${profile?.freelancer?.greenQuestion.length ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ profile?.freelancer?.greenQuestion ? 'Oui' : 'Non' }}</span>
+                                :class="`px-3 py-1 bg-${profile?.agence?.greenQuestion.length ? 'green' : 'red'}-600 rounded-lg text-light-50`"
+                              >{{ profile?.agence?.greenQuestion ? 'Oui' : 'Non' }}</span>
                               <span
                                 class="i-carbon-help-filled inline-block text-green-600 leading-2 text-sm ml-2 mr-0.5"
                                 @click="visibleModalGreenQuestion = true"
@@ -1601,28 +1364,28 @@ onMounted(async() => {
                             </div>
                             <div class="w-[40%]">
                               <span
-                                :class="`px-3 py-1 bg-${profile?.freelancer?.description?.length ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ profile?.freelancer?.description?.length ? 'Oui' : 'Non' }}</span>
+                                :class="`px-3 py-1 bg-${profile?.agence?.description?.length ? 'green' : 'red'}-600 rounded-lg text-light-50`"
+                              >{{ profile?.agence?.description?.length ? 'Oui' : 'Non' }}</span>
                             </div>
                           </div>
                           <div class="flex mb-4">
                             <div class="w-[60%]">
-                              Au minimum sept compétences ajoutées
+                              Au minimum une références
                             </div>
                             <div class="w-[40%]">
                               <span
-                                :class="`px-3 py-1 bg-${profile?.freelancer?.skills.length ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ profile?.freelancer?.skills.length ? 'Oui' : 'Non' }}</span>
+                                :class="`px-3 py-1 bg-${profile?.agence?.references.length ? 'green' : 'red'}-600 rounded-lg text-light-50`"
+                              >{{ profile?.agence?.references.length ? 'Oui' : 'Non' }}</span>
                             </div>
                           </div>
                           <div class="flex mb-4">
                             <div class="w-[60%]">
-                              Au minimum une langue ajoutée
+                              Au minimum une offre ajoutée
                             </div>
                             <div class="w-[40%]">
                               <span
-                                :class="`px-3 py-1 bg-${profile?.freelancer?.languages.length ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ profile?.freelancer?.languages.length ? 'Oui' : 'Non' }}</span>
+                                :class="`px-3 py-1 bg-${profile?.agence?.offers.length ? 'green' : 'red'}-600 rounded-lg text-light-50`"
+                              >{{ profile?.agence?.offers.length ? 'Oui' : 'Non' }}</span>
                             </div>
                           </div>
                           <div class="flex mb-4">
@@ -1631,8 +1394,8 @@ onMounted(async() => {
                             </div>
                             <div class="w-[40%]">
                               <span
-                                :class="`px-3 py-1 bg-${profile?.freelancer?.email_verification ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ profile?.freelancer?.email_verification ? 'Oui' : 'Non' }}</span>
+                                :class="`px-3 py-1 bg-${profile?.agence?.email_verification ? 'green' : 'red'}-600 rounded-lg text-light-50`"
+                              >{{ profile?.agence?.email_verification ? 'Oui' : 'Non' }}</span>
                               <span
                                 class="i-carbon-help-filled inline-block text-green-600 leading-2 text-sm ml-2 mr-0.5"
                                 @click="visibleModalInformationEmailVerification = true"
@@ -1645,8 +1408,8 @@ onMounted(async() => {
                             </div>
                             <div class="w-[40%]">
                               <span
-                                :class="`px-3 py-1 bg-${profile?.freelancer?.confidentiality ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ profile?.freelancer?.confidentiality ? 'Oui' : 'Non' }}</span>
+                                :class="`px-3 py-1 bg-${profile?.agence?.confidentiality ? 'green' : 'red'}-600 rounded-lg text-light-50`"
+                              >{{ profile?.agence?.confidentiality ? 'Oui' : 'Non' }}</span>
                             </div>
                           </div>
                           <div class="flex mb-4">
@@ -1655,8 +1418,8 @@ onMounted(async() => {
                             </div>
                             <div class="w-[40%]">
                               <span
-                                :class="`px-3 py-1 bg-${profile?.freelancer?.documents_val ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ profile?.freelancer?.documents_val ? 'Oui' : 'Non' }}</span>
+                                :class="`px-3 py-1 bg-${profile?.agence?.documents_val ? 'green' : 'red'}-600 rounded-lg text-light-50`"
+                              >{{ profile?.agence?.documents_val ? 'Oui' : 'Non' }}</span>
                               <span
                                 class="i-carbon-help-filled inline-block text-green-600 leading-2 text-sm ml-2 mr-0.5"
                                 @click="visibleModalInformationDocumentVal = true"
@@ -1669,8 +1432,8 @@ onMounted(async() => {
                             </div>
                             <div class="w-[40%]">
                               <span
-                                :class="`px-3 py-1 bg-${profile?.freelancer?.signed_client ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ profile?.freelancer?.signed_client ? 'Oui' : 'Non' }}</span>
+                                :class="`px-3 py-1 bg-${profile?.agence?.signed_client ? 'green' : 'red'}-600 rounded-lg text-light-50`"
+                              >{{ profile?.agence?.signed_client ? 'Oui' : 'Non' }}</span>
                               <span
                                 class="i-carbon-help-filled inline-block text-green-600 leading-2 text-sm ml-2 mr-0.5"
                                 @click="visibleModalInformationSignatureCharte = true"
@@ -1683,8 +1446,8 @@ onMounted(async() => {
                             </div>
                             <div class="w-[40%]">
                               <span
-                                :class="`px-3 py-1 bg-${profile?.freelancer?.validated ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ profile?.freelancer?.validated ? 'Oui' : 'Non' }}</span>
+                                :class="`px-3 py-1 bg-${profile?.agence?.validated ? 'green' : 'red'}-600 rounded-lg text-light-50`"
+                              >{{ profile?.agence?.validated ? 'Oui' : 'Non' }}</span>
                               <span
                                 class="i-carbon-help-filled inline-block text-green-600 leading-2 text-sm ml-2 mr-0.5"
                                 @click="visibleModalInformationValidated = true"
@@ -1698,129 +1461,20 @@ onMounted(async() => {
                   </a-card>
                 </div>
               </a-tab-pane>
-              <a-tab-pane key="2" tab="Experience" force-render>
+              <a-tab-pane key="2" tab="Références" force-render>
                 <div class>
-                  <a-card title="Experience" :bordered="false" class="rounded-sm">
-                    <div v-if="profile && profile?.experiences?.length">
-                      <a-timeline mode="alternate">
-                        <a-timeline-item>
-                          <template #dot>
-                            <a-tooltip>
-                              <template #title>
-                                Ajouter une expérience
-                              </template>
-                              <a
-                                href="javascript:;"
-                                @click="() => { resetFields(); modelRefExperience.id = undefined; visibleModalAddExperience = true }"
-                              >
-                                <span class="i-carbon-add-filled inline-block text-green-300" />
-                              </a>
-                            </a-tooltip>
-                          </template>
-                          <div class="leading-10">
-                            <span class="invisible">Ajouter</span>
-                          </div>
-                        </a-timeline-item>
-                        <a-timeline-item v-for="item in profile?.experiences" :key="item._id">
-                          <template #dot>
-                            <a-dropdown :trigger="['click', 'hover']">
-                              <a class="ant-dropdown-link" @click.prevent>
-                                <a href="javascript:;">
-                                  <span
-                                    class="i-carbon-recording-filled-alt inline-block text-green-300"
-                                  />
-                                </a>
-                              </a>
-                              <template #overlay>
-                                <a-menu>
-                                  <a-menu-item key="0" @click="updateExperience(item)">
-                                    <span class="flex items-center">
-                                      <span class="i-carbon-edit inline-block text-md mr-2" /> Modifier
-                                    </span>
-                                  </a-menu-item>
-                                  <a-menu-divider />
-                                  <a-menu-item key="1" @click="deleteExperience(item._id)">
-                                    <span class="flex items-center">
-                                      <span class="i-carbon-delete inline-block text-md mr-2" /> Supprimer
-                                    </span>
-                                  </a-menu-item>
-                                </a-menu>
-                              </template>
-                            </a-dropdown>
-                          </template>
-                          <div class="text-left">
-                            <h3 class="text-gray-900 text-2xl flex items-center mb-0.5">
-                              <span
-                                class="i-carbon-enterprise inline-block text-gray-600 text-4xl mr-1 mb-1"
-                              />
-                              <span class="font-mono uppercase" />
-                              {{ item.society }}
-                            </h3>
-                            <div class="text-lg text-gray-600">
-                              {{ item.title }}
-                            </div>
-                            <div class="text-gray-500 text-sm flex items-center mb-1">
-                              <span
-                                class="i-carbon-time inline-block text-gray-700 text-xs mr-0.5"
-                              />
-                              <span>
-                                {{
-                                  dayjs(item.dateBegin).format("DD-MM-YYYY")
-                                }}{{ item.dateEnd && ` - ${dayjs(item.dateEnd).format("DD-MM-YYYY")}` }}
-                              </span>
-                              <span v-if="!item.dateEnd && item.actuallyPost" class="ml-1">
-                                <a-tag class="mr-0.5" color="#05f">Poste actuelle</a-tag>
-                              </span>
-                              <span v-if="item.isFreelancer" class="ml-1">
-                                <a-tag class="mr-0.5" color="#f50">Freelance</a-tag>
-                              </span>
-                            </div>
-                            <h4 class="text-gray-500 flex items-center mb-2">
-                              <span
-                                class="i-carbon-location-filled inline-block text-gray-700 leading-2 text-xs mr-0.5"
-                              />
-                              {{ item.place }}
-                            </h4>
-                            <h4 class="text-gray-500 flex items-center mb-2">
-                              <span
-                                class="i-carbon-idea inline-block text-gray-700 leading-2 text-xs mr-0.5"
-                              />
-                              {{ item.domain }}
-                            </h4>
-                            <a-typography-paragraph
-                              :ellipsis="{ rows: 2 }"
-                              :content="item.description"
-                            />
-                            <div>
-                              <a-list
-                                size="small"
-                                item-layout="horizontal"
-                                :data-source="item.skills.filter(s => s).map(s => ({ title: s }))"
-                              >
-                                <template #renderItem="{ item: skill }">
-                                  <a-list-item>
-                                    <div class="flex items-center">
-                                      <span
-                                        class="i-carbon-checkmark inline-block text-green-400 text-lg mr-2.5"
-                                      />
-                                      <span class="text-dark-100 text-sm">{{ skill.title }}</span>
-                                    </div>
-                                  </a-list-item>
-                                </template>
-                              </a-list>
-                            </div>
-                          </div>
-                        </a-timeline-item>
-                      </a-timeline>
+                  <a-card title="Référence" :bordered="false" class="rounded-sm">
+                    <div v-if="profile && profile?.references?.length">
+                      Références
                     </div>
                     <a-result
                       v-else
                       status="404"
-                      title="No experience found"
-                      sub-title="Sorry, the page you visited does not exist."
+                      title="aucune référence trouvée"
+                      sub-title="veuillez ajouter vos références"
                     >
                       <template #extra>
-                        <a-button type="primary" @click="visibleModalAddExperience = true">
+                        <a-button type="primary" @click="visibleModalAddReference = true">
                           Ajouter
                         </a-button>
                       </template>
@@ -1828,302 +1482,24 @@ onMounted(async() => {
                   </a-card>
                 </div>
               </a-tab-pane>
-              <a-tab-pane key="3" tab="Formations" force-render>
+              <a-tab-pane key="3" tab="Offres" force-render>
                 <div class>
-                  <a-card title="Formations" :bordered="false" class="rounded-sm">
-                    <div v-if="profile && profile?.formations?.length">
-                      <a-timeline mode="alternate">
-                        <a-timeline-item>
-                          <template #dot>
-                            <a-tooltip>
-                              <template #title>
-                                Ajouter une formation
-                              </template>
-                              <a
-                                href="javascript:;"
-                                @click="() => { resetFieldsFormation(); modelRefFormation.id = undefined; visibleModalAddFormation = true }"
-                              >
-                                <span class="i-carbon-add-filled inline-block text-green-300" />
-                              </a>
-                            </a-tooltip>
-                          </template>
-                          <div class="leading-10">
-                            <span class="invisible">Ajouter</span>
-                          </div>
-                        </a-timeline-item>
-                        <a-timeline-item v-for="item in profile?.formations" :key="item._id">
-                          <template #dot>
-                            <a-dropdown :trigger="['click', 'hover']">
-                              <a class="ant-dropdown-link" @click.prevent>
-                                <a href="javascript:;">
-                                  <span
-                                    class="i-carbon-recording-filled-alt inline-block text-green-300"
-                                  />
-                                </a>
-                              </a>
-                              <template #overlay>
-                                <a-menu>
-                                  <a-menu-item key="0" @click="updateFormation(item)">
-                                    <span class="flex items-center">
-                                      <span class="i-carbon-edit inline-block text-md mr-2" /> Modifier
-                                    </span>
-                                  </a-menu-item>
-                                  <a-menu-divider />
-                                  <a-menu-item key="1" @click="deleteFormation(item._id)">
-                                    <span class="flex items-center">
-                                      <span class="i-carbon-delete inline-block text-md mr-2" /> Supprimer
-                                    </span>
-                                  </a-menu-item>
-                                </a-menu>
-                              </template>
-                            </a-dropdown>
-                          </template>
-                          <div class="text-left">
-                            <h3 class="text-gray-900 text-2xl flex items-center mb-0.5">
-                              <span
-                                class="i-carbon-enterprise inline-block text-gray-600 text-4xl mr-1 mb-1"
-                              />
-                              <span class="font-mono uppercase" />
-                              {{ item.name }}
-                              <a-tag
-                                v-if="item.type === 'en cours'"
-                                class="text-xs ml-2 leading-5"
-                                color="#05f"
-                              >
-                                {{ item.type }}
-                              </a-tag>
-                              <a-tag
-                                v-else
-                                class="text-xs ml-2 leading-5"
-                                color="#080"
-                              >
-                                {{ item.type }}
-                              </a-tag>
-                              <a-tag class="text-xs ml-2 leading-5" color="#f50">
-                                {{ item.year }}
-                              </a-tag>
-                            </h3>
-                            <a-typography-paragraph
-                              :ellipsis="{ rows: 2 }"
-                              :content="item.description"
-                            />
-                          </div>
-                        </a-timeline-item>
-                      </a-timeline>
+                  <a-card title="Offres" :bordered="false" class="rounded-sm">
+                    <div v-if="profile && profile?.offers?.length">
+                      Offres
                     </div>
                     <a-result
                       v-else
                       status="404"
-                      title="Formations non trouvées"
-                      sub-title="veuillez ajouter vos formations"
+                      title="aucune offre n'a été trouvée"
+                      sub-title="veuillez ajouter vos offres"
                     >
                       <template #extra>
-                        <a-button type="primary" @click="visibleModalAddFormation = true">
+                        <a-button type="primary" @click="visibleModalAddOffer = true">
                           Ajouter
                         </a-button>
                       </template>
                     </a-result>
-                    <div>
-                      <h3 class="text-dark-50 mb-1 text-lg">
-                        Compétences:
-                      </h3>
-                      <a-select
-                        v-model:value="skillsValue"
-                        mode="tags"
-                        style="width: 100%"
-                        :token-separators="[',']"
-                        placeholder="Choisissez les compétences proposés ou rédigez ceux propre à vous"
-                        :options="skills"
-                      />
-                      <a-button
-                        class="mt-3"
-                        type="primary"
-                        block
-                        @click="updateProfile({ ...profile.freelancer, skills: skillsValue })"
-                      >
-                        Ajouter vos compétences
-                      </a-button>
-                    </div>
-                  </a-card>
-                </div>
-              </a-tab-pane>
-              <a-tab-pane key="4" tab="Certifications" force-render>
-                <div class>
-                  <a-card title="Certifications" :bordered="false" class="rounded-sm">
-                    <div v-if="profile && profile?.certifications?.length">
-                      <a-timeline mode="alternate">
-                        <a-timeline-item>
-                          <template #dot>
-                            <a-tooltip>
-                              <template #title>
-                                Ajouter une certification
-                              </template>
-                              <a
-                                href="javascript:;"
-                                @click="() => { resetFieldsCertification(); modelRefCertification.id = undefined; visibleModalAddCertification = true }"
-                              >
-                                <span class="i-carbon-add-filled inline-block text-green-300" />
-                              </a>
-                            </a-tooltip>
-                          </template>
-                          <div class="leading-10">
-                            <span class="invisible">Ajouter</span>
-                          </div>
-                        </a-timeline-item>
-                        <a-timeline-item v-for="item in profile?.certifications" :key="item._id">
-                          <template #dot>
-                            <a-dropdown :trigger="['click', 'hover']">
-                              <a class="ant-dropdown-link" @click.prevent>
-                                <a href="javascript:;">
-                                  <span
-                                    class="i-carbon-recording-filled-alt inline-block text-green-300"
-                                  />
-                                </a>
-                              </a>
-                              <template #overlay>
-                                <a-menu>
-                                  <a-menu-item key="0" @click="updateCertification(item)">
-                                    <span class="flex items-center">
-                                      <span class="i-carbon-edit inline-block text-md mr-2" /> Modifier
-                                    </span>
-                                  </a-menu-item>
-                                  <a-menu-divider />
-                                  <a-menu-item key="1" @click="deleteCertification(item._id)">
-                                    <span class="flex items-center">
-                                      <span class="i-carbon-delete inline-block text-md mr-2" /> Supprimer
-                                    </span>
-                                  </a-menu-item>
-                                </a-menu>
-                              </template>
-                            </a-dropdown>
-                          </template>
-                          <div class="text-left">
-                            <h3 class="text-gray-900 text-2xl flex items-center mb-0.5">
-                              <span
-                                class="i-carbon-enterprise inline-block text-gray-600 text-4xl mr-1 mb-1"
-                              />
-                              <span class="font-mono uppercase" />
-                              {{ item.name }}
-                              <a-tag
-                                v-if="item.type === 'en cours'"
-                                class="text-xs ml-2 leading-5"
-                                color="#05f"
-                              >
-                                {{ item.type }}
-                              </a-tag>
-                              <a-tag
-                                v-else
-                                class="text-xs ml-2 leading-5"
-                                color="#080"
-                              >
-                                {{ item.type }}
-                              </a-tag>
-                              <a-tag class="text-xs ml-2 leading-5" color="#f50">
-                                {{ item.year }}
-                              </a-tag>
-                            </h3>
-                            <h4 class="text-gray-500 flex items-center mb-2">
-                              <span
-                                class="i-carbon-location-filled inline-block text-gray-700 leading-2 text-xs mr-0.5"
-                              />
-                              {{ item.place }}
-                            </h4>
-                            <a-typography-paragraph
-                              :ellipsis="{ rows: 2 }"
-                              :content="item.description"
-                            />
-                          </div>
-                        </a-timeline-item>
-                      </a-timeline>
-                    </div>
-                    <a-result
-                      v-else
-                      status="404"
-                      title="Certifications non trouvées"
-                      sub-title="veuillez ajouter vos certifications"
-                    >
-                      <template #extra>
-                        <a-button
-                          type="primary"
-                          @click="visibleModalAddCertification = true"
-                        >
-                          Ajouter
-                        </a-button>
-                      </template>
-                    </a-result>
-                  </a-card>
-                </div>
-              </a-tab-pane>
-              <a-tab-pane key="6" tab="Centres d'intérets" force-render>
-                <div class>
-                  <a-card title="Centre d'interet" :bordered="false" class="rounded-sm">
-                    <div>
-                      <div class="mb-3">
-                        <div class="text-dark-50 mb-1 text-lg">
-                          Passion
-                        </div>
-                        <div>
-                          <a-textarea
-                            v-model:value="passionValue"
-                            placeholder="Passion"
-                            :auto-size="{ minRows: 3, maxRows: 5 }"
-                          />
-                        </div>
-                      </div>
-                      <div class="mb-1">
-                        <div class="text-dark-50 mb-1 text-lg">
-                          Centre d'intéréts
-                        </div>
-                        <a-select
-                          v-model:value="interestValue"
-                          mode="tags"
-                          style="width: 100%"
-                          placeholder="Choisissez les compétences proposés ou rédigez ceux propre à vous"
-                          :options="profile.freelancer?.interest?.map(i => ({label: i, value: i})) || []"
-                        />
-                      </div>
-                      <a-button
-                        class="mt-3"
-                        type="primary"
-
-                        @click="updateProfile({ passion: passionValue, interest: interestValue})"
-                      >
-                        Modifier
-                      </a-button>
-                      <div class="mb-3 mt-4">
-                        <div class="text-dark-50 mb-1 text-lg">
-                          Langues
-                        </div>
-                        <LanguagesLevel
-                          v-model="profile.freelancer.languages"
-                          :languages="languages"
-                          @remove-language="removeLanguage"
-                          @add-language="addLanguage"
-                          @update-language="updateLanguage"
-                        />
-                        <a-select
-                          mode="multiple"
-                          class="hidden"
-                          placeholder="Choisir une langue"
-                          :options="languages"
-                          style="width: 100%"
-                        >
-                          <template #option="{ value: val, label, icon }">
-                            <span role="img" :aria-label="val">{{ icon }}</span>
-                            {{ label }}
-                          </template>
-                          <template #tagRender="{ value: val, label, closable, onClose, option }">
-                            <a-tag :closable="closable" style="margin-right: 3px" @close="onClose">
-                              {{ label }}&nbsp;&nbsp;
-                              <span
-                                role="img"
-                                :aria-label="val"
-                              >{{ option.icon }}</span>
-                            </a-tag>
-                          </template>
-                        </a-select>
-                      </div>
-                    </div>
                   </a-card>
                 </div>
               </a-tab-pane>
@@ -2310,7 +1686,7 @@ onMounted(async() => {
                                       />
                                     </a-form-item>
                                     <a-form-item
-                                      label="Pays de naissance"
+                                      label="Nationalité"
                                       v-bind="validateInfosLegalRepresentative.nationality"
                                     >
                                       <a-select
@@ -2334,7 +1710,7 @@ onMounted(async() => {
                                       <a-form-item name="dragger" no-style>
                                         <a-upload-dragger
                                           name="files"
-                                          :file-list="profile?.freelancer?.documents.map(f => ({
+                                          :file-list="profile?.agence?.documents.map(f => ({
                                             uid: f.uid || f,
                                             name: f.name || f,
                                             status: f.status || 'done',
@@ -2770,48 +2146,43 @@ onMounted(async() => {
     <!--== End Login Area Wrapper ==-->
   </main>
   <a-modal
-    v-model:visible="visibleModalAddExperience"
+    v-model:visible="visibleModalAddReference"
     width="40%"
-    :title="modelRefExperience.id ? 'Modifier Experience' : 'Ajouter Experience'"
+    :title="modelRefReference.id ? 'Modifier Référence client' : 'Ajouter Référence client'"
     @ok="() => { }"
   >
     <div>
       <a-form layout="vertical" :wrapper-col="{ span: 24 }">
-        <a-form-item label="Nom Expérience :" v-bind="experienceValidateInfos.title">
+        <a-form-item label="Nom Client :" v-bind="referenceValidateInfos.client">
           <a-input
-            v-model:value="modelRefExperience.title"
-            @blur="validate('title', { trigger: 'blur' }).catch(() => { })"
+            v-model:value="modelRefReference.client"
+            @blur="validate('client', { trigger: 'blur' }).catch(() => { })"
           />
         </a-form-item>
-        <a-form-item label="Société :" v-bind="experienceValidateInfos.society">
-          <a-input
-            v-model:value="modelRefExperience.society"
-            @blur="validate('society', { trigger: 'blur' }).catch(() => { })"
-          />
-        </a-form-item>
-        <a-form-item label="Localisation :" v-bind="experienceValidateInfos.place">
-          <a-input
-            v-model:value="modelRefExperience.place"
-            @blur="validate('place', { trigger: 'blur' }).catch(() => { })"
-          />
-        </a-form-item>
-        <a-form-item label="Choisir un domaine :" v-bind="experienceValidateInfos.domain">
+        <a-form-item label="Choisir un domaine :" v-bind="referenceValidateInfos.domain">
           <a-select
-            v-model:value="modelRefExperience.domain"
+            v-model:value="modelRefReference.domain"
             placeholder="please select your domain"
             :options="activities"
             @blur="validate('domain', { trigger: 'blur' }).catch(() => { })"
           />
         </a-form-item>
+        <a-form-item label="Titre :" v-bind="referenceValidateInfos.title">
+          <a-input
+            v-model:value="modelRefReference.title"
+            @blur="validate('title', { trigger: 'blur' }).catch(() => { })"
+          />
+        </a-form-item>
+        <a-form-item label="Localisation :" v-bind="referenceValidateInfos.place">
+          <a-input
+            v-model:value="modelRefReference.place"
+            @blur="validate('place', { trigger: 'blur' }).catch(() => { })"
+          />
+        </a-form-item>
         <div class="grid grid-cols-2 gap-3 w-full">
           <div>
-            <a-form-item name="switch" label="en freelance ?">
-              <a-switch v-model:checked="modelRefExperience.isFreelancer" />
-            </a-form-item>
-          </div>
-          <div>
-            <a-form-item name="switch" label="poste actuelle ?">
-              <a-switch v-model:checked="modelRefExperience.actuallyPost" />
+            <a-form-item name="switch" label="référence confidentielle ?">
+              <a-switch v-model:checked="modelRefReference.confidential" />
             </a-form-item>
           </div>
         </div>
@@ -2824,10 +2195,10 @@ onMounted(async() => {
               :label-col="{
                 sm: { span: 24 }
               }"
-              v-bind="experienceValidateInfos.dateBegin"
+              v-bind="referenceValidateInfos.dateBegin"
             >
               <a-date-picker
-                v-model:value="modelRefExperience.dateBegin"
+                v-model:value="modelRefReference.dateBegin"
                 style="width: 100%"
                 value-format="YYYY-MM-DD"
                 :disabled-date="(current: Dayjs) => current && current > dayjs().endOf('day')"
@@ -2835,7 +2206,7 @@ onMounted(async() => {
               />
             </a-form-item>
           </div>
-          <div v-if="!modelRefExperience.actuallyPost" class>
+          <div class>
             <a-form-item
               :label-col="{
                 sm: { span: 24 }
@@ -2843,35 +2214,18 @@ onMounted(async() => {
               :wrapper-col="{ span: 24, offset: 0 }"
               name="month-picker"
               label="Date de fin"
-              v-bind="experienceValidateInfos.dateEnd"
+              v-bind="referenceValidateInfos.dateEnd"
             >
               <a-date-picker
-                v-model:value="modelRefExperience.dateEnd"
+                v-model:value="modelRefReference.dateEnd"
                 style="width: 100%"
                 value-format="YYYY-MM-DD"
-                :disabled-date="(current: Dayjs) => current && current > dayjs().endOf('day') || current < dayjs(modelRefExperience.dateBegin)"
+                :disabled-date="(current: Dayjs) => current && current > dayjs().endOf('day') || current < dayjs(modelRefReference.dateBegin)"
                 @blur="validate('dateEnd', { trigger: 'blur' }).catch(() => { })"
               />
             </a-form-item>
           </div>
         </div>
-        <a-form-item name="switch" label="Compétences :">
-          <a-select
-            v-model:value="modelRefExperience.skills"
-            mode="tags"
-            style="width: 100%"
-            :token-separators="[',']"
-            placeholder="Compétences"
-            :options="skills"
-          />
-        </a-form-item>
-        <a-form-item label="Description :">
-          <a-textarea
-            v-model:value="modelRefExperience.description"
-            placeholder="description"
-            :auto-size="{ minRows: 2, maxRows: 5 }"
-          />
-        </a-form-item>
       </a-form>
     </div>
     <template #footer>
@@ -2879,166 +2233,19 @@ onMounted(async() => {
         type="primary"
         @click.prevent="onSubmit"
       >
-        {{ modelRefExperience.id ? 'Modifier' : 'Ajouter' }}
+        {{ modelRefReference.id ? 'Modifier' : 'Ajouter' }}
       </a-button>
       <a-button
         style="margin-left: 10px"
-        @click="() => !modelRefExperience.id ? resetFields() : (visibleModalAddExperience = false)"
+        @click="() => !modelRefReference.id ? resetFields() : (visibleModalAddReference = false)"
       >
-        {{ modelRefExperience.id ? 'Close' : 'Reset' }}
+        {{ modelRefReference.id ? 'Fermer' : 'Réinitialiser' }}
       </a-button>
     </template>
   </a-modal>
-  <a-modal
-    v-model:visible="visibleModalAddFormation"
-    width="40%"
-    :title="modelRefFormation.id ? 'Modifier Formation' : 'Ajouter Formation'"
-    @ok="() => { }"
-  >
-    <div>
-      <a-form layout="vertical" :wrapper-col="{ span: 24 }">
-        <a-form-item label="Nom formation :" v-bind="validateInfosFormation.name">
-          <a-input
-            v-model:value="modelRefFormation.name"
-            @blur="validate('name', { trigger: 'blur' }).catch(() => { })"
-          />
-        </a-form-item>
-        <a-form-item label="Institution :" v-bind="validateInfosFormation.institute">
-          <a-input
-            v-model:value="modelRefFormation.institute"
-            @blur="validate('institute', { trigger: 'blur' }).catch(() => { })"
-          />
-        </a-form-item>
-        <a-form-item label="Choisir l'état de la formation :" v-bind="validateInfosFormation.type">
-          <a-select
-            v-model:value="modelRefFormation.type"
-            placeholder="Choisissez l'état de la formation"
-            :options="types"
-          />
-        </a-form-item>
-        <div class="grid grid-cols-2 gap-3 w-full">
-          <div class>
-            <a-form-item
-              v-bind="validateInfosFormation.year"
-              name="year-picker"
-              label="Année d'obtention"
-              :wrapper-col="{ span: 24, offset: 0 }"
-              :label-col="{
-                sm: { span: 24 }
-              }"
-            >
-              <a-month-picker
-                v-model:value="modelRefFormation.year"
-                style="width: 100%"
-                value-format="YYYY"
-              />
-            </a-form-item>
-          </div>
-        </div>
-        <a-form-item label="Description :" v-bind="validateInfosFormation.description">
-          <a-textarea
-            v-model:value="modelRefFormation.description"
-            placeholder="description"
-            :auto-size="{ minRows: 2, maxRows: 5 }"
-          />
-        </a-form-item>
-        <a-form-item class="hidden" :wrapper-col="{ span: 14, offset: 4 }">
-          <a-button type="primary" @click.prevent="onSubmitForm">
-            Créer
-          </a-button>
-          <a-button style="margin-left: 10px" @click="resetFieldsFormation">
-            Réinitialiser
-          </a-button>
-        </a-form-item>
-      </a-form>
-    </div>
-    <template #footer>
-      <a-button type="primary" @click.prevent="onSubmitForm">
-        Ajouter
-      </a-button>
-      <a-button style="margin-left: 10px" @click="resetFieldsFormation">
-        Réinitialiser
-      </a-button>
-    </template>
-  </a-modal>
-  <a-modal
-    v-model:visible="visibleModalAddCertification"
-    width="40%"
-    :title="modelRefCertification.id ? 'Modifier Certification' : 'Ajouter Certification'"
-    @ok="() => { }"
-  >
-    <div>
-      <a-form layout="vertical" :wrapper-col="{ span: 24 }">
-        <a-form-item label="Nom certification :" v-bind="validateInfosCertification.name">
-          <a-input
-            v-model:value="modelRefCertification.name"
-            @blur="validate('name', { trigger: 'blur' }).catch(() => { })"
-          />
-        </a-form-item>
-        <a-form-item label="Organisme :" v-bind="validateInfosCertification.organism">
-          <a-input
-            v-model:value="modelRefCertification.organism"
-            @blur="validate('institute', { trigger: 'blur' }).catch(() => { })"
-          />
-        </a-form-item>
-        <a-form-item
-          label="Choisir l'état de la certification :"
-          v-bind="validateInfosCertification.type"
-        >
-          <a-select
-            v-model:value="modelRefCertification.type"
-            placeholder="Choisissez l'état de la certification"
-            :options="types"
-          />
-        </a-form-item>
-        <a-form-item label="Localisation :">
-          <a-input v-model:value="modelRefCertification.place" />
-        </a-form-item>
-        <div class="grid grid-cols-2 gap-3 w-full">
-          <div class>
-            <a-form-item
-              v-bind="validateInfosCertification.year"
-              name="year-picker"
-              label="Année d'obtention"
-              :wrapper-col="{ span: 24, offset: 0 }"
-              :label-col="{
-                sm: { span: 24 }
-              }"
-            >
-              <a-month-picker
-                v-model:value="modelRefCertification.year"
-                style="width: 100%"
-                value-format="YYYY"
-              />
-            </a-form-item>
-          </div>
-        </div>
-        <a-form-item label="Description :" v-bind="validateInfosCertification.description">
-          <a-textarea
-            v-model:value="modelRefCertification.description"
-            placeholder="description"
-            :auto-size="{ minRows: 2, maxRows: 5 }"
-          />
-        </a-form-item>
-        <a-form-item class="hidden" :wrapper-col="{ span: 14, offset: 4 }">
-          <a-button type="primary" @click.prevent="onSubmitCert">
-            Créer
-          </a-button>
-          <a-button style="margin-left: 10px" @click="resetFieldsCertification">
-            Réinitialiser
-          </a-button>
-        </a-form-item>
-      </a-form>
-    </div>
-    <template #footer>
-      <a-button type="primary" @click.prevent="onSubmitCert">
-        Ajouter
-      </a-button>
-      <a-button style="margin-left: 10px" @click="resetFieldsCertification">
-        Réinitialiser
-      </a-button>
-    </template>
-  </a-modal>
+  <!-- modale offer creation and update -->
+
+  <!-- end modale offer creation and update -->
   <a-modal v-model:visible="visibleModalInformationEmailVerification" width="40%">
     <div>
       <div>
@@ -3103,7 +2310,7 @@ onMounted(async() => {
         </div>
         <div>
           Vous devez signer la charte de green_positive selon votre rôle.
-          Veuillez l'accepter via <router-link class="green" :to="`/charte/freelancer/${$props.id}`">
+          Veuillez l'accepter via <router-link class="green" :to="`/charte/agence/${$props.id}`">
             <span>ce lien</span>
           </router-link> pour continuez la validation de votre compte.
         </div>
