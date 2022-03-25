@@ -13,7 +13,7 @@ export const http: AxiosInstance = axios.create({
   // prefix
   baseURL: BASE_PREFIX,
   // time out
-  timeout: 1000 * 30,
+  // timeout: 1000 * 30,
   // request header
   headers: {
     'Content-Type': 'application/json',
@@ -58,6 +58,15 @@ const service = {
   get: (url: string, data?: object) => http.get(url, { params: data }),
   post: (url: string, data?: object) => http.post(url, data),
   patch: (url: string, data?: object) => http.patch(url, data),
+  delete: (url: string, data?: object) => http.delete(url, data),
+  upload: (url: string, file: FormData) =>
+    http.patch(url, file, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  download: (url: string, data: instanceObject) => {
+    const downloadUrl = `${BASE_PREFIX}/${url}?${formatJsonToUrlParams(data)}`
+    window.location.href = downloadUrl
+  },
 }
 
 watch(token, () => {

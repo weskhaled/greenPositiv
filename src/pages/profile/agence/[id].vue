@@ -724,6 +724,7 @@ const getFormData = async() => {
       formStateProfile.nameAgence = agence.nameAgence
       formStateProfile.firstName = agence.firstName
       formStateProfile.lastName = agence.lastName
+      formStateProfile.confidentiality = agence.confidentiality
       formStateProfile.jobCat = agence.jobCat
       formStateProfile.localisation = agence.localisation
       formStateProfile.phone = agence.phone

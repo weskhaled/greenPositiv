@@ -6,7 +6,7 @@ import showCodeMessage from '~/api/code'
 import type { instanceObject } from '~/utils/format'
 import { formatJsonToUrlParams } from '~/utils/format'
 
-const BASE_PREFIX = `${import.meta.env.VITE_API_AUTH}`
+const BASE_PREFIX = `${import.meta.env.VITE_API_COMPANY}`
 
 // Create instance
 export const http: AxiosInstance = axios.create({
@@ -55,8 +55,18 @@ http.interceptors.response.use(
   },
 )
 const service = {
+  get: (url: string, data?: object) => http.get(url, { params: data }),
   post: (url: string, data?: object) => http.post(url, data),
   patch: (url: string, data?: object) => http.patch(url, data),
+  delete: (url: string, data?: object) => http.delete(url, data),
+  upload: (url: string, file: FormData) =>
+    http.patch(url, file, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  download: (url: string, data: instanceObject) => {
+    const downloadUrl = `${BASE_PREFIX}/${url}?${formatJsonToUrlParams(data)}`
+    window.location.href = downloadUrl
+  },
 }
 
 watch(token, () => {

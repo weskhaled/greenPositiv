@@ -43,10 +43,16 @@ onClickOutside(asideOffcanvasMenu.value, () => {
                           <span>Freelance</span>
                         </router-link>
                       </li>
-                      <router-link class="nav-link" :to="`/charte/agence/${currentUser?.idUser}`">
-                        <span>Agence</span>
-                      </router-link>
-                      <li><a href="job-details.html"><span>Entreprise</span></a></li>
+                      <li>
+                        <router-link class="nav-link" :to="`/charte/agence/${currentUser?.idUser}`">
+                          <span>Agence</span>
+                        </router-link>
+                      </li>
+                      <li>
+                        <router-link class="nav-link" :to="`/charte/company/${currentUser?.idUser}`">
+                          <span>Entreprise</span>
+                        </router-link>
+                      </li>
                     </ul>
                   </li>
                   <li><a href="javascript:;" @click="router.push('/blog')"><span>Blog</span></a></li>
@@ -57,9 +63,9 @@ onClickOutside(asideOffcanvasMenu.value, () => {
                     </router-link>
                   </li>
                   <li v-if="!isAuthenticated">
-                    <a href="javascript:;" class="header-action-area" @click="router.push({path: '/auth/registration', query:{agence: 'true'}})">
-                      <span class="btn-registration">Je suis une entreprise</span>
-                    </a>
+                    <router-link to="/auth/registration-company" class="header-action-area">
+                      <span class="btn-registration">Je suis une Entreprise</span>
+                    </router-link>
                   </li>
                   <li v-if="!isAuthenticated">
                     <router-link class="nav-link" to="/auth">
@@ -78,6 +84,16 @@ onClickOutside(asideOffcanvasMenu.value, () => {
                       </li>
                       <li v-else-if="currentUser && currentUser.role === 'Agence'">
                         <router-link class="nav-link" :to="`/profile/agence/${currentUser?.idUser}`">
+                          <span>Modifier mon profil</span>
+                        </router-link>
+                      </li>
+                      <li v-else-if="currentUser && currentUser.role === 'Company'">
+                        <router-link class="nav-link" :to="`/profile/comapny/${currentUser?.idUser}`">
+                          <span>Modifier mon profil</span>
+                        </router-link>
+                      </li>
+                      <li v-else-if="currentUser && currentUser.role === 'Collab'">
+                        <router-link class="nav-link" :to="`/profile/collaborator/${currentUser?.idUser}`">
                           <span>Modifier mon profil</span>
                         </router-link>
                       </li>

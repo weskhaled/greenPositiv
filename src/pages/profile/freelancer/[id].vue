@@ -838,7 +838,7 @@ const getFormData = async() => {
       formStateProfile.phone = freelancer.phone
       formStateProfile.price_per_day = freelancer.price_per_day
       formStateProfile.show_price = !!freelancer.show_price
-      formStateProfile.visibility = !!freelancer.visibility
+      formStateProfile.disponibility = !!freelancer.disponibility
       formStateProfile.greenQuestion = freelancer.greenQuestion
       formStateProfile.url_fb = freelancer.url_fb
       formStateProfile.url_github = freelancer.url_github
@@ -1514,8 +1514,8 @@ onMounted(async() => {
                               :options="jobs"
                             />
                           </a-form-item>
-                          <a-form-item name="visibility" label="Disponibilité">
-                            <a-switch v-model:checked="formStateProfile.visibility" />
+                          <a-form-item name="disponibility" label="Disponibilité">
+                            <a-switch v-model:checked="formStateProfile.disponibility" />
                           </a-form-item>
                           <a-form-item name="disponibility_freq" label="Fréquence / semaine">
                             <a-slider

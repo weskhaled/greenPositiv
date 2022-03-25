@@ -17,6 +17,11 @@ const profilEntrepriseApi = {
   updateTaxeAgence: async(params: object) => service.patch('/profil-entreprise-agence/taxes', params),
   updateLegalMentionAgence: async(params: object) => service.patch('/profil-entreprise-agence/legal-mention', params),
   updatePaymentModuleAgence: async(params: object) => service.patch('/profil-entreprise-agence/payment/iban', params),
+
+  profileEntrepriseCompany: async(id: string) => service.get(`${BASE_PREFIX}/profil-entreprise-company/${id}`),
+  updateProfileEntrepriseCompany: async(file: FormData) => service.upload('/profil-entreprise-company/', file),
+  updateFacturationCompany: async(params: object) => service.patch('/profil-entreprise-company/facturation', params),
+  updateContactComptabilityCompany: async(params: object) => service.patch('/profil-entreprise-company/contact', params),
 }
 
 export default profilEntrepriseApi
