@@ -457,7 +457,6 @@ const rulesRef = reactive({
     },
   ],
 })
-/**/
 const rulesOffer = reactive({
   name: [
     {

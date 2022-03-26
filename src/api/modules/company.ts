@@ -14,6 +14,7 @@ const companyApi = {
   removeFavoris: async(id: string) => service.patch(`${BASE_PREFIX}/company/remove-favoris-freelance/${id}`),
 
   createCollaborator: async(params: object) => service.post(`${BASE_PREFIX}/company/create-collab`, params),
+  addCollab: async(id: string, idCollab: string) => useFetch(`${BASE_PREFIX}/add-collab/${id}/${idCollab}`).get().json(),
   removeCollaborator: async(id: string, idCollab: string) => service.patch(`${BASE_PREFIX}/company/remove-collab/${id}/${idCollab}`),
 }
 

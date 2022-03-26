@@ -35,11 +35,7 @@ const visibleModalInformationDocumentVal = ref(false)
 const visibleModalInformationSignatureCharte = ref(false)
 const visibleModalGreenQuestion = ref(false)
 const visibleModalInformationValidated = ref(false)
-// const formState = reactive<Record<string, any>>({
-//   'input-number': 3,
-//   'checkbox-group': ['A', 'B'],
-//   'rate': 3.5,
-// })
+const visibleModalAddCollaborator = ref(false)
 typeSearchable.value = [{
   value: 'alone',
   label: 'chercher des freelancers tout seul',
@@ -49,31 +45,31 @@ typeSearchable.value = [{
   label: 'greenPositiv cherchera pour vous les profils',
 }]
 sizeCompanies.value = [{
-  value: 0,
+  value: '0',
   label: '1 personne',
 },
 {
-  value: 1,
+  value: '1',
   label: 'Entre 1 et 10',
 },
 {
-  value: 2,
+  value: '2',
   label: 'Entre 11 et 49',
 },
 {
-  value: 3,
+  value: '3',
   label: 'Entre 50 et 249',
 },
 {
-  value: 4,
+  value: '4',
   label: 'Entre 250 et 999',
 },
 {
-  value: 5,
+  value: '5',
   label: 'Entre 1000 et 4999',
 },
 {
-  value: 6,
+  value: '6',
   label: 'Plus de 5000',
 }]
 departements.value = [{
@@ -120,6 +116,14 @@ departements.value = [{
   value: 'COMMUNICATION',
   label: 'COMMUNICATION',
 }]
+const modelRefCollaborator = reactive({
+  id: undefined,
+  username: '',
+  email: '',
+  password: '',
+  departement: undefined,
+  validated: undefined,
+})
 const formStateProfile = reactive<Record<string, any>>({
   avatar: null,
   email: '',
@@ -134,6 +138,7 @@ const formStateProfile = reactive<Record<string, any>>({
   worked_with: [],
   favorites: [],
   worked_in: [],
+  active_collab: false,
 })
 const formStateProfileEntreprise = reactive<any>({
   logo: null,
@@ -257,7 +262,84 @@ const rulesContact = reactive({
     },
   ],
 })
+const rulesCollab = reactive({
+  username: [
+    {
+      required: true,
+      message: 'Saisir un identifiant',
+    },
+    {
+      min: 3,
+      message: 'la longueur minimale est de 3',
+      trigger: 'blur',
+    },
+  ],
+  email: [
+    {
+      required: true,
+      message: 'Saisir une adresse email',
+    },
+    {
+      min: 3,
+      message: 'la longueur minimale est de 3',
+      trigger: 'blur',
+    },
+  ],
+  password: [
+    {
+      required: true,
+      validator: async(_rule: RuleObject, value: string) => {
+        if (!value) return Promise.reject(new Error('Saisir un mot de passe '))
+        if (value.length < 8)
+          return Promise.reject(new Error('la longueur minimal du mot de passe est 8 caractéres'))
+        else
+          return Promise.resolve()
+      },
+    },
+  ],
+  departement: [
+    {
+      required: true,
+      message: 'Choisissez un département',
+    },
+  ],
+})
+/* bloc collaborator */
+const { resetFields, validate, validateInfos: collaboratorValidateInfos } = useForm(modelRefCollaborator, rulesCollab)
+const onSubmitCollab = async() => {
+  validate()
+    .then(async() => {
+      const params = toRaw(modelRefCollaborator)
+      const { data } = await companyApi.createCollaborator(params)
+      message.info(data.message)
+      visibleModalAddCollaborator.value = false
+      getFormData()
+    })
+    .catch((err) => {
+      console.log('error', err)
+    })
+}
 
+const deleteCollab = (id: string) => {
+  setTimeout(() => {
+    Modal.confirm({
+      content: 'Supprimer le collaborateur',
+      icon: h(ExclamationCircleOutlined),
+      onOk() {
+        return companyApi.removeCollaborator(currentUser?.value.idUser, id).then(({ data }) => {
+          message.info(data.message)
+          profile.value = null
+          getFormData()
+        }).catch(err => message.error(`Oops errors! ${err}`))
+      },
+      cancelText: 'Retour',
+      onCancel() {
+        Modal.destroyAll()
+      },
+    })
+  })
+}
+/* end bloc reference */
 const getFormData = async() => {
   globalApi.activities().then(({ data }) => {
     data.value && (activities.value = data.value.filter(a => a.code && a.name).map(a => ({
@@ -285,6 +367,7 @@ const getFormData = async() => {
       formStateProfile.name = company.name
       formStateProfile.size = !!company.size
       formStateProfile.greenQuestion = company.greenQuestion
+      formStateProfile.active_collab = company.active_collab
     }
   })
   /**/
@@ -294,8 +377,8 @@ const getFormData = async() => {
       profileEntreprise.value = data
       formStateProfileEntreprise.name = profileEntreprise.value?.profile?.name
       formStateProfileEntreprise.size = profileEntreprise.value?.profile?.size
-      logoProfile.value = profileEntreprise.value?.profile.logo || ''
       formStateProfileEntreprise.sector_activity = profileEntreprise.value?.profile?.sector_activity
+      logoProfile.value = profileEntreprise.value?.profile.logo || ''
 
       formStateFacturation.social_reason = profileEntreprise.value?.facturation?.social_reason
       formStateFacturation.siret = profileEntreprise.value?.facturation?.siret
@@ -374,17 +457,17 @@ const useFormProfileEntreprise = useForm(formStateProfileEntreprise, rulesProfil
 const validateProfileEntreprise = useFormProfileEntreprise.validate
 const validateInfosProfileEntreprise = useFormProfileEntreprise.validateInfos
 const onSubmitProfileEntreprise = async() => {
-  if (userDocument.value) {
-    const formData = new FormData()
-    formData.append('documents', userDocument.value)
-    profile.value?.company?.documents?.length && formData.append('old_documents', profile.value?.company?.documents[0])
-    companyApi.uploadDocuments(formData).catch(err => message.error(`${err}`))
-  }
   validateProfileEntreprise()
     .then(async() => {
-      const params = toRaw(formStateProfileEntreprise)
-      params.id_company = props.id
-      const { data } = await profileEntrepriseApi.updateProfileEntrepriseCompany(params)
+      console.log('passed validators')
+      const formData = new FormData()
+      formData.append('name', formStateProfileEntreprise.name)
+      formData.append('size', formStateProfileEntreprise.size)
+      console.log('to update ', formStateProfileEntreprise.sector_activity)
+      formData.append('sector_activity', formStateProfileEntreprise.sector_activity)
+      if (formStateProfileEntreprise.logo)
+        formData.append('logo', formStateProfileEntreprise.logo[0].originFileObj)
+      const { data } = await profileEntrepriseApi.updateProfileEntrepriseCompany(formData)
       message.info(data.message)
       profileEntreprise.value = null
       getFormData()
@@ -416,7 +499,7 @@ const beforeUploadProfileLogo = async(file: any) => {
   if (!isLt2M)
     message.error('Image must smaller than 2MB!')
   if (isJpgOrPng && isLt2M) {
-    formStateProfile.avatar = [file]
+    formStateProfileEntreprise.logo = [file]
     const base64 = await useBase64(file).execute()
     logoProfile.value = base64
   }
@@ -426,16 +509,11 @@ const onFinish = async(values: any) => {
   if (values.avatar) {
     const formData = new FormData()
     formData.append('image', values.avatar[0].originFileObj)
+    console.log('avatar ', values.avatar[0].originFileObj)
+
     if (profile.value.company?.image)
       formData.append('old_image', 'test')
     await companyApi.uploadProfile(formData)
-  }
-  if (values.logo) {
-    const formData = new FormData()
-    formData.append('logo', values.logo[0].originFileObj)
-    if (profileEntreprise.value.company?.logo)
-      formData.append('old_logo', 'test')
-    await profileEntrepriseApi.updateProfileEntrepriseCompany(formData)
   }
   updateProfile({ ...profile, ...values })
 }
@@ -622,6 +700,9 @@ onMounted(async() => {
                               v-model:value="formStateProfile.searchable" :options="typeSearchable" placeholder="Choisissez le type de recherche"
                             />
                           </a-form-item>
+                          <a-form-item name="active_collab" label="Accés aux collaborateurs">
+                            <a-switch v-model:checked="formStateProfile.active_collab" />
+                          </a-form-item>
                           <a-form-item class="mb-0" :wrapper-col="{ span: 2, offset: 20 }">
                             <a-button size="large" type="primary" html-type="submit">
                               Enregistrer
@@ -733,9 +814,38 @@ onMounted(async() => {
               </a-tab-pane>
               <a-tab-pane key="2" tab="Collaborateurs" force-render>
                 <div class>
-                  <a-card title="Référence" :bordered="false" class="rounded-sm">
-                    <div v-if="profile && profile?.worked_in?.length">
-                      Collaborateurs
+                  <a-card title="Collaborateurs" :bordered="false" class="rounded-sm">
+                    <div v-if="profile && profile?.worked_with?.length">
+                      <div class="row">
+                        <div class="col-sm-6 col-md-6 col-lg-4 col-xl-3">
+                          <!--== Start Team Item ==-->
+                          <div v-for="item in profile?.worked_with" class="team-item">
+                            <div class="content">
+                              <h4 class="title">
+                                <a href="candidate-details.html">{{ item.username }}</a>
+                                <span v-if="item.validated" class="i-carbon-checkmark-filled text-green-600 text-xl inline-block" />
+                                <span v-else class="i-carbon-close-filled text-red-600 text-xl inline-block" />
+                              </h4>
+                              <h5 class="sub-title">
+                                {{ item.departement }}
+                              </h5>
+                              <div class="rating-box">
+                                <i class="icofont-star" />
+                                <i class="icofont-star" />
+                                <i class="icofont-star" />
+                                <i class="icofont-star" />
+                                <i class="icofont-star" />
+                              </div>
+                              <p class="desc">
+                                {{ item.email }}
+                              </p>
+                            </div>
+                            <span class="bookmark-icon i-carbon-trash-can text-xl inline-block" @click="deleteCollab(item._id)" />
+                            <span class="bookmark-icon-hover i-carbon-trash-can text-xl inline-block" @click="deleteCollab(item._id)" />
+                          </div>
+                          <!--== End Team Item ==-->
+                        </div>
+                      </div>
                     </div>
                     <a-result
                       v-else
@@ -819,29 +929,29 @@ onMounted(async() => {
                                     />
                                   </a-form-item>
                                   <a-form-item
+                                    name="size"
+                                    has-feedback
                                     label="Taille de l'entreprise"
-                                    v-bind="validateInfosProfileEntreprise.size"
+                                    :rules="[{ required: true, message: 'Veuillez choisir la taille de votre entreprise' }]"
                                   >
                                     <a-select
-                                      v-model:value="formStateProfileEntreprise.size"
-                                      placeholder="Taille de l'entreprise "
-                                      :options="sizeCompanies"
+                                      v-model:value="formStateProfileEntreprise.size" :options="sizeCompanies" placeholder="Choisissez le secteur d'activité"
                                     />
                                   </a-form-item>
                                   <a-form-item
+                                    name="sector_activity"
+                                    has-feedback
                                     label="Secteur d'activité"
-                                    v-bind="validateInfosProfileEntreprise.size"
+                                    :rules="[{ required: true, message: 'Veuillez choisir le type de recherche' }]"
                                   >
                                     <a-select
-                                      v-model:value="formStateProfileEntreprise.sector_activity"
-                                      placeholder="Secteur d'activité"
-                                      :options="activities"
+                                      v-model:value="formStateProfileEntreprise.sector_activity" :options="activities" placeholder="Choisissez le secteur d'activité"
                                     />
                                   </a-form-item>
                                   <a-form-item label="Logo">
-                                    <a-form-item name="logoProfile" no-style>
+                                    <a-form-item name="logo" no-style>
                                       <a-upload-dragger
-                                        v-model:fileList="formStateProfile.logo"
+                                        v-model:fileList="formStateProfileEntreprise.logo"
                                         :multiple="false"
                                         :before-upload="beforeUploadProfileLogo" name="logo"
                                       >
@@ -998,6 +1108,58 @@ onMounted(async() => {
     </section>
     <!--== End Login Area Wrapper ==-->
   </main>
+  <a-modal
+    v-model:visible="visibleModalAddCollaborator"
+    width="40%"
+    title="Ajouter un Collaborateur"
+    @ok="() => { }"
+  >
+    <div>
+      <a-form layout="vertical" :wrapper-col="{ span: 24 }">
+        <a-form-item label="Identifiant :" v-bind="collaboratorValidateInfos.username">
+          <a-input
+            v-model:value="modelRefCollaborator.username"
+            @blur="validate('username', { trigger: 'blur' }).catch(() => { })"
+          />
+        </a-form-item>
+        <a-form-item label="email :" v-bind="collaboratorValidateInfos.email">
+          <a-input
+            v-model:value="modelRefCollaborator.email"
+            @blur="validate('email', { trigger: 'blur' }).catch(() => { })"
+          />
+        </a-form-item>
+        <a-form-item label="mot de passe  :" v-bind="collaboratorValidateInfos.password">
+          <a-input
+            v-model:value="modelRefCollaborator.password"
+            type="password"
+            @blur="validate('password', { trigger: 'blur' }).catch(() => { })"
+          />
+        </a-form-item>
+        <a-form-item label="Choisir un domaine :" v-bind="collaboratorValidateInfos.departement">
+          <a-select
+            v-model:value="modelRefCollaborator.departement"
+            placeholder="Département"
+            :options="departements"
+            @blur="validate('departement', { trigger: 'blur' }).catch(() => { })"
+          />
+        </a-form-item>
+      </a-form>
+    </div>
+    <template #footer>
+      <a-button
+        type="primary"
+        @click.prevent="onSubmitCollab"
+      >
+        Ajouter
+      </a-button>
+      <a-button
+        style="margin-left: 10px"
+        @click="() => !modelRefCollab.id ? resetFields() : (visibleModalAddCollaborator = false)"
+      >
+        {{ modelRefCollaborator.id ? 'Fermer' : 'Réinitialiser' }}
+      </a-button>
+    </template>
+  </a-modal>
   <a-modal v-model:visible="visibleModalInformationEmailVerification" width="40%">
     <div>
       <div>

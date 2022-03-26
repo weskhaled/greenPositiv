@@ -88,7 +88,7 @@ onClickOutside(asideOffcanvasMenu.value, () => {
                         </router-link>
                       </li>
                       <li v-else-if="currentUser && currentUser.role === 'Company'">
-                        <router-link class="nav-link" :to="`/profile/comapny/${currentUser?.idUser}`">
+                        <router-link class="nav-link" :to="`/profile/company/${currentUser?.idUser}`">
                           <span>Modifier mon profil</span>
                         </router-link>
                       </li>
