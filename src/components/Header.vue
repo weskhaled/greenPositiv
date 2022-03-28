@@ -35,6 +35,7 @@ onClickOutside(asideOffcanvasMenu.value, () => {
                 <ul class="main-menu nav">
                   <li><a href="javascript:;" @click="router.push('/')"><span>Offres et tarifs</span></a></li>
                   <li><a href="javascript:;" @click="router.push('/')"><span>Entreprise</span></a></li>
+                  <li><a href="javascript:;" @click="router.push('/freelancers/all')"><span>Freelance</span></a></li>
                   <li class="has-submenu">
                     <a href="#/"><span>Ressources</span></a>
                     <ul class="submenu-nav">

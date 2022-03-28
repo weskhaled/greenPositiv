@@ -21,6 +21,7 @@ const freelancerApi = {
   addCertification: async(params: object) => service.post(`${BASE_PREFIX}/freelancer/add-certification`, params),
   updateCertification: async(id: string, params: object) => service.patch(`${BASE_PREFIX}/freelancer/update-certification/${id}`, params),
   deleteCertification: async(id: string) => service.patch(`${BASE_PREFIX}/freelancer/delete-certification/${id}`),
+  getAllVisibleAndValidated: async() => useFetch(`${BASE_PREFIX}/freelancer/`).get().json(),
 }
 
 export default freelancerApi

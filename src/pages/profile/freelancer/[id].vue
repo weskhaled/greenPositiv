@@ -1001,6 +1001,7 @@ const resetModuleIban = () => {
 }
 const updateProfile = async(profileData: any) => {
   profileData.disponibility_freq = calcDisponibilityFreq(+formStateProfile.disponibility_freq, false)
+  console.log('skills ', profileData)
 
   const { data } = await freelancerApi.updateProfile(profileData)
   data && message.info(data.message)

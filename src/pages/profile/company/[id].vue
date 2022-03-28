@@ -339,6 +339,27 @@ const deleteCollab = (id: string) => {
     })
   })
 }
+
+const deleteFavoris = (id: string) => {
+  setTimeout(() => {
+    Modal.confirm({
+      content: 'Supprimer le Retirer ce freelance de la liste des favoris ?',
+      icon: h(ExclamationCircleOutlined),
+      onOk() {
+        return companyApi.removeFavoris(id).then(({ data }) => {
+          message.info(data.message)
+          profile.value = null
+          getFormData()
+        }).catch(err => message.error(`Oops errors! ${err}`))
+      },
+      cancelText: 'Retour',
+      onCancel() {
+        Modal.destroyAll()
+      },
+    })
+  })
+}
+
 /* end bloc reference */
 const getFormData = async() => {
   globalApi.activities().then(({ data }) => {
@@ -866,7 +887,46 @@ onMounted(async() => {
                 <div class>
                   <a-card title="Freelance Favoris" :bordered="false" class="rounded-sm">
                     <div v-if="profile && profile?.favorites?.length">
-                      Offres
+                      <div class="row row-gutter-70">
+                        <div class="row">
+                          <div v-for="item in profile?.favorites" class="col-sm-6 col-md-6 col-lg-4 col-xl-3">
+                            <!--== Start Team Item ==-->
+                            <div class="team-item">
+                              <div class="thumb">
+                                <a-avatar
+                                  :src="item?.image"
+                                  shape="square"
+                                  :size="{ xs: 24, sm: 32, md: 40, lg: 64, xl: 120, xxl: 160 }"
+                                />
+                              </div>
+                              <div class="content">
+                                <h4 class="title">
+                                  <routrer-link :to="`/profile/${item._id}`">
+                                    {{ item.firstName }} {{ item.lastName }}
+                                  </routrer-link>
+                                </h4>
+                                <a href="#" class="flex items-center text-gray-400 text-hover-primary mb-2">
+                                  <span class="i-carbon-email text-xl inline-block mr-1" />
+                                  {{ item?.email }}
+                                </a>
+                                <a href="#" class="flex items-center text-gray-400 text-hover-primary mb-2">
+                                  <span class="i-carbon-phone text-xl inline-block mr-1" />
+                                  {{ item?.phone }}
+                                </a>
+                                <h5 class="sub-title">
+                                  {{ item.title_profile }}
+                                </h5>
+                                <router-link class="btn-theme btn-white btn-sm" :to="`/profile/${item._id}`">
+                                  Voir profile
+                                </router-link>
+                                <span class="bookmark-icon i-carbon-trash-can text-xl inline-block" @click="deleteFavoris(item._id)" />
+                                <span class="bookmark-icon-hover i-carbon-trash-can text-xl inline-block" @click="deleteFavoris(item._id)" />
+                              </div>
+                              <!--== End Team Item ==-->
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                     <a-result
                       v-else
