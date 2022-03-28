@@ -916,7 +916,7 @@ onMounted(async() => {
                                 <h5 class="sub-title">
                                   {{ item.title_profile }}
                                 </h5>
-                                <router-link class="btn-theme btn-white btn-sm" :to="`/profile/${item._id}`">
+                                <router-link class="btn-theme btn-white btn-sm" :to="`/freelancers/${item._id}`">
                                   Voir profile
                                 </router-link>
                                 <span class="bookmark-icon i-carbon-trash-can text-xl inline-block" @click="deleteFavoris(item._id)" />
