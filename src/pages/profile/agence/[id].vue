@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { ExclamationCircleOutlined } from '@ant-design/icons-vue'
+import SwiperCore, { Controller, Pagination } from 'swiper'
+import { Swiper, SwiperSlide } from 'swiper/vue'
 import dayjs, { Dayjs } from 'dayjs'
 import { Form, Modal, message } from 'ant-design-vue'
 import type { RuleObject } from 'ant-design-vue/es/form'
@@ -8,6 +10,10 @@ import globalApi from '~/api/modules/global'
 import agenceApi from '~/api/modules/agence'
 import profileEntrepriseApi from '~/api/modules/profil-entreprise'
 import { currentUser } from '~/stores'
+import 'swiper/css/pagination'
+
+SwiperCore.use([Controller, Pagination])
+
 const useForm = Form.useForm
 const props = defineProps<{ id: string }>()
 const router = useRouter()
@@ -43,6 +49,7 @@ const socials = reactive({
   },
 })
 const profile = ref(null)
+const references: Ref<any[]> = ref([])
 const profileAvatar = ref('')
 const userDocument = ref(null)
 const profileEntreprise = ref(null)
@@ -65,6 +72,10 @@ const visibleModalInformationValidated = ref(false)
 //   'checkbox-group': ['A', 'B'],
 //   'rate': 3.5,
 // })
+const controlledSwiper = ref(null)
+const setControlledSwiper = (swiper) => {
+  controlledSwiper.value = swiper
+}
 typesAccount.value = [{
   value: 'epargne',
   label: 'epargne',
@@ -715,6 +726,7 @@ const getFormData = async() => {
   await agenceApi.profile(props.id).then(({ data }) => {
     if (data.value) {
       profile.value = data.value
+      references.value = data.value.references
       const agence = profile.value?.agence
       profileAvatar.value = agence.image || ''
       formStateProfile.description = agence.description
@@ -997,6 +1009,15 @@ const onSubmit = async() => {
         const { data } = await agenceApi.updateReference(id, params)
         message.info(data.message)
         visibleModalAddReference.value = false
+        modelRefReference.id = undefined
+        modelRefReference.title = ''
+        modelRefReference.client = ''
+        modelRefReference.place = ''
+        modelRefReference.domain = undefined
+        modelRefReference.dateBegin = undefined
+        modelRefReference.dateEnd = undefined
+        modelRefReference.confidential = false
+        resetFields()
       }
       else {
         const { data } = await agenceApi.addReference(params)
@@ -1012,8 +1033,8 @@ const onSubmit = async() => {
 }
 const updateReference = (item) => {
   modelRefReference.id = item._id
-  modelRefReference.client = item.title
-  modelRefReference.title = item.society
+  modelRefReference.client = item.client
+  modelRefReference.title = item.title
   modelRefReference.place = item.place
   modelRefReference.domain = item.domain
   modelRefReference.dateBegin = item.dateBegin
@@ -1021,23 +1042,22 @@ const updateReference = (item) => {
   modelRefReference.confidential = item.confidential
   visibleModalAddReference.value = true
 }
+
 const deleteReference = (id: string) => {
-  setTimeout(() => {
-    Modal.confirm({
-      content: 'Supprimer la référence client',
-      icon: h(ExclamationCircleOutlined),
-      onOk() {
-        return agenceApi.deleteReference(id).then(({ data }) => {
-          message.info(data.message)
-          profile.value = null
-          getFormData()
-        }).catch(err => message.error(`Oops errors! ${err}`))
-      },
-      cancelText: 'Click to destroy all',
-      onCancel() {
-        Modal.destroyAll()
-      },
-    })
+  Modal.confirm({
+    content: 'Supprimer la référence client',
+    icon: h(ExclamationCircleOutlined),
+    onOk() {
+      return agenceApi.deleteReference(id).then(({ data }) => {
+        message.info(data.message)
+        profile.value = null
+        getFormData()
+      }).catch(err => message.error(`Oops errors! ${err}`))
+    },
+    cancelText: 'Click to destroy all',
+    onCancel() {
+      Modal.destroyAll()
+    },
   })
 }
 /* end bloc reference */
@@ -1464,8 +1484,62 @@ onMounted(async() => {
               <a-tab-pane key="2" tab="Références" force-render>
                 <div class>
                   <a-card title="Référence" :bordered="false" class="rounded-sm">
-                    <div v-if="profile && profile?.references?.length">
-                      Références
+                    <div v-if="profile && references.length" class="">
+                      <swiper
+                        :modules="[Controller]"
+                        :slides-per-view="4" class="p-3"
+                        :pagination="{
+                          clickable: true,
+                        }"
+                        :grab-cursor="true"
+                        @swiper="setControlledSwiper"
+                      >
+                        <swiper-slide
+                          v-for="(item, index) in references"
+                          :key="index"
+                        >
+                          <a-card class="mr-2" hoverable>
+                            <template #actions>
+                              <span key="setting" class="i-ant-design-edit-outlined inline-block" @click="updateReference(item)" />
+                              <span key="edit" class="i-ant-design-delete-twotone inline-block" @click="deleteReference(item._id)" />
+                            </template>
+                            <a-card-meta :title="item.title">
+                              <template #description>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    Place:
+                                  </span>
+                                  <span>
+                                    {{ item.place }}
+                                  </span>
+                                  <span class="inline-block bg-green-400 text-xs rounded-sm p-1 text-light-50 ml-1">
+                                    {{ item.domain }}
+                                  </span>
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    Client:
+                                  </span>
+                                  {{ item.client }} <span v-if="item.confidential" class="i-ant-design-check-circle-twotone ml-1 inline-block text-sm text-green-300" />
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    Date:
+                                  </span>
+                                  {{ dayjs(item.dateBegin).format("DD-MM-YYYY") }} / {{ dayjs(item.dateEnd).format("DD-MM-YYYY") }}
+                                </div>
+                              </template>
+                            </a-card-meta>
+                          </a-card>
+                        </swiper-slide>
+                        <swiper-slide>
+                          <a-card class="m-auto" hoverable style="width: 150px;" body-style="height: 100%;" @click="visibleModalAddReference = true">
+                            <div class="w-full h-full flex items-center justify-center">
+                              <span class="i-ant-design-plus-square-twotone ml-1 inline-block text-4xl text-green-300" />
+                            </div>
+                          </a-card>
+                        </swiper-slide>
+                      </swiper>
                     </div>
                     <a-result
                       v-else
@@ -2361,6 +2435,9 @@ onMounted(async() => {
   border-radius: 6px;
   background-color: #fafafa;
   min-height: 200px;
+}
+.swiper-wrapper {
+  @apply items-center;
 }
 </style>
 <route lang="yaml">
