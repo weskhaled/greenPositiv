@@ -2,20 +2,48 @@
 import { message } from 'ant-design-vue'
 import { currentUser } from '~/stores'
 import freelancerApi from '~/api/modules/freelancer'
+import adminApi from '~/api/modules/admin'
+
 import companyApi from '~/api/modules/company'
 import bookMark from '~/assets/img/icons/bookmark1.png'
 import bookMarkHover from '~/assets/img/icons/bookmark2.png'
 
 const freelancers = ref([])
+const freelancersUnfiltred = ref([])
+
+const priceRange = ref([50, 810])
+const checkList = ref([])
+const jobs = ref([])
+const numberJobs = []
+const jobsName = ref([])
+const disponibility_freq = ref([])
+const formStateFilter = reactive<Record<string, any>>({
+  min: 50,
+  max: 810,
+  jobCats: [],
+})
+
 const getFormData = async() => {
   await freelancerApi.getAllVisibleAndValidated().then(({ data }) => {
     if (data.value) {
-      console.log('data ', data.value)
       freelancers.value = data.value
+      freelancersUnfiltred.value = data.value
     }
     else {
       message.error('aucun freelance disponible')
     }
+  })
+  const { data } = await adminApi.jobs()
+
+  data.value && (jobs.value = data.value.filter(j => j._id && j.name).map(j => ({
+    value: j._id,
+    label: j.name,
+  })))
+  jobsName.value = data.value.filter(el => el._id).map(el => el._id)
+  jobsName.value.map(el => numberJobs.push(0))
+  await freelancers.value.map((el) => {
+    const index = jobsName.value.indexOf(el.jobCat)
+    numberJobs[index]++
   })
 }
 const addFavoris = async(id: string) => {
@@ -24,6 +52,30 @@ const addFavoris = async(id: string) => {
   }).catch((err) => {
     message.error(err.message)
   })
+}
+const filterAll = async() => {
+  freelancers.value = freelancersUnfiltred.value
+  if (formStateFilter.jobCats.length !== 0)
+    freelancers.value = await freelancers.value.filter(j => formStateFilter.jobCats.includes(j.jobCat))
+  if (disponibility_freq.value.length !== 0)
+    freelancers.value = await freelancers.value.filter(j => j.disponibility_freq === 5)
+  if (priceRange.value[1] === formStateFilter.max)
+    freelancers.value = await freelancers.value.filter(j => j.price_per_day >= priceRange.value[0])
+  else
+    freelancers.value = await freelancers.value.filter(j => j.price_per_day >= priceRange.value[0] && j.price_per_day <= priceRange.value[1])
+
+  if (checkList.value.length !== 0)
+    freelancers.value = await freelancers.value.filter(j => checkList.value.includes(j.level))
+}
+const getCategorie = async(item: string) => {
+  if (formStateFilter.jobCats.includes(item))
+    formStateFilter.jobCats.splice(formStateFilter.jobCats.indexOf(item), 1)
+  else formStateFilter.jobCats.push(item)
+  await filterAll()
+}
+const initJobs = async() => {
+  formStateFilter.jobCats = []
+  filterAll()
 }
 onMounted(async() => {
   getFormData()
@@ -61,110 +113,67 @@ onMounted(async() => {
           <div class="col-xl-2">
             <div class="blog-sidebar blog-sidebar-right">
               <div class="widget-item">
+                <div class="widget-title">
+                  <h3 class="title">
+                    Filtres
+                  </h3>
+                </div>
                 <div class="widget-body">
-                  <div class="widget-search-box">
-                    <form action="#" method="post">
-                      <div class="form-input-item">
-                        <input id="search2" type="search" placeholder="Search here">
-                        <button type="submit" class="btn-src">
-                          <i class="icofont-search" />
-                        </button>
-                      </div>
-                    </form>
+                  <div>
+                    <h3><b>Prix/jour</b></h3>
+                    <a-slider v-model:value="priceRange" max="810" range @change="filterAll($event)" />
+                  </div>
+                  <div>
+                    <h3><b>Niveau d'éxpérience</b></h3>
+                    <a-checkbox-group v-model:value="checkList" @change="filterAll($event)">
+                      <a-col :span="16">
+                        <a-checkbox value="Junior">
+                          0 - 2 ans d'éxpérience
+                        </a-checkbox>
+                      </a-col>
+
+                      <a-col :span="16">
+                        <a-checkbox value="Intermédiaire">
+                          2 - 5 ans d'éxpérience
+                        </a-checkbox>
+                      </a-col>
+
+                      <a-col :span="16">
+                        <a-checkbox value="Senior">
+                          7 ans et plus
+                        </a-checkbox>
+                      </a-col>
+                    </a-checkbox-group>
+                  </div>
+                  <div>
+                    <h3><b>Disponibilité</b></h3>
+                    <a-checkbox-group v-model:value="disponibility_freq" @change="filterAll($event)">
+                      <a-col :span="16">
+                        <a-checkbox value="5">
+                          A temps plein uniquement
+                        </a-checkbox>
+                      </a-col>
+                    </a-checkbox-group>
                   </div>
                 </div>
               </div>
               <div class="widget-item">
                 <div class="widget-title">
                   <h3 class="title">
-                    Post Category
+                    Catégories
                   </h3>
                 </div>
                 <div class="widget-body">
                   <div class="widget-categories">
                     <ul>
-                      <li><a href="job.html">Commercial Movers<span>(16)</span></a></li>
-                      <li><a href="job.html">Air Freight Services<span>(03)</span></a></li>
-                      <li><a href="job.html">Drone Services<span>(08)</span></a></li>
-                      <li><a href="job.html">Road Freight<span>(18)</span></a></li>
-                      <li><a href="job.html">Warehousing<span>(02)</span></a></li>
-                      <li><a href="job.html">Consulting Storage<span>(14)</span></a></li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-              <div class="widget-item">
-                <div class="widget-title">
-                  <h3 class="title">
-                    Recent Post
-                  </h3>
-                </div>
-                <div class="widget-body">
-                  <div class="widget-post">
-                    <div class="widget-blog-post">
-                      <div class="thumb">
-                        <a href="blog-details.html"><img src="assets/img/blog/s1.jpg" alt="Image" width="71" height="70"></a>
-                      </div>
-                      <div class="content">
-                        <h4><a href="blog-details.html">This includes shipment <br>of raw materials.</a></h4>
-                        <div class="meta">
-                          <span class="post-date"><i class="icofont-ui-calendar" /> 10 August, 2021</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="widget-blog-post">
-                      <div class="thumb">
-                        <a href="blog-details.html"><img src="assets/img/blog/s2.jpg" alt="Image" width="71" height="70"></a>
-                      </div>
-                      <div class="content">
-                        <h4><a href="blog-details.html">All of these amazing <br>features come price.</a></h4>
-                        <div class="meta">
-                          <span class="post-date"><i class="icofont-ui-calendar" /> 18 August, 2021</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="widget-blog-post">
-                      <div class="thumb">
-                        <a href="blog-details.html"><img src="assets/img/blog/s3.jpg" alt="Image" width="71" height="70"></a>
-                      </div>
-                      <div class="content">
-                        <h4><a href="blog-details.html">This includes shipment <br>of raw materials.</a></h4>
-                        <div class="meta">
-                          <span class="post-date"><i class="icofont-ui-calendar" /> 19 August, 2021</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="widget-blog-post">
-                      <div class="thumb">
-                        <a href="blog-details.html"><img src="assets/img/blog/s4.jpg" alt="Image" width="71" height="70"></a>
-                      </div>
-                      <div class="content">
-                        <h4><a href="blog-details.html">All of these amazing <br>features come price.</a></h4>
-                        <div class="meta">
-                          <span class="post-date"><i class="icofont-ui-calendar" /> 10 August, 2021</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="widget-item mb-md-0">
-                <div class="widget-title">
-                  <h3 class="title">
-                    Popular Tags
-                  </h3>
-                </div>
-                <div class="widget-body">
-                  <div class="widget-tags">
-                    <ul>
-                      <li><a href="job.html">Animal</a></li>
-                      <li><a class="tags-padding mr-0" href="job.html">Bird’s</a></li>
-                      <li><a class="tags-padding" href="job.html">Charity</a></li>
-                      <li><a class="mr-0" href="job.html">Forest</a></li>
-                      <li><a href="job.html">Water</a></li>
-                      <li><a class="tags-padding mr-0" href="job.html">Children</a></li>
-                      <li><a class="tags-padding" href="job.html">Human</a></li>
-                      <li><a href="job.html">Jungle</a></li>
+                      <li>
+                        <a v-if="formStateFilter.jobCats.length === 0" class="green-link"> Tous</a>
+                        <a v-else @click="initJobs()"> Tous</a>
+                      </li>
+                      <li v-for="item in jobs" :key="item.value">
+                        <a v-if="formStateFilter.jobCats.includes(item.value)" class="green-link" @click="getCategorie(item.value)">{{ item.label }}<span>({{ numberJobs[jobsName.indexOf(item.value)] }})</span></a>
+                        <a v-else @click="getCategorie(item.value)">{{ item.label }}<span>({{ numberJobs[jobsName.indexOf(item.value)] }})</span></a>
+                      </li>
                     </ul>
                   </div>
                 </div>
@@ -195,6 +204,9 @@ onMounted(async() => {
                       <h5 class="sub-title">
                         {{ item.title_profile }}
                       </h5>
+                      <a-tag class="sub-title" color="green">
+                        {{ item.price_per_day }}
+                      </a-tag>
                       <div v-if="item.skills.length == 0">
                         compétences pas encore ajoutée
                         <br>
@@ -238,6 +250,10 @@ onMounted(async() => {
   .container {
     max-width: 1800px;
   }
+}
+.green-link {
+    background-color: #03a84e !important;
+    color: #fff !important;
 }
 </style>
 <route lang="yaml">

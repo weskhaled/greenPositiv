@@ -1054,7 +1054,7 @@ const deleteReference = (id: string) => {
         getFormData()
       }).catch(err => message.error(`Oops errors! ${err}`))
     },
-    cancelText: 'Click to destroy all',
+    cancelText: 'Retour',
     onCancel() {
       Modal.destroyAll()
     },
@@ -1112,7 +1112,7 @@ const deleteOffer = (id: string) => {
           getFormData()
         }).catch(err => message.error(`Oops errors! ${err}`))
       },
-      cancelText: 'Click to destroy all',
+      cancelText: 'Retour',
       onCancel() {
         Modal.destroyAll()
       },
@@ -1507,10 +1507,13 @@ onMounted(async() => {
                               <template #description>
                                 <div class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
-                                    Place:
+                                    Client:
                                   </span>
-                                  <span>
-                                    {{ item.place }}
+                                  {{ item.client }} <span v-if="item.confidential" class="i-ant-design-check-circle-twotone ml-1 inline-block text-sm text-green-300" />
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    Domaine:
                                   </span>
                                   <span class="inline-block bg-green-400 text-xs rounded-sm p-1 text-light-50 ml-1">
                                     {{ item.domain }}
@@ -1518,9 +1521,11 @@ onMounted(async() => {
                                 </div>
                                 <div class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
-                                    Client:
+                                    Localisation:
                                   </span>
-                                  {{ item.client }} <span v-if="item.confidential" class="i-ant-design-check-circle-twotone ml-1 inline-block text-sm text-green-300" />
+                                  <span>
+                                    {{ item.place }}
+                                  </span>
                                 </div>
                                 <div class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
