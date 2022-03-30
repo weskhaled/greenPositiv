@@ -14,7 +14,12 @@ const props = defineProps<{
 }>()
 const emit = defineEmits(['update:modelValue', 'addLanguage', 'removeLanguage', 'updateLanguage'])
 const data = useVModel(props, 'modelValue', emit)
-
+enum LEVELS {
+  BASIC = 'Notions',
+  CONVERSATIONAL = 'Capacité professionnelle limitée',
+  FLUENT = 'Capacité professionnelle complète',
+  NATIVE = 'Bilingue ou natif',
+}
 const columns = [
   {
     title: 'langue',
@@ -113,7 +118,7 @@ onMounted(() => {
               />
             </template>
             <template v-else>
-              {{ text }}
+              {{ LEVELS[text] }}
             </template>
           </div>
         </template>
