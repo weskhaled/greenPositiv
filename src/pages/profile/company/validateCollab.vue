@@ -2,19 +2,21 @@
 import companyApi from '~/api/modules/company'
 import signCharter from '~/assets/img/charter/signCharter.png'
 
-// const props = defineProps<[ id: string, idCollab: string ]>()
+const route = useRoute()
+
 const formStateValidation = reactive<Record<string, any>>({
   message: '',
 })
-const getFormData = async() => {
-  /*
- companyApi.addCollab(props.id, props.idCollab).then(({ data }) => {
+const getFormData = async(id: string, idCollab: string) => {
+  companyApi.addCollab(id, idCollab).then(({ data }) => {
     if (data.value)
       formStateValidation.message = data.value.message
-  }) */
+  })
 }
 onMounted(async() => {
-  getFormData()
+  const { id, idCollab } = route.query
+  if (id && idCollab)
+    getFormData(id, idCollab)
 })
 </script>
 <template>

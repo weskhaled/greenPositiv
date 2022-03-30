@@ -50,6 +50,7 @@ const socials = reactive({
 })
 const profile = ref(null)
 const references: Ref<any[]> = ref([])
+const offers: Ref<any[]> = ref([])
 const profileAvatar = ref('')
 const userDocument = ref(null)
 const profileEntreprise = ref(null)
@@ -160,7 +161,7 @@ const modelRefOffer = reactive({
   name: '',
   domain: undefined,
   price: undefined,
-  show_price: undefined,
+  show_price: false,
   description: '',
 })
 
@@ -727,6 +728,7 @@ const getFormData = async() => {
     if (data.value) {
       profile.value = data.value
       references.value = data.value.references
+      offers.value = data.value.offers
       const agence = profile.value?.agence
       profileAvatar.value = agence.image || ''
       formStateProfile.description = agence.description
@@ -1071,7 +1073,7 @@ const onSubmitOffer = async() => {
   validateOffer()
     .then(async() => {
       const params = toRaw(modelRefOffer)
-      console.log('offer ', params)
+
       if (params.id) {
         const id = params.id
         delete params.id
@@ -1084,6 +1086,12 @@ const onSubmitOffer = async() => {
         message.info(data.message)
         visibleModalAddOffer.value = false
       }
+      modelRefOffer.id = undefined
+      modelRefOffer.name = ''
+      modelRefOffer.price = undefined
+      modelRefOffer.show_price = false
+      modelRefOffer.domain = undefined
+      modelRefOffer.description = ''
       profile.value = null
       getFormData()
     })
@@ -1101,22 +1109,20 @@ const updateOffer = (item) => {
   visibleModalAddOffer.value = true
 }
 const deleteOffer = (id: string) => {
-  setTimeout(() => {
-    Modal.confirm({
-      content: 'Supprimer l\'offre',
-      icon: h(ExclamationCircleOutlined),
-      onOk() {
-        return agenceApi.deleteOffer(id).then(({ data }) => {
-          message.info(data.message)
-          profile.value = null
-          getFormData()
-        }).catch(err => message.error(`Oops errors! ${err}`))
-      },
-      cancelText: 'Retour',
-      onCancel() {
-        Modal.destroyAll()
-      },
-    })
+  Modal.confirm({
+    content: 'Supprimer l\'offre',
+    icon: h(ExclamationCircleOutlined),
+    onOk() {
+      return agenceApi.deleteOffer(id).then(({ data }) => {
+        message.info(data.message)
+        profile.value = null
+        getFormData()
+      }).catch(err => message.error(`Oops errors! ${err}`))
+    },
+    cancelText: 'Retour',
+    onCancel() {
+      Modal.destroyAll()
+    },
   })
 }
 /* end bloc offer */
@@ -1564,8 +1570,62 @@ onMounted(async() => {
               <a-tab-pane key="3" tab="Offres" force-render>
                 <div class>
                   <a-card title="Offres" :bordered="false" class="rounded-sm">
-                    <div v-if="profile && profile?.offers?.length">
-                      Offres
+                    <div v-if="profile && offers?.length">
+                      <swiper
+                        :modules="[Controller]"
+                        :slides-per-view="4" class="p-3"
+                        :pagination="{
+                          clickable: true,
+                        }"
+                        :grab-cursor="true"
+                        @swiper="setControlledSwiper"
+                      >
+                        <swiper-slide
+                          v-for="(item, index) in offers"
+                          :key="index"
+                        >
+                          <a-card class="mr-2" hoverable>
+                            <template #actions>
+                              <span key="setting" class="i-ant-design-edit-outlined inline-block" @click="updateOffer(item)" />
+                              <span key="edit" class="i-ant-design-delete-twotone inline-block" @click="deleteOffer(item._id)" />
+                            </template>
+                            <a-card-meta :title="item.title">
+                              <template #description>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    Nom:
+                                  </span>
+                                  {{ item.name }}
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    Domaine:
+                                  </span>
+                                  {{ item.domain }}
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    price:
+                                  </span>
+                                  <span>
+                                    {{ item.price }}
+                                  </span>
+                                  <span class="inline-block text-xs rounded-sm p-1 text-light-50 ml-1" :class="item.show_price ? 'bg-green-400' : 'bg-red-400'">
+                                    {{ item.show_price ? 'visible' : 'hidden' }}
+                                  </span>
+                                </div>
+                              </template>
+                            </a-card-meta>
+                          </a-card>
+                        </swiper-slide>
+                        <swiper-slide>
+                          <a-card class="m-auto" hoverable style="width: 150px;" body-style="height: 100%;" @click="visibleModalAddOffer = true">
+                            <div class="w-full h-full flex items-center justify-center">
+                              <span class="i-ant-design-plus-square-twotone ml-1 inline-block text-4xl text-green-300" />
+                            </div>
+                          </a-card>
+                        </swiper-slide>
+                      </swiper>
                     </div>
                     <a-result
                       v-else
@@ -2323,7 +2383,64 @@ onMounted(async() => {
     </template>
   </a-modal>
   <!-- modale offer creation and update -->
-
+  <a-modal
+    v-model:visible="visibleModalAddOffer"
+    width="40%"
+    :title="modelRefOffer.id ? 'Modifier Référence client' : 'Ajouter Référence client'"
+    @ok="() => { }"
+  >
+    <div>
+      <a-form layout="vertical" :wrapper-col="{ span: 24 }">
+        <a-form-item label="Nom :" v-bind="validateInfosOffer.name">
+          <a-input
+            v-model:value="modelRefOffer.name"
+            @blur="validate('name', { trigger: 'blur' }).catch(() => { })"
+          />
+        </a-form-item>
+        <a-form-item label="Choisir un domaine :" v-bind="validateInfosOffer.domain">
+          <a-select
+            v-model:value="modelRefOffer.domain"
+            placeholder="please select your domain"
+            :options="activities"
+            @blur="validate('domain', { trigger: 'blur' }).catch(() => { })"
+          />
+        </a-form-item>
+        <div class="grid grid-cols-2 gap-3 w-full">
+          <div>
+            <a-form-item label="price :" v-bind="validateInfosOffer.price">
+              <a-input-number v-model:value="modelRefOffer.price" addon-after="€" @blur="validate('price', { trigger: 'blur' }).catch(() => { })" />
+            </a-form-item>
+          </div>
+          <div>
+            <a-form-item label="show Price ?">
+              <a-switch v-model:checked="modelRefOffer.show_price" checked-value="1" un-checked-value="0" />
+            </a-form-item>
+          </div>
+        </div>
+        <a-form-item label="Description :">
+          <a-textarea
+            v-model:value="modelRefOffer.description"
+            placeholder="description"
+            auto-size
+          />
+        </a-form-item>
+      </a-form>
+    </div>
+    <template #footer>
+      <a-button
+        type="primary"
+        @click.prevent="onSubmitOffer"
+      >
+        {{ modelRefReference.id ? 'Modifier' : 'Ajouter' }}
+      </a-button>
+      <a-button
+        style="margin-left: 10px"
+        @click="() => !modelRefReference.id ? resetFieldsOffer() : (visibleModalAddOffer = false)"
+      >
+        {{ modelRefReference.id ? 'Fermer' : 'Réinitialiser' }}
+      </a-button>
+    </template>
+  </a-modal>
   <!-- end modale offer creation and update -->
   <a-modal v-model:visible="visibleModalInformationEmailVerification" width="40%">
     <div>
