@@ -25,6 +25,7 @@ const formStateFilter = reactive<Record<string, any>>({
 })
 
 const getFormData = async() => {
+  jobsValues.value = []
   await freelancerApi.getAllVisibleAndValidated().then(({ data }) => {
     if (data.value) {
       freelancers.value = data.value
@@ -56,8 +57,6 @@ const addFavoris = async(id: string) => {
 }
 const filterAll = async() => {
   freelancers.value = freelancersUnfiltred.value
-  console.log('jobsValues ', jobsValues.value)
-  console.log('length ', jobsValues.value.length)
   if (jobsValues.value.length !== 0)
     freelancers.value = await freelancers.value.filter(j => jobsValues.value.includes(j.jobCat))
   if (disponibility_freq.value.length !== 0)
@@ -164,7 +163,7 @@ onMounted(async() => {
                 <div>
                   <a-checkbox-group @change="initJobs($event)">
                     <a-col :span="16">
-                      <a-checkbox v-if="jobsValues.value.length == 0" value="all" checked="true">
+                      <a-checkbox v-if="jobsValues?.value?.length == 0" value="all" checked>
                         Tous
                       </a-checkbox>
                       <a-checkbox v-else checked="false">
