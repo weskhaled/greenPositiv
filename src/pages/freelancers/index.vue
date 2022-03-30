@@ -174,7 +174,7 @@ onMounted(async() => {
                   <a-checkbox-group v-model:value="jobsValues" @change="filterAll($event)">
                     <a-col v-for="item in jobs" :key="item.value" :span="16">
                       <a-checkbox :value="`${item.value}`">
-                        {{ item.label }} <span>({{ numberJobs[jobsName.indexOf(item.value)] }})</span>
+                        {{ item.label }}  <!--<span>({{ numberJobs[jobsName.indexOf(item.value)] }})</span>-->
                       </a-checkbox>
                     </a-col>
                   </a-checkbox-group>
