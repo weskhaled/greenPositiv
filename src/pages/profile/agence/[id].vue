@@ -20,6 +20,7 @@ const router = useRouter()
 const { t } = useI18n()
 const activeKey = ref('1')
 const typesAccount = ref([])
+const loadingDocuments = ref(false)
 const activeKeyProfileEtprs = ref('1')
 const currentStepProfileEtprs = ref(0)
 const formItemLayout = {
@@ -61,7 +62,6 @@ const countriesIbanOthers = ref([])
 const jobs = ref([])
 const typesIban = ref([])
 const activities = ref([])
-const activitiesCode = ref([])
 const visibleModalAddReference = ref(false)
 const visibleModalAddOffer = ref(false)
 const visibleModalInformationEmailVerification = ref(false)
@@ -730,7 +730,6 @@ const getFormData = async() => {
       profile.value = data.value
       references.value = data.value.references
       offers.value = data.value.offers
-      activitiesCode.value = activities.value.map(a => a.value)
       const agence = profile.value?.agence
       profileAvatar.value = agence.image || ''
       formStateProfile.description = agence.description
@@ -1127,6 +1126,16 @@ const deleteOffer = (id: string) => {
     },
   })
 }
+const handleChangeUpload = async(event, offer) => {
+  console.log(offer)
+  if (event.file.type === 'application/pdf') {
+    const formData = new FormData()
+    formData.append('documents', event.file)
+    if (offer.documents?.length)
+      formData.append('old_documents', offer.documents)
+    await agenceApi.uploadDocumentsOffer(offer._id, formData)
+  }
+}
 /* end bloc offer */
 const beforeUploadProfileAvatar = async(file: any) => {
   const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png'
@@ -1266,7 +1275,7 @@ onMounted(async() => {
           </div>
           <div class="pt-0">
             <a-tabs v-model:activeKey="activeKey" class="mt-0">
-              <a-tab-pane key="1" tab="Profil">
+              <a-tab-pane key="1" tab="Profile">
                 <div class>
                   <a-card title="Profile Details" :bordered="false" class="rounded-sm">
                     <div class="flex w-full">
@@ -1524,7 +1533,7 @@ onMounted(async() => {
                                     Domaine:
                                   </span>
                                   <span class="inline-block bg-green-400 text-xs rounded-sm p-1 text-light-50 ml-1">
-                                    {{ activities[activitiesCode.indexOf(item.domain)].label }}
+                                    {{ item.domain }}
                                   </span>
                                 </div>
                                 <div class="flex items-center">
@@ -1590,30 +1599,57 @@ onMounted(async() => {
                             <template #actions>
                               <span key="setting" class="i-ant-design-edit-outlined inline-block" @click="updateOffer(item)" />
                               <span key="edit" class="i-ant-design-delete-twotone inline-block" @click="deleteOffer(item._id)" />
+                              <span key="uploadDoc">
+                                <a-upload
+                                  name="avatar"
+                                  :show-upload-list="false"
+                                  :before-upload="(file: any) => {
+                                    if (file.type !== 'application/pdf') {
+                                      message.error('type should be pdf')
+                                    }
+
+                                    return false;
+                                  }"
+                                  @change="handleChangeUpload($event, item)"
+                                >
+                                  <div>
+                                    <span v-if="loadingDocuments" class="i-ant-design-loading-outlined" />
+                                    <span v-else class="i-ant-design-upload-outlined inline-block" />
+                                  </div>
+                                </a-upload>
+                              </span>
                             </template>
                             <a-card-meta :title="item.title">
                               <template #description>
-                                <div class="flex items-center">
+                                <div class="flex items-center mb-1">
                                   <span class="text-dark-300 mr-1.5">
                                     Nom:
                                   </span>
                                   {{ item.name }}
                                 </div>
-                                <div class="flex items-center">
+                                <div class="flex items-center  mb-1">
                                   <span class="text-dark-300 mr-1.5">
                                     Domaine:
                                   </span>
-                                  {{ activities[activitiesCode.indexOf(item.domain)].label }}
+                                  {{ item.domain }}
                                 </div>
-                                <div class="flex items-center">
+                                <div class="flex items-center mb-1">
                                   <span class="text-dark-300 mr-1.5">
-                                    prix:
+                                    price:
                                   </span>
                                   <span>
-                                    {{ item.price }} Euro
+                                    {{ item.price }}
                                   </span>
                                   <span class="inline-block text-xs rounded-sm p-1 text-light-50 ml-1" :class="item.show_price ? 'bg-green-400' : 'bg-red-400'">
-                                    {{ item.show_price ? 'Affiché' : 'caché' }}
+                                    {{ item.show_price ? 'visible' : 'hidden' }}
+                                  </span>
+                                </div>
+                                <div class="flex items-center  mb-1">
+                                  <span class="text-dark-300 mr-1.5">
+                                    Documents:
+                                  </span>
+                                  <span class="inline-block text-xs rounded-sm p-1 text-light-50 ml-1" :class="item.show_price ? 'bg-green-400' : 'bg-red-400'">
+                                    {{ item.documents ? 'telecharge' : 'no telecharger' }}
                                   </span>
                                 </div>
                               </template>
@@ -2303,7 +2339,7 @@ onMounted(async() => {
         <a-form-item label="Choisir un domaine :" v-bind="referenceValidateInfos.domain">
           <a-select
             v-model:value="modelRefReference.domain"
-            placeholder="Choisir un domaine "
+            placeholder="please select your domain"
             :options="activities"
             @blur="validate('domain', { trigger: 'blur' }).catch(() => { })"
           />
@@ -2388,7 +2424,7 @@ onMounted(async() => {
   <a-modal
     v-model:visible="visibleModalAddOffer"
     width="40%"
-    :title="modelRefOffer.id ? 'Modifier une offre' : 'Ajouter une offre'"
+    :title="modelRefOffer.id ? 'Modifier Référence client' : 'Ajouter Référence client'"
     @ok="() => { }"
   >
     <div>
@@ -2402,19 +2438,19 @@ onMounted(async() => {
         <a-form-item label="Choisir un domaine :" v-bind="validateInfosOffer.domain">
           <a-select
             v-model:value="modelRefOffer.domain"
-            placeholder="Choisir un domaine"
+            placeholder="please select your domain"
             :options="activities"
             @blur="validate('domain', { trigger: 'blur' }).catch(() => { })"
           />
         </a-form-item>
         <div class="grid grid-cols-2 gap-3 w-full">
           <div>
-            <a-form-item label="prix :" v-bind="validateInfosOffer.price">
+            <a-form-item label="price :" v-bind="validateInfosOffer.price">
               <a-input-number v-model:value="modelRefOffer.price" addon-after="€" @blur="validate('price', { trigger: 'blur' }).catch(() => { })" />
             </a-form-item>
           </div>
           <div>
-            <a-form-item label="afficher le prix ?">
+            <a-form-item label="show Price ?">
               <a-switch v-model:checked="modelRefOffer.show_price" checked-value="1" un-checked-value="0" />
             </a-form-item>
           </div>

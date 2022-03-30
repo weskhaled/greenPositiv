@@ -127,7 +127,7 @@ onMounted(() => {
             </span>
             <span v-else>
               <a-typography-link class="mr-4" @click="edit(record.key)">Modifier</a-typography-link>
-              <a-popconfirm title="Voulez vous vraiment supprimer" @confirm="remove(record.key)">
+              <a-popconfirm cancel-text="retour" title="Voulez vous vraiment supprimer" @confirm="remove(record.key)">
                 <a-typography-link class="mr-4">Supprimer</a-typography-link>
               </a-popconfirm>
               <a-typography-link v-if="index === dataSource.length - 1" class="mr-4" @click="add">Ajouter</a-typography-link>
