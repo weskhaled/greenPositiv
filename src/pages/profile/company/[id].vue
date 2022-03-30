@@ -648,7 +648,7 @@ onMounted(async() => {
           </div>
           <div class="pt-0">
             <a-tabs v-model:activeKey="activeKey" class="mt-0">
-              <a-tab-pane key="1" tab="Profile">
+              <a-tab-pane key="1" tab="Profil">
                 <div class>
                   <a-card title="Profile Details" :bordered="false" class="rounded-sm">
                     <div class="flex w-full">
