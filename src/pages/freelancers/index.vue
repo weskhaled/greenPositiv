@@ -17,6 +17,7 @@ const jobs = ref([])
 const numberJobs = []
 const jobsName = ref([])
 const disponibility_freq = ref([])
+const jobsValues = ref([])
 const formStateFilter = reactive<Record<string, any>>({
   min: 50,
   max: 810,
@@ -55,8 +56,10 @@ const addFavoris = async(id: string) => {
 }
 const filterAll = async() => {
   freelancers.value = freelancersUnfiltred.value
-  if (formStateFilter.jobCats.length !== 0)
-    freelancers.value = await freelancers.value.filter(j => formStateFilter.jobCats.includes(j.jobCat))
+  console.log('jobsValues ', jobsValues.value)
+  console.log('length ', jobsValues.value.length)
+  if (jobsValues.value.length !== 0)
+    freelancers.value = await freelancers.value.filter(j => jobsValues.value.includes(j.jobCat))
   if (disponibility_freq.value.length !== 0)
     freelancers.value = await freelancers.value.filter(j => j.disponibility_freq === 5)
   if (priceRange.value[1] === formStateFilter.max)
@@ -67,14 +70,9 @@ const filterAll = async() => {
   if (checkList.value.length !== 0)
     freelancers.value = await freelancers.value.filter(j => checkList.value.includes(j.level))
 }
-const getCategorie = async(item: string) => {
-  if (formStateFilter.jobCats.includes(item))
-    formStateFilter.jobCats.splice(formStateFilter.jobCats.indexOf(item), 1)
-  else formStateFilter.jobCats.push(item)
-  await filterAll()
-}
+
 const initJobs = async() => {
-  formStateFilter.jobCats = []
+  jobsValues.value = []
   filterAll()
 }
 onMounted(async() => {
@@ -163,19 +161,24 @@ onMounted(async() => {
                     Catégories
                   </h3>
                 </div>
-                <div class="widget-body">
-                  <div class="widget-categories">
-                    <ul>
-                      <li>
-                        <a v-if="formStateFilter.jobCats.length === 0" class="green-link"> Tous</a>
-                        <a v-else @click="initJobs()"> Tous</a>
-                      </li>
-                      <li v-for="item in jobs" :key="item.value">
-                        <a v-if="formStateFilter.jobCats.includes(item.value)" class="green-link" @click="getCategorie(item.value)">{{ item.label }}<span>({{ numberJobs[jobsName.indexOf(item.value)] }})</span></a>
-                        <a v-else @click="getCategorie(item.value)">{{ item.label }}<span>({{ numberJobs[jobsName.indexOf(item.value)] }})</span></a>
-                      </li>
-                    </ul>
-                  </div>
+                <div>
+                  <a-checkbox-group @change="initJobs($event)">
+                    <a-col :span="16">
+                      <a-checkbox v-if="jobsValues.value.length == 0" value="all" checked="true">
+                        Tous
+                      </a-checkbox>
+                      <a-checkbox v-else checked="false">
+                        Tous
+                      </a-checkbox>
+                    </a-col>
+                  </a-checkbox-group>
+                  <a-checkbox-group v-model:value="jobsValues" @change="filterAll($event)">
+                    <a-col v-for="item in jobs" :key="item.value" :span="16">
+                      <a-checkbox :value="`${item.value}`">
+                        {{ item.label }} <span>({{ numberJobs[jobsName.indexOf(item.value)] }})</span>
+                      </a-checkbox>
+                    </a-col>
+                  </a-checkbox-group>
                 </div>
               </div>
             </div>
@@ -227,10 +230,10 @@ onMounted(async() => {
                         Voir profile
                       </router-link>
 
-                      <div v-if="currentUser.role == 'Company'" class="bookmark-icon">
+                      <div v-if="currentUser && currentUser.role == 'Company'" class="bookmark-icon">
                         <img :src="bookMark" alt="Image-HasTech">
                       </div>
-                      <div v-if="currentUser.role == 'Company'" class="bookmark-icon-hover">
+                      <div v-if="currentUser && currentUser.role == 'Company'" class="bookmark-icon-hover">
                         <img :src="bookMarkHover" alt="Image-HasTech" @click="addFavoris(item._id)">
                       </div>
                     </div>

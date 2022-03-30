@@ -17,17 +17,17 @@ const data = useVModel(props, 'modelValue', emit)
 
 const columns = [
   {
-    title: 'name',
+    title: 'langue',
     dataIndex: 'name',
     width: '25%',
   },
   {
-    title: 'level',
+    title: 'niveau',
     dataIndex: 'level',
     width: '40%',
   },
   {
-    title: 'operation',
+    title: 'opération',
     dataIndex: 'operation',
   },
 ]
@@ -38,10 +38,10 @@ interface DataItem {
 }
 
 const levels = [
-  { lable: 'Notions', value: 'BASIC' },
-  { lable: 'Capacité professionnelle limitée', value: 'CONVERSATIONAL' },
-  { lable: 'Capacité professionnelle complète', value: 'FLUENT' },
-  { lable: 'Bilingue ou natif', value: 'NATIVE' },
+  { label: 'Notions', value: 'BASIC' },
+  { label: 'Capacité professionnelle limitée', value: 'CONVERSATIONAL' },
+  { label: 'Capacité professionnelle complète', value: 'FLUENT' },
+  { label: 'Bilingue ou natif', value: 'NATIVE' },
 ]
 
 const dataSource = ref(data.value.map(l => ({ ...l, key: l.name })))
@@ -101,14 +101,14 @@ onMounted(() => {
                 v-if="column.dataIndex == 'name'"
                 v-model:value="editableData[record.key][column.dataIndex]"
                 class="w-full"
-                placeholder="Please select a langues"
+                placeholder="Choisir un langue"
                 :options="props.languages"
               />
               <a-select
                 v-else-if="column.dataIndex == 'level'"
                 v-model:value="editableData[record.key][column.dataIndex]"
                 class="w-full"
-                placeholder="Please select a level"
+                placeholder="Choisir un niveau"
                 :options="levels"
               />
             </template>
@@ -120,17 +120,17 @@ onMounted(() => {
         <template v-else-if="column.dataIndex === 'operation'">
           <div class="editable-row-operations">
             <span v-if="editableData[record.key]">
-              <a-typography-link class="mr-4" @click="save(record.key)">Save</a-typography-link>
+              <a-typography-link class="mr-4" @click="save(record.key)">Enregistrer</a-typography-link>
               <a-popconfirm title="Sure to cancel?" @confirm="cancel(record.key)">
-                <a-typography-link class="mr-4">Cancel</a-typography-link>
+                <a-typography-link class="mr-4">Retour</a-typography-link>
               </a-popconfirm>
             </span>
             <span v-else>
-              <a-typography-link class="mr-4" @click="edit(record.key)">Edit</a-typography-link>
-              <a-popconfirm title="Sure to cancel?" @confirm="remove(record.key)">
-                <a-typography-link class="mr-4">Delete</a-typography-link>
+              <a-typography-link class="mr-4" @click="edit(record.key)">Modifier</a-typography-link>
+              <a-popconfirm title="Voulez vous vraiment supprimer" @confirm="remove(record.key)">
+                <a-typography-link class="mr-4">Supprimer</a-typography-link>
               </a-popconfirm>
-              <a-typography-link v-if="index === dataSource.length - 1" class="mr-4" @click="add">Add</a-typography-link>
+              <a-typography-link v-if="index === dataSource.length - 1" class="mr-4" @click="add">Ajouter</a-typography-link>
             </span>
           </div>
         </template>

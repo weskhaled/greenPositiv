@@ -276,354 +276,342 @@ onMounted(async() => {
             </div>
           </div>
           <div class="pt-0">
-            <a-tabs v-model:activeKey="activeKey" class="mt-0">
-              <a-tab-pane key="1" tab="Profile">
-                <div class>
-                  <a-card title="Profile Details" :bordered="false" class="rounded-sm">
-                    <div class="flex w-full">
-                      <div class="w-[60%]">
-                        <a-form
-                          :model="formStateProfile"
-                          v-bind="formItemLayout"
-                          @finish-failed="onFinishFailed"
-                          @finish="onFinish"
-                        >
-                          <h4>Comment le Green fait parti de votre de vie et comment est-il présent dans votre vie ?</h4>
-                          <a-form-item class="font-bold" name="greenQuestion" label="Question GREEN">
-                            <label class="font-normal">{{ formStateProfile.greenQuestion }}</label>
-                          </a-form-item>
-                          <a-form-item class="font-bold" name="description" label="Description">
-                            <label class="font-normal">{{ formStateProfile.description }}</label>
-                          </a-form-item>
-                          <a-form-item class="font-bold" name="jobCat" label="Catégorie de métier">
-                            <label class="font-normal">{{ profile?.jobCat }}</label>
-                          </a-form-item>
-                          <a-form-item name="disponibility_freq" class="font-bold" label="Fréquence / semaine">
-                            <a-slider
-                              v-model:value="formStateProfile.disponibility_freq"
-                              :step="null"
-                              disabled="true"
-                              :tip-formatter="null"
-                              :marks="{
-                                0: '1 jour',
-                                15: '2 jours',
-                                30: '3 jours',
-                                50: '4 jours',
-                                70: 'Soirs & week-ends',
-                                100: 'Temps plein',
-                              }"
-                            />
-                          </a-form-item>
-                          <a-form-item
-                            name="price_per_day"
-                            label="Tarif/jour"
-                            class="font-bold"
-                          >
-                            <label class="font-normal">{{ formStateProfile?.price_per_day }} Euro</label>
-                          </a-form-item>
-                        </a-form>
-                      </div>
-                      <div class="w-[40%]">
-                        <h3 class="text-xl mb-4">
-                          Informations
-                        </h3>
-                        <div>
-                          <div class="flex mb-4">
-                            <div class="w-[60%]">
-                              Disponibilité
-                            </div>
-                            <div class="w-[40%]">
-                              <span
-                                :class="`px-3 py-1 bg-${profile?.freelancer?.disponibility ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ profile?.freelancer?.disponibility ? 'OUI' : 'NON' }}</span>
-                            </div>
-                          </div>
-                          <div class="flex mb-4">
-                            <div class="w-[60%]">
-                              Signature Charte
-                            </div>
-                            <div class="w-[40%]">
-                              <span
-                                :class="`px-3 py-1 bg-${profile?.freelancer?.signed_client ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ profile?.freelancer?.signed_client ? 'Oui' : 'Non' }}</span>
-                            </div>
-                          </div>
+            <div class>
+              <a-card title="Profile Details" :bordered="false" class="rounded-sm font-bold">
+                <div class="flex w-full">
+                  <div class="w-[60%]">
+                    <a-form
+                      :model="formStateProfile"
+                      v-bind="formItemLayout"
+                      @finish-failed="onFinishFailed"
+                      @finish="onFinish"
+                    >
+                      <h4>Comment le Green fait parti de votre de vie et comment est-il présent dans votre vie ?</h4>
+                      <a-form-item class="font-bold" name="greenQuestion" label="Question GREEN">
+                        <label class="font-normal">{{ formStateProfile.greenQuestion }}</label>
+                      </a-form-item>
+                      <a-form-item class="font-bold" name="description" label="Description">
+                        <label class="font-normal">{{ formStateProfile.description }}</label>
+                      </a-form-item>
+                      <a-form-item class="font-bold" name="jobCat" label="Catégorie de métier">
+                        <label class="font-normal">{{ profile?.jobCat }}</label>
+                      </a-form-item>
+                      <a-form-item name="disponibility_freq" class="font-bold" label="Fréquence / semaine">
+                        <a-slider
+                          v-model:value="formStateProfile.disponibility_freq"
+                          :step="null"
+                          disabled="true"
+                          :tip-formatter="null"
+                          :marks="{
+                            0: '1 jour',
+                            15: '2 jours',
+                            30: '3 jours',
+                            50: '4 jours',
+                            70: 'Soirs & week-ends',
+                            100: 'Temps plein',
+                          }"
+                        />
+                      </a-form-item>
+                      <a-form-item
+                        name="price_per_day"
+                        label="Tarif/jour"
+                        class="font-bold"
+                      >
+                        <label class="font-normal">{{ formStateProfile?.price_per_day }} Euro</label>
+                      </a-form-item>
+                    </a-form>
+                  </div>
+                  <div class="w-[40%]">
+                    <h3 class="text-xl mb-4">
+                      Informations
+                    </h3>
+                    <div>
+                      <div class="flex mb-4">
+                        <div class="w-[60%]">
+                          Disponibilité
                         </div>
-                        <span class="hidden bg-green w-full h-full block border-2 border-sky-500" />
+                        <div class="w-[40%]">
+                          <span
+                            :class="`px-3 py-1 bg-${profile?.freelancer?.disponibility ? 'green' : 'red'}-600 rounded-lg text-light-50`"
+                          >{{ profile?.freelancer?.disponibility ? 'OUI' : 'NON' }}</span>
+                        </div>
+                      </div>
+                      <div class="flex mb-4">
+                        <div class="w-[60%]">
+                          Signature Charte
+                        </div>
+                        <div class="w-[40%]">
+                          <span
+                            :class="`px-3 py-1 bg-${profile?.freelancer?.signed_client ? 'green' : 'red'}-600 rounded-lg text-light-50`"
+                          >{{ profile?.freelancer?.signed_client ? 'Oui' : 'Non' }}</span>
+                        </div>
                       </div>
                     </div>
-                  </a-card>
+                    <span class="hidden bg-green w-full h-full block border-2 border-sky-500" />
+                  </div>
                 </div>
-              </a-tab-pane>
-              <a-tab-pane key="2" tab="Experience" force-render>
-                <div class>
-                  <a-card title="Experience" :bordered="false" class="rounded-sm">
-                    <div v-if="profile && profile?.experiences?.length">
-                      <a-timeline mode="alternate">
-                        <a-timeline-item>
-                          <template #dot>
-                            <a-tooltip />
-                          </template>
-                          <div class="leading-10">
-                            <span class="invisible">Ajouter</span>
-                          </div>
-                        </a-timeline-item>
-                        <a-timeline-item v-for="item in profile?.experiences" :key="item._id">
-                          <div class="text-left">
-                            <h3 class="text-gray-900 text-2xl flex items-center mb-0.5">
-                              <span
-                                class="i-carbon-enterprise inline-block text-gray-600 text-4xl mr-1 mb-1"
-                              />
-                              <span class="font-mono uppercase" />
-                              {{ item.society }}
-                            </h3>
-                            <div class="text-lg text-gray-600">
-                              {{ item.title }}
-                            </div>
-                            <div class="text-gray-500 text-sm flex items-center mb-1">
-                              <span
-                                class="i-carbon-time inline-block text-gray-700 text-xs mr-0.5"
-                              />
-                              <span>
-                                {{
-                                  dayjs(item.dateBegin).format("DD-MM-YYYY")
-                                }}{{ item.dateEnd && ` - ${dayjs(item.dateEnd).format("DD-MM-YYYY")}` }}
-                              </span>
-                              <span v-if="!item.dateEnd && item.actuallyPost" class="ml-1">
-                                <a-tag class="mr-0.5" color="#05f">Poste actuelle</a-tag>
-                              </span>
-                              <span v-if="item.isFreelancer" class="ml-1">
-                                <a-tag class="mr-0.5" color="#f50">Freelance</a-tag>
-                              </span>
-                            </div>
-                            <h4 class="text-gray-500 flex items-center mb-2">
-                              <span
-                                class="i-carbon-location-filled inline-block text-gray-700 leading-2 text-xs mr-0.5"
-                              />
-                              {{ item.place }}
-                            </h4>
-                            <h4 class="text-gray-500 flex items-center mb-2">
-                              <span
-                                class="i-carbon-idea inline-block text-gray-700 leading-2 text-xs mr-0.5"
-                              />
-                              {{ item.domain }}
-                            </h4>
-                            <a-typography-paragraph
-                              :ellipsis="{ rows: 2 }"
-                              :content="item.description"
-                            />
-                            <div>
-                              <a-list
-                                size="small"
-                                item-layout="horizontal"
-                                :data-source="item.skills.filter(s => s).map(s => ({ title: s }))"
-                              >
-                                <template #renderItem="{ item: skill }">
-                                  <a-list-item>
-                                    <div class="flex items-center">
-                                      <span
-                                        class="i-carbon-checkmark inline-block text-green-400 text-lg mr-2.5"
-                                      />
-                                      <span class="text-dark-100 text-sm">{{ skill.title }}</span>
-                                    </div>
-                                  </a-list-item>
-                                </template>
-                              </a-list>
-                            </div>
-                          </div>
-                        </a-timeline-item>
-                      </a-timeline>
-                    </div>
-                    <a-result
-                      v-else
-                      status="404"
-                      title="Expériences non trouvées"
-                    />
-                  </a-card>
+              </a-card>
+            </div>
+            <div class>
+              <a-card title="Experience" :bordered="false" class="rounded-sm font-bold">
+                <div v-if="profile && profile?.experiences?.length">
+                  <a-timeline mode="alternate">
+                    <a-timeline-item>
+                      <template #dot>
+                        <a-tooltip />
+                      </template>
+                      <div class="leading-10">
+                        <span class="invisible">Ajouter</span>
+                      </div>
+                    </a-timeline-item>
+                    <a-timeline-item v-for="item in profile?.experiences" :key="item._id">
+                      <div class="text-left">
+                        <h3 class="text-gray-900 text-2xl flex items-center mb-0.5">
+                          <span
+                            class="i-carbon-enterprise inline-block text-gray-600 text-4xl mr-1 mb-1"
+                          />
+                          <span class="font-mono uppercase" />
+                          {{ item.society }}
+                        </h3>
+                        <div class="text-lg text-gray-600">
+                          {{ item.title }}
+                        </div>
+                        <div class="text-gray-500 text-sm flex items-center mb-1">
+                          <span
+                            class="i-carbon-time inline-block text-gray-700 text-xs mr-0.5"
+                          />
+                          <span>
+                            {{
+                              dayjs(item.dateBegin).format("DD-MM-YYYY")
+                            }}{{ item.dateEnd && ` - ${dayjs(item.dateEnd).format("DD-MM-YYYY")}` }}
+                          </span>
+                          <span v-if="!item.dateEnd && item.actuallyPost" class="ml-1">
+                            <a-tag class="mr-0.5" color="#05f">Poste actuelle</a-tag>
+                          </span>
+                          <span v-if="item.isFreelancer" class="ml-1">
+                            <a-tag class="mr-0.5" color="#f50">Freelance</a-tag>
+                          </span>
+                        </div>
+                        <h4 class="text-gray-500 flex items-center mb-2">
+                          <span
+                            class="i-carbon-location-filled inline-block text-gray-700 leading-2 text-xs mr-0.5"
+                          />
+                          {{ item.place }}
+                        </h4>
+                        <h4 class="text-gray-500 flex items-center mb-2">
+                          <span
+                            class="i-carbon-idea inline-block text-gray-700 leading-2 text-xs mr-0.5"
+                          />
+                          {{ item.domain }}
+                        </h4>
+                        <a-typography-paragraph
+                          :ellipsis="{ rows: 2 }"
+                          :content="item.description"
+                        />
+                        <div>
+                          <a-list
+                            size="small"
+                            item-layout="horizontal"
+                            :data-source="item.skills.filter(s => s).map(s => ({ title: s }))"
+                          >
+                            <template #renderItem="{ item: skill }">
+                              <a-list-item>
+                                <div class="flex items-center">
+                                  <span
+                                    class="i-carbon-checkmark inline-block text-green-400 text-lg mr-2.5"
+                                  />
+                                  <span class="text-dark-100 text-sm">{{ skill.title }}</span>
+                                </div>
+                              </a-list-item>
+                            </template>
+                          </a-list>
+                        </div>
+                      </div>
+                    </a-timeline-item>
+                  </a-timeline>
                 </div>
-              </a-tab-pane>
-              <a-tab-pane key="3" tab="Formations" force-render>
-                <div class>
-                  <a-card title="Formations" :bordered="false" class="rounded-sm">
-                    <div v-if="profile && profile?.formations?.length">
-                      <a-timeline mode="alternate">
-                        <a-timeline-item>
-                          <template #dot>
-                            <a-tooltip />
-                          </template>
-                          <div class="leading-10">
-                            <span class="invisible">Ajouter</span>
-                          </div>
-                        </a-timeline-item>
-                        <a-timeline-item v-for="item in profile?.formations" :key="item._id">
-                          <div class="text-left">
-                            <h3 class="text-gray-900 text-2xl flex items-center mb-0.5">
-                              <span
-                                class="i-carbon-enterprise inline-block text-gray-600 text-4xl mr-1 mb-1"
-                              />
-                              <span class="font-mono uppercase" />
-                              {{ item.name }}
-                              <a-tag
-                                v-if="item.type === 'en cours'"
-                                class="text-xs ml-2 leading-5"
-                                color="#05f"
-                              >
-                                {{ item.type }}
-                              </a-tag>
-                              <a-tag
-                                v-else
-                                class="text-xs ml-2 leading-5"
-                                color="#080"
-                              >
-                                {{ item.type }}
-                              </a-tag>
-                              <a-tag class="text-xs ml-2 leading-5" color="#f50">
-                                {{ item.year }}
-                              </a-tag>
-                            </h3>
-                            <a-typography-paragraph
-                              :ellipsis="{ rows: 2 }"
-                              :content="item.description"
-                            />
-                          </div>
-                        </a-timeline-item>
-                      </a-timeline>
+                <a-result
+                  v-else
+                  status="404"
+                  title="Expériences non trouvées"
+                />
+              </a-card>
+            </div>
+            <div class>
+              <a-card title="Formations" :bordered="false" class="rounded-sm font-bold">
+                <div v-if="profile && profile?.formations?.length">
+                  <a-timeline mode="alternate">
+                    <a-timeline-item>
+                      <template #dot>
+                        <a-tooltip />
+                      </template>
+                      <div class="leading-10">
+                        <span class="invisible">Ajouter</span>
+                      </div>
+                    </a-timeline-item>
+                    <a-timeline-item v-for="item in profile?.formations" :key="item._id">
+                      <div class="text-left">
+                        <h3 class="text-gray-900 text-2xl flex items-center mb-0.5">
+                          <span
+                            class="i-carbon-enterprise inline-block text-gray-600 text-4xl mr-1 mb-1"
+                          />
+                          <span class="font-mono uppercase" />
+                          {{ item.name }}
+                          <a-tag
+                            v-if="item.type === 'en cours'"
+                            class="text-xs ml-2 leading-5"
+                            color="#05f"
+                          >
+                            {{ item.type }}
+                          </a-tag>
+                          <a-tag
+                            v-else
+                            class="text-xs ml-2 leading-5"
+                            color="#080"
+                          >
+                            {{ item.type }}
+                          </a-tag>
+                          <a-tag class="text-xs ml-2 leading-5" color="#f50">
+                            {{ item.year }}
+                          </a-tag>
+                        </h3>
+                        <a-typography-paragraph
+                          :ellipsis="{ rows: 2 }"
+                          :content="item.description"
+                        />
+                      </div>
+                    </a-timeline-item>
+                  </a-timeline>
+                </div>
+                <a-result
+                  v-else
+                  status="404"
+                  title="Formations non trouvées"
+                />
+                <div>
+                  <h3 class="text-dark-50 mb-1 text-lg">
+                    Compétences:
+                  </h3>
+                  <div v-for="skill in skillsValue">
+                    <span class="i-carbon-checkmark-filled inline-block text-green-600 text-4lg mr-1" /> {{ skill.value }}
+                  </div>
+                </div>
+              </a-card>
+            </div>
+            <div class>
+              <a-card title="Certifications" :bordered="false" class="rounded-sm font-bold">
+                <div v-if="profile && profile?.certifications?.length">
+                  <a-timeline mode="alternate">
+                    <a-timeline-item>
+                      <template #dot>
+                        <a-tooltip />
+                      </template>
+                      <div class="leading-10">
+                        <span class="invisible">Ajouter</span>
+                      </div>
+                    </a-timeline-item>
+                    <a-timeline-item v-for="item in profile?.certifications" :key="item._id">
+                      <div class="text-left">
+                        <h3 class="text-gray-900 text-2xl flex items-center mb-0.5">
+                          <span
+                            class="i-carbon-enterprise inline-block text-gray-600 text-4xl mr-1 mb-1"
+                          />
+                          <span class="font-mono uppercase" />
+                          {{ item.name }}
+                          <a-tag
+                            v-if="item.type === 'en cours'"
+                            class="text-xs ml-2 leading-5"
+                            color="#05f"
+                          >
+                            {{ item.type }}
+                          </a-tag>
+                          <a-tag
+                            v-else
+                            class="text-xs ml-2 leading-5"
+                            color="#080"
+                          >
+                            {{ item.type }}
+                          </a-tag>
+                          <a-tag class="text-xs ml-2 leading-5" color="#f50">
+                            {{ item.year }}
+                          </a-tag>
+                        </h3>
+                        <h4 class="text-gray-500 flex items-center mb-2">
+                          <span
+                            class="i-carbon-location-filled inline-block text-gray-700 leading-2 text-xs mr-0.5"
+                          />
+                          {{ item.place }}
+                        </h4>
+                        <a-typography-paragraph
+                          :ellipsis="{ rows: 2 }"
+                          :content="item.description"
+                        />
+                      </div>
+                    </a-timeline-item>
+                  </a-timeline>
+                </div>
+                <a-result
+                  v-else
+                  status="404"
+                  title="Certifications non trouvées"
+                  sub-title="veuillez ajouter vos certifications"
+                >
+                  <template #extra>
+                    <a-button
+                      type="primary"
+                      @click="visibleModalAddCertification = true"
+                    >
+                      Ajouter
+                    </a-button>
+                  </template>
+                </a-result>
+              </a-card>
+            </div>
+            <div class>
+              <a-card title="Centre d'interet" :bordered="false" class="rounded-sm font-bold">
+                <div>
+                  <div class="mb-3">
+                    <div class="text-dark-50 mb-1 text-lg font-bold">
+                      Passion :
                     </div>
-                    <a-result
-                      v-else
-                      status="404"
-                      title="Formations non trouvées"
-                    />
+                    <div>
+                      <label>
+                        {{ passionValue }}
+                      </label>
+                    </div>
+                  </div>
+                  <div class="mb-1">
                     <div>
                       <h3 class="text-dark-50 mb-1 text-lg">
-                        Compétences:
+                        Centre d'intéréts :
                       </h3>
-                      <div v-for="skill in skillsValue">
-                        <span class="i-carbon-checkmark-filled inline-block text-green-600 text-4lg mr-1" /> {{ skill.value }}
+                      <div v-for="interest in profile.freelancer?.interest">
+                        <span class="i-carbon-checkmark-filled inline-block text-green-600 text-4lg mr-1" /> {{ interest }}
                       </div>
                     </div>
-                  </a-card>
-                </div>
-              </a-tab-pane>
-              <a-tab-pane key="4" tab="Certifications" force-render>
-                <div class>
-                  <a-card title="Certifications" :bordered="false" class="rounded-sm">
-                    <div v-if="profile && profile?.certifications?.length">
-                      <a-timeline mode="alternate">
-                        <a-timeline-item>
-                          <template #dot>
-                            <a-tooltip />
-                          </template>
-                          <div class="leading-10">
-                            <span class="invisible">Ajouter</span>
-                          </div>
-                        </a-timeline-item>
-                        <a-timeline-item v-for="item in profile?.certifications" :key="item._id">
-                          <div class="text-left">
-                            <h3 class="text-gray-900 text-2xl flex items-center mb-0.5">
-                              <span
-                                class="i-carbon-enterprise inline-block text-gray-600 text-4xl mr-1 mb-1"
-                              />
-                              <span class="font-mono uppercase" />
-                              {{ item.name }}
-                              <a-tag
-                                v-if="item.type === 'en cours'"
-                                class="text-xs ml-2 leading-5"
-                                color="#05f"
-                              >
-                                {{ item.type }}
-                              </a-tag>
-                              <a-tag
-                                v-else
-                                class="text-xs ml-2 leading-5"
-                                color="#080"
-                              >
-                                {{ item.type }}
-                              </a-tag>
-                              <a-tag class="text-xs ml-2 leading-5" color="#f50">
-                                {{ item.year }}
-                              </a-tag>
-                            </h3>
-                            <h4 class="text-gray-500 flex items-center mb-2">
-                              <span
-                                class="i-carbon-location-filled inline-block text-gray-700 leading-2 text-xs mr-0.5"
-                              />
-                              {{ item.place }}
-                            </h4>
-                            <a-typography-paragraph
-                              :ellipsis="{ rows: 2 }"
-                              :content="item.description"
-                            />
-                          </div>
-                        </a-timeline-item>
-                      </a-timeline>
+                  </div>
+                  <div class="mb-3 mt-4">
+                    <div class="text-dark-50 mb-1 text-lg font-bold">
+                      Langues :
                     </div>
-                    <a-result
-                      v-else
-                      status="404"
-                      title="Certifications non trouvées"
-                      sub-title="veuillez ajouter vos certifications"
-                    >
-                      <template #extra>
-                        <a-button
-                          type="primary"
-                          @click="visibleModalAddCertification = true"
-                        >
-                          Ajouter
-                        </a-button>
-                      </template>
-                    </a-result>
-                  </a-card>
-                </div>
-              </a-tab-pane>
-              <a-tab-pane key="6" tab="Centres d'intérets" force-render>
-                <div class>
-                  <a-card title="Centre d'interet" :bordered="false" class="rounded-sm">
-                    <div>
-                      <div class="mb-3">
-                        <div class="text-dark-50 mb-1 text-lg font-bold">
-                          Passion :
-                        </div>
-                        <div>
-                          <label>
-                            {{ passionValue }}
-                          </label>
-                        </div>
-                      </div>
-                      <div class="mb-1">
-                        <div>
-                          <h3 class="text-dark-50 mb-1 text-lg">
-                            Centre d'intéréts :
-                          </h3>
-                          <div v-for="interest in profile.freelancer?.interest">
-                            <span class="i-carbon-checkmark-filled inline-block text-green-600 text-4lg mr-1" /> {{ interest }}
-                          </div>
-                        </div>
-                      </div>
-                      <div class="mb-3 mt-4">
-                        <div class="text-dark-50 mb-1 text-lg font-bold">
-                          Langues :
-                        </div>
-                        <div v-for="langue in profile?.freelancer?.languages" class="font-bold">
-                          <label v-if="langue.level == 'BASIC'">
-                            <span class="i-carbon-checkmark-filled inline-block text-green-600 text-4lg mr-1" /> {{ langue.name }} // Notions
-                          </label>
-                          <label v-else-if="langue.level == 'CONVERSATIONAL'">
-                            <span class="i-carbon-checkmark-filled inline-block text-green-600 text-4lg mr-1" /> {{ langue.name }} // Capacité professionnelle limitée
-                          </label>
-                          <label v-else-if="langue.level == 'FLUENT'">
-                            <span class="i-carbon-checkmark-filled inline-block text-green-600 text-4lg mr-1" /> {{ langue.name }} // Capacité professionnelle complète
-                          </label>
-                          <label v-else-if="langue.level == 'NATIVE'">
-                            <span class="i-carbon-checkmark-filled inline-block text-green-600 text-4lg mr-1" />  {{ langue.name }} // Bilingue ou natif
-                          </label>
-                        </div>
-                      </div>
+                    <div v-for="langue in profile?.freelancer?.languages" class="font-bold">
+                      <label v-if="langue.level == 'BASIC'">
+                        <span class="i-carbon-checkmark-filled inline-block text-green-600 text-4lg mr-1" /> {{ langue.name }} // Notions
+                      </label>
+                      <label v-else-if="langue.level == 'CONVERSATIONAL'">
+                        <span class="i-carbon-checkmark-filled inline-block text-green-600 text-4lg mr-1" /> {{ langue.name }} // Capacité professionnelle limitée
+                      </label>
+                      <label v-else-if="langue.level == 'FLUENT'">
+                        <span class="i-carbon-checkmark-filled inline-block text-green-600 text-4lg mr-1" /> {{ langue.name }} // Capacité professionnelle complète
+                      </label>
+                      <label v-else-if="langue.level == 'NATIVE'">
+                        <span class="i-carbon-checkmark-filled inline-block text-green-600 text-4lg mr-1" />  {{ langue.name }} // Bilingue ou natif
+                      </label>
                     </div>
-                  </a-card>
+                  </div>
                 </div>
-              </a-tab-pane>
-            </a-tabs>
+              </a-card>
+            </div>
           </div>
         </div>
       </div>

@@ -602,7 +602,7 @@ const rulesLegaleMention = reactive({
   sas: [
     {
       required: true,
-      message: 'Saisir votre SAS',
+      message: 'Saisir votre Status juridique',
     },
     {
       validator: async(_rule: RuleObject, value: string) => {
@@ -1269,7 +1269,7 @@ onMounted(async() => {
                           @finish-failed="onFinishFailed"
                           @finish="onFinish"
                         >
-                          <h4>Comment le Green fait parti de votre de vie et comment est-il présent dans votre vie ?</h4>
+                          <h4>Qu'est ce qui fait de vous un profil "Green" et comment cela se traduit dans votre travail ? </h4>
                           <a-form-item name="greenQuestion" label="Question GREEN">
                             <a-input v-model:value="formStateProfile.greenQuestion" />
                           </a-form-item>
@@ -1582,7 +1582,7 @@ onMounted(async() => {
                   </a-card>
                 </div>
               </a-tab-pane>
-              <a-tab-pane key="7" tab="Ma micro entreprise" force-render>
+              <a-tab-pane key="7" tab="Notre entreprise" force-render>
                 <div class>
                   <a-card title="Profile entreprise" :bordered="false" class="rounded-sm">
                     <div>
@@ -1880,7 +1880,7 @@ onMounted(async() => {
                                     @finish-failed="onFinishFailed"
                                     @finish="onFinish"
                                   >
-                                    <a-form-item label="Sas" v-bind="validateInfosLegalMention.sas">
+                                    <a-form-item label="Status juridique" v-bind="validateInfosLegalMention.sas">
                                       <a-input
                                         v-model:value="formStateLegalMention.sas"
                                         @blur="validate('sas', { trigger: 'blur' }).catch(() => { })"
@@ -2329,14 +2329,14 @@ onMounted(async() => {
     <div>
       <div>
         <div class="text-h5 grey lighten-2">
-          Vérification email
+          <h3> Vérification email</h3>
         </div>
         <div>
-          Lors de votre inscription sur Green-positiv, nous vous avons envoyé un emai lde
-          vérification. il faut ouvrir cette email. si vous ne l'avez pas reçu, cliquer sur ce
+          Lors de votre inscription sur Green-positiv, nous vous avons fait parvenir un email de vérification avec un lien de validation.
+          Merci de bien vouloir cliquer sur le lien pour confirmer votre adresse. Si vous ne l'avez pas reçu, cliquer sur ce
           <a
             class="link-info"
-          >lien</a> pour le reenvoyer.
+          >lien</a> pour le recevoir.
         </div>
       </div>
     </div>
@@ -2350,11 +2350,10 @@ onMounted(async() => {
     <div>
       <div>
         <div class="text-h5 grey lighten-2">
-          Validation des documents
+          <h3>Validation des documents</h3>
         </div>
         <div>
-          Vous devez nous envoyé vos documents tel que ....
-          nous procéderons à une iscpection et les valideront si tout va bien.
+          Merci de bien vouloir télécharger l'ensemble des documents demandés pour que nous puissions procéder à la validation de votre profil.
         </div>
       </div>
     </div>
@@ -2368,10 +2367,10 @@ onMounted(async() => {
     <div>
       <div>
         <div class="text-h5 grey lighten-2">
-          <h3>Répondre à la question Green</h3>
+          <h3>Répondre à la question Green Positiv</h3>
         </div>
         <div>
-          Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+          Veuillez compléter ce champ afin de valider votre profil.
         </div>
       </div>
     </div>
@@ -2385,13 +2384,12 @@ onMounted(async() => {
     <div>
       <div>
         <div class="text-h5 grey lighten-2">
-          Signature de la charte
+          <h3>Signature de la charte</h3>
         </div>
         <div>
-          Vous devez signer la charte de green_positive selon votre rôle.
-          Veuillez l'accepter via <router-link class="green" :to="`/charte/agence/${$props.id}`">
+          Merci de bien vouloir lire et accepter la charte afin de valider votre profil via <router-link class="green" :to="`/charte/agence/${$props.id}`">
             <span>ce lien</span>
-          </router-link> pour continuez la validation de votre compte.
+          </router-link>
         </div>
       </div>
     </div>
@@ -2405,12 +2403,10 @@ onMounted(async() => {
     <div>
       <div>
         <div class="text-h5 grey lighten-2">
-          Signature de la charte
+          <h3>Compte validé</h3>
         </div>
         <div>
-          Si votre compte est non valide, plusieurs cas peuvent causer cette invalidité tel que les
-          documents non validés ,une plainte d'une entreprise , des informations saisites non
-          adéquates, etc...
+          Afin de procéder à la validation de votre compte, tous les champs doivent être renseignés. Si ce n'est pas le cas, votre profil restera non valide jusqu'à ce que vous remplissiez toutes les étapes.
         </div>
       </div>
     </div>
@@ -2440,6 +2436,11 @@ onMounted(async() => {
   border-radius: 6px;
   background-color: #fafafa;
   min-height: 200px;
+}
+.ant-tabs-tab{
+  padding: 20px;
+  font-size: 16px;
+  font-weight: bold;
 }
 .swiper-wrapper {
   @apply items-center;

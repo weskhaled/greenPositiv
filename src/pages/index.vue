@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { useUserStore } from '~/stores/user'
+import adminApi from '~/api/modules/admin'
 
 const user = useUserStore()
 const name = ref(user.savedName)
+const jobs = ref([])
 
 const router = useRouter()
 const go = () => {
@@ -11,6 +13,19 @@ const go = () => {
 }
 
 const { t } = useI18n()
+
+const getFormData = async() => {
+  const { data } = await adminApi.jobs()
+
+  data.value && (jobs.value = data.value.filter(j => j._id && j.name).map(j => ({
+    value: j._id,
+    label: j.name,
+  })))
+}
+
+onMounted(async() => {
+  getFormData()
+})
 </script>
 
 <template>
@@ -136,153 +151,18 @@ const { t } = useI18n()
           <div class="col-12">
             <div class="section-title text-center">
               <h3 class="title">
-                Popular Category
+                Catégories de métier
               </h3>
-              <div class="desc">
-                <p>Many desktop publishing packages and web page editors</p>
-              </div>
             </div>
           </div>
         </div>
         <div class="row row-gutter-20">
-          <div class="col-sm-6 col-lg-3">
+          <div v-for="job in jobs" class="col-sm-6 col-lg-3">
             <!--== Start Job Category Item ==-->
             <div class="job-category-item">
               <div class="content">
                 <h3 class="title">
-                  <a href="job-details.html">Accounting/Finance <span>(305)</span></a>
-                </h3>
-              </div>
-              <a class="overlay-link" href="job-details.html" />
-            </div>
-            <!--== End Job Category Item ==-->
-          </div>
-          <div class="col-sm-6 col-lg-3">
-            <!--== Start Job Category Item ==-->
-            <div class="job-category-item">
-              <div class="content">
-                <h3 class="title">
-                  <a href="job-details.html">Production/Operation <span>(95)</span></a>
-                </h3>
-              </div>
-              <a class="overlay-link" href="job-details.html" />
-            </div>
-            <!--== End Job Category Item ==-->
-          </div>
-          <div class="col-sm-6 col-lg-3">
-            <!--== Start Job Category Item ==-->
-            <div class="job-category-item">
-              <div class="content">
-                <h3 class="title">
-                  <a href="job-details.html">Education/Training <span>(212)</span></a>
-                </h3>
-              </div>
-              <a class="overlay-link" href="job-details.html" />
-            </div>
-            <!--== End Job Category Item ==-->
-          </div>
-          <div class="col-sm-6 col-lg-3">
-            <!--== Start Job Category Item ==-->
-            <div class="job-category-item">
-              <div class="content">
-                <h3 class="title">
-                  <a href="job-details.html">Design/Creative <span>(93)</span></a>
-                </h3>
-              </div>
-              <a class="overlay-link" href="job-details.html" />
-            </div>
-            <!--== End Job Category Item ==-->
-          </div>
-          <div class="col-sm-6 col-lg-3">
-            <!--== Start Job Category Item ==-->
-            <div class="job-category-item">
-              <div class="content">
-                <h3 class="title">
-                  <a href="job-details.html">Health & Fitness <span>(4)</span></a>
-                </h3>
-              </div>
-              <a class="overlay-link" href="job-details.html" />
-            </div>
-            <!--== End Job Category Item ==-->
-          </div>
-          <div class="col-sm-6 col-lg-3">
-            <!--== Start Job Category Item ==-->
-            <div class="job-category-item">
-              <div class="content">
-                <h3 class="title">
-                  <a href="job-details.html">Research/Consultancy <span>(34)</span></a>
-                </h3>
-              </div>
-              <a class="overlay-link" href="job-details.html" />
-            </div>
-            <!--== End Job Category Item ==-->
-          </div>
-          <div class="col-sm-6 col-lg-3">
-            <!--== Start Job Category Item ==-->
-            <div class="job-category-item">
-              <div class="content">
-                <h3 class="title">
-                  <a href="job-details.html">Engineer/Architects <span>(376)</span></a>
-                </h3>
-              </div>
-              <a class="overlay-link" href="job-details.html" />
-            </div>
-            <!--== End Job Category Item ==-->
-          </div>
-          <div class="col-sm-6 col-lg-3">
-            <!--== Start Job Category Item ==-->
-            <div class="job-category-item">
-              <div class="content">
-                <h3 class="title">
-                  <a href="job-details.html">Telecommunication <span>(450)</span></a>
-                </h3>
-              </div>
-              <a class="overlay-link" href="job-details.html" />
-            </div>
-            <!--== End Job Category Item ==-->
-          </div>
-          <div class="col-sm-6 col-lg-3">
-            <!--== Start Job Category Item ==-->
-            <div class="job-category-item">
-              <div class="content">
-                <h3 class="title">
-                  <a href="job-details.html">Data Entry/Operator <span>(25)</span></a>
-                </h3>
-              </div>
-              <a class="overlay-link" href="job-details.html" />
-            </div>
-            <!--== End Job Category Item ==-->
-          </div>
-          <div class="col-sm-6 col-lg-3">
-            <!--== Start Job Category Item ==-->
-            <div class="job-category-item">
-              <div class="content">
-                <h3 class="title">
-                  <a href="job-details.html">Production/Operation <span>(95)</span></a>
-                </h3>
-              </div>
-              <a class="overlay-link" href="job-details.html" />
-            </div>
-            <!--== End Job Category Item ==-->
-          </div>
-          <div class="col-sm-6 col-lg-3">
-            <!--== Start Job Category Item ==-->
-            <div class="job-category-item">
-              <div class="content">
-                <h3 class="title">
-                  <a href="job-details.html">Marketing/Sales <span>(666)</span></a>
-                </h3>
-              </div>
-              <a class="overlay-link" href="job-details.html" />
-            </div>
-            <!--== End Job Category Item ==-->
-          </div>
-          <div class="col-sm-6 col-lg-3">
-            <!--== Start Job Category Item ==-->
-            <div class="job-category-item">
-              <div class="content">
-                <h3 class="title">
-                  <a href="job-details.html">Security/Support Service <span>(62)</span></a>
+                  <a href="job-details.html">{{ job.label }}</a>
                 </h3>
               </div>
               <a class="overlay-link" href="job-details.html" />

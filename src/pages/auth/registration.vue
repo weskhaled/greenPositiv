@@ -407,7 +407,7 @@ onMounted(async() => {
                       <template #tab>
                         <span class="px-2 flex items-center">
                           <span class="i-uim-user-nurse text-md inline-block mr-1" />
-                          Agence
+                          Solution innovante
                         </span>
                       </template>
                       <div class="px-2">
@@ -433,9 +433,9 @@ onMounted(async() => {
                             </a-form-item>
                             <a-form-item
                               name="nameAgence"
-                              :rules="[{ required: true, message: 'Veuillez saisir le nom de votre agence', trigger: 'change' }]"
+                              :rules="[{ required: true, message: 'Veuillez saisir le nom de votre solution innovante', trigger: 'change' }]"
                             >
-                              <a-input v-model:value="formRegisterAgenceState.nameAgence" placeholder="Nom agence" />
+                              <a-input v-model:value="formRegisterAgenceState.nameAgence" placeholder="Nom de votre solution innovante" />
                             </a-form-item>
 
                             <a-form-item
@@ -537,7 +537,7 @@ onMounted(async() => {
                             </a-descriptions-item>
                             <a-descriptions-item>
                               <template #label>
-                                <span class="text-md">Nom de l'agence</span>
+                                <span class="text-md">Nom de la solution innovante</span>
                               </template>
                               {{ formRegisterAgenceState.nameAgence }}
                             </a-descriptions-item>
