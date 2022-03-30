@@ -62,6 +62,7 @@ const countriesIbanOthers = ref([])
 const jobs = ref([])
 const typesIban = ref([])
 const activities = ref([])
+const activitiesCode = ref([])
 const visibleModalAddReference = ref(false)
 const visibleModalAddOffer = ref(false)
 const visibleModalInformationEmailVerification = ref(false)
@@ -730,6 +731,7 @@ const getFormData = async() => {
       profile.value = data.value
       references.value = data.value.references
       offers.value = data.value.offers
+      activitiesCode.value = activities.value.map(a => a.value)
       const agence = profile.value?.agence
       profileAvatar.value = agence.image || ''
       formStateProfile.description = agence.description
@@ -1275,7 +1277,7 @@ onMounted(async() => {
           </div>
           <div class="pt-0">
             <a-tabs v-model:activeKey="activeKey" class="mt-0">
-              <a-tab-pane key="1" tab="Profile">
+              <a-tab-pane key="1" tab="Profil">
                 <div class>
                   <a-card title="Profile Details" :bordered="false" class="rounded-sm">
                     <div class="flex w-full">
@@ -1533,7 +1535,7 @@ onMounted(async() => {
                                     Domaine:
                                   </span>
                                   <span class="inline-block bg-green-400 text-xs rounded-sm p-1 text-light-50 ml-1">
-                                    {{ item.domain }}
+                                    {{ activities[activitiesCode.indexOf(item.domain)].label }}
                                   </span>
                                 </div>
                                 <div class="flex items-center">
@@ -1631,7 +1633,7 @@ onMounted(async() => {
                                   <span class="text-dark-300 mr-1.5">
                                     Domaine:
                                   </span>
-                                  {{ item.domain }}
+                                  {{ activities[activitiesCode.indexOf(item.domain)].label }}
                                 </div>
                                 <div class="flex items-center mb-1">
                                   <span class="text-dark-300 mr-1.5">
@@ -1641,7 +1643,7 @@ onMounted(async() => {
                                     {{ item.price }}
                                   </span>
                                   <span class="inline-block text-xs rounded-sm p-1 text-light-50 ml-1" :class="item.show_price ? 'bg-green-400' : 'bg-red-400'">
-                                    {{ item.show_price ? 'visible' : 'hidden' }}
+                                    {{ item.show_price ? 'Affiché' : 'caché' }}
                                   </span>
                                 </div>
                                 <div class="flex items-center  mb-1">
@@ -1649,7 +1651,7 @@ onMounted(async() => {
                                     Documents:
                                   </span>
                                   <span class="inline-block text-xs rounded-sm p-1 text-light-50 ml-1" :class="item.show_price ? 'bg-green-400' : 'bg-red-400'">
-                                    {{ item.documents ? 'telecharge' : 'no telecharger' }}
+                                    {{ item.documents ? 'téléchargé' : 'non téléchargé' }}
                                   </span>
                                 </div>
                               </template>
@@ -2325,7 +2327,7 @@ onMounted(async() => {
   <a-modal
     v-model:visible="visibleModalAddReference"
     width="40%"
-    :title="modelRefReference.id ? 'Modifier Référence client' : 'Ajouter Référence client'"
+    :title="modelRefReference.id ? 'Modifier référence client' : 'Ajouter une référence'"
     @ok="() => { }"
   >
     <div>
@@ -2339,7 +2341,7 @@ onMounted(async() => {
         <a-form-item label="Choisir un domaine :" v-bind="referenceValidateInfos.domain">
           <a-select
             v-model:value="modelRefReference.domain"
-            placeholder="please select your domain"
+            placeholder="Choisir un domaine"
             :options="activities"
             @blur="validate('domain', { trigger: 'blur' }).catch(() => { })"
           />
@@ -2424,7 +2426,7 @@ onMounted(async() => {
   <a-modal
     v-model:visible="visibleModalAddOffer"
     width="40%"
-    :title="modelRefOffer.id ? 'Modifier Référence client' : 'Ajouter Référence client'"
+    :title="modelRefOffer.id ? 'Modifier une offre' : 'Ajouter une offre'"
     @ok="() => { }"
   >
     <div>
@@ -2438,19 +2440,19 @@ onMounted(async() => {
         <a-form-item label="Choisir un domaine :" v-bind="validateInfosOffer.domain">
           <a-select
             v-model:value="modelRefOffer.domain"
-            placeholder="please select your domain"
+            placeholder="Choisir un domaine"
             :options="activities"
             @blur="validate('domain', { trigger: 'blur' }).catch(() => { })"
           />
         </a-form-item>
         <div class="grid grid-cols-2 gap-3 w-full">
           <div>
-            <a-form-item label="price :" v-bind="validateInfosOffer.price">
+            <a-form-item label="prix :" v-bind="validateInfosOffer.price">
               <a-input-number v-model:value="modelRefOffer.price" addon-after="€" @blur="validate('price', { trigger: 'blur' }).catch(() => { })" />
             </a-form-item>
           </div>
           <div>
-            <a-form-item label="show Price ?">
+            <a-form-item label="afficher le prix ?">
               <a-switch v-model:checked="modelRefOffer.show_price" checked-value="1" un-checked-value="0" />
             </a-form-item>
           </div>
