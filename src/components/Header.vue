@@ -17,7 +17,7 @@ onClickOutside(asideOffcanvasMenu.value, () => {
 
 <template>
   <!--== Start Header Wrapper ==-->
-  <header class="header-area transparent">
+  <header class="header-area fixed bg-white w-full z-50">
     <div class="container">
       <div class="row no-gutter align-items-center position-relative">
         <div class="col-12">
