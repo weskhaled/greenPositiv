@@ -617,7 +617,7 @@ const rulesLegaleMention = reactive({
   sas: [
     {
       required: true,
-      message: 'Saisir votre Statue juridique',
+      message: 'Saisir votre capitale',
     },
     {
       validator: async(_rule: RuleObject, value: string) => {
@@ -2426,14 +2426,14 @@ onMounted(async() => {
                                     @finish-failed="onFinishFailed"
                                     @finish="onFinish"
                                   >
-                                    <a-form-item label="Status juridique" v-bind="validateInfosLegalMention.sas">
+                                    <a-form-item label="Capitale" v-bind="validateInfosLegalMention.sas">
                                       <a-input
                                         v-model:value="formStateLegalMention.sas"
                                         @blur="validate('sas', { trigger: 'blur' }).catch(() => { })"
                                       />
                                     </a-form-item>
                                     <a-form-item
-                                      label="siret"
+                                      label="SIRET"
                                       v-bind="validateInfosLegalMention.siret"
                                     >
                                       <a-input
@@ -2441,13 +2441,13 @@ onMounted(async() => {
                                         @blur="validate('siret', { trigger: 'blur' }).catch(() => { })"
                                       />
                                     </a-form-item>
-                                    <a-form-item label="rcs" v-bind="validateInfosLegalMention.rcs">
+                                    <a-form-item label="RCS" v-bind="validateInfosLegalMention.rcs">
                                       <a-input
                                         v-model:value="formStateLegalMention.rcs"
                                         @blur="validate('rcs', { trigger: 'blur' }).catch(() => { })"
                                       />
                                     </a-form-item>
-                                    <a-form-item label="naf" v-bind="validateInfosLegalMention.naf">
+                                    <a-form-item label="NAF" v-bind="validateInfosLegalMention.naf">
                                       <a-input
                                         v-model:value="formStateLegalMention.naf"
                                         @blur="validate('naf', { trigger: 'blur' }).catch(() => { })"

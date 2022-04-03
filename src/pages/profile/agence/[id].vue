@@ -605,7 +605,7 @@ const rulesLegaleMention = reactive({
   sas: [
     {
       required: true,
-      message: 'Saisir votre Status juridique',
+      message: 'Saisir votre capitale',
     },
     {
       validator: async(_rule: RuleObject, value: string) => {
@@ -1288,7 +1288,7 @@ onMounted(async() => {
                           @finish-failed="onFinishFailed"
                           @finish="onFinish"
                         >
-                          <h4>Qu'est ce qui fait de vous un profil "Green" et comment cela se traduit dans votre travail ? </h4>
+                          <h4>Qu'est ce qui fait de votre outils une solution "Green" et comment cela se traduit-il ?</h4>
                           <a-form-item name="greenQuestion" label="Question GREEN">
                             <a-input v-model:value="formStateProfile.greenQuestion" />
                           </a-form-item>
@@ -1980,14 +1980,14 @@ onMounted(async() => {
                                     @finish-failed="onFinishFailed"
                                     @finish="onFinish"
                                   >
-                                    <a-form-item label="Status juridique" v-bind="validateInfosLegalMention.sas">
+                                    <a-form-item label="Capitale" v-bind="validateInfosLegalMention.sas">
                                       <a-input
                                         v-model:value="formStateLegalMention.sas"
                                         @blur="validate('sas', { trigger: 'blur' }).catch(() => { })"
                                       />
                                     </a-form-item>
                                     <a-form-item
-                                      label="siret"
+                                      label="SIRET"
                                       v-bind="validateInfosLegalMention.siret"
                                     >
                                       <a-input
@@ -1995,13 +1995,13 @@ onMounted(async() => {
                                         @blur="validate('siret', { trigger: 'blur' }).catch(() => { })"
                                       />
                                     </a-form-item>
-                                    <a-form-item label="rcs" v-bind="validateInfosLegalMention.rcs">
+                                    <a-form-item label="RCS" v-bind="validateInfosLegalMention.rcs">
                                       <a-input
                                         v-model:value="formStateLegalMention.rcs"
                                         @blur="validate('rcs', { trigger: 'blur' }).catch(() => { })"
                                       />
                                     </a-form-item>
-                                    <a-form-item label="naf" v-bind="validateInfosLegalMention.naf">
+                                    <a-form-item label="NAF" v-bind="validateInfosLegalMention.naf">
                                       <a-input
                                         v-model:value="formStateLegalMention.naf"
                                         @blur="validate('naf', { trigger: 'blur' }).catch(() => { })"
@@ -2016,17 +2016,29 @@ onMounted(async() => {
                                         @blur="validate('tva_intracom', { trigger: 'blur' }).catch(() => { })"
                                       />
                                     </a-form-item>
+                                    <a-alert
+                                      class="mb-8 text-justify"
+                                      message="Attention !"
+                                      description="Tout règlement effectué après expiration du délai donnera lieu, à titre de pénalité de retard, à
+                                      l'application d'un intérêt égal à celui appliqué par la Banque Centrale Européenne à son opération de
+                                      refinancement la plus récente, majoré de 10 points de pourcentage, ainsi qu'à une indemnité forfaitaire
+                                      pour frais de recouvrement d'un montant de 40 Euros.
+                                      Les pénalités de retard sont exigibles sans qu'un rappel soit nécessaire."
+                                      type="warning"
+                                      show-icon
+                                    />
                                     <a-form-item
                                       v-bind="validateInfosLegalMention.days"
-                                      name="Jours"
-                                      label="Définissez le nombre de jours"
                                       :rules="[{ required: true, message: 'Définissez le nombre de jours' }]"
                                     >
-                                      <a-input-number
-                                        v-bind="validateInfosLegalMention.days"
-                                        v-model:value="formStateLegalMention.days"
-                                      />
+                                      <p>
+                                        La facture est payable sur <a-input-number
+                                          v-bind="validateInfosLegalMention.days"
+                                          v-model:value="formStateLegalMention.days"
+                                        /> jours.
+                                      </p>
                                     </a-form-item>
+
                                     <a-form-item :wrapper-col="{ span: 24, offset: 0 }">
                                       <a-button
                                         block

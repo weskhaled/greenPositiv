@@ -46,7 +46,7 @@ onClickOutside(asideOffcanvasMenu.value, () => {
                       </li>
                       <li>
                         <router-link class="nav-link" :to="`/charte/agence/${currentUser?.idUser}`">
-                          <span>Agence</span>
+                          <span>Solution innovante</span>
                         </router-link>
                       </li>
                       <li>
@@ -60,12 +60,7 @@ onClickOutside(asideOffcanvasMenu.value, () => {
                   <li><a href="employers-details.html"><span>À propos</span></a></li>
                   <li v-if="!isAuthenticated">
                     <router-link to="/auth/registration" class="header-action-area">
-                      <span class="btn-registration">Je suis freelance</span>
-                    </router-link>
-                  </li>
-                  <li v-if="!isAuthenticated">
-                    <router-link to="/auth/registration-company" class="header-action-area">
-                      <span class="btn-registration">Je suis une Entreprise</span>
+                      <span class="btn-registration">Créer votre compte</span>
                     </router-link>
                   </li>
                   <li v-if="!isAuthenticated">
@@ -158,70 +153,85 @@ onClickOutside(asideOffcanvasMenu.value, () => {
       <!-- Mobile Menu Start -->
       <div class="mobile-menu-items">
         <ul class="nav-menu">
+          <li><a href="javascript:;" @click="router.push('/')"><span>Offres et tarifs</span></a></li>
+          <li><a href="javascript:;" @click="router.push('/')"><span>Entreprise</span></a></li>
+          <li><a href="javascript:;" @click="router.push('/freelancers')"><span>Freelance</span></a></li>
           <li>
-            <a href="index.html">Home</a>
-          </li>
-          <li>
-            <a href="#">Find Jobs</a>
+            <a href="#">Ressources</a>
             <ul class="sub-menu">
               <li>
-                <a href="job.html">Jobs</a>
+                <router-link class="nav-link" :to="`/charte/freelancer/${currentUser?.idUser}`">
+                  <span>Freelance</span>
+                </router-link>
               </li>
               <li>
-                <a href="job-details.html">Job Details</a>
+                <router-link class="nav-link" :to="`/charte/agence/${currentUser?.idUser}`">
+                  <span>Solution innovante</span>
+                </router-link>
+              </li>
+              <li>
+                <router-link class="nav-link" :to="`/charte/company/${currentUser?.idUser}`">
+                  <span>Entreprise</span>
+                </router-link>
               </li>
             </ul>
           </li>
-          <li>
-            <a href="employers-details.html">Employers Details</a>
+          <li><a href="javascript:;" @click="router.push('/blog')"><span>Blog</span></a></li>
+          <li><a href="employers-details.html"><span>À propos</span></a></li>
+          <li v-if="!isAuthenticated">
+            <router-link to="/auth/registration">
+              <span>Créer votre compte</span>
+            </router-link>
+          </li>
+          <li v-if="!isAuthenticated">
+            <router-link class="nav-link" to="/auth">
+              <span>Se Connecter</span>
+            </router-link>
           </li>
           <li>
-            <a href="#">Candidates</a>
+            <a href="#">Mon espace</a>
             <ul class="sub-menu">
-              <li>
-                <a href="candidate.html">Candidates</a>
+              <li v-if="currentUser && currentUser.role === 'Freelancer'">
+                <router-link class="nav-link" :to="`/profile/freelancer/${currentUser?.idUser}`">
+                  <span>Modifier mon profil</span>
+                </router-link>
+              </li>
+              <li v-else-if="currentUser && currentUser.role === 'Agence'">
+                <router-link class="nav-link" :to="`/profile/agence/${currentUser?.idUser}`">
+                  <span>Modifier mon profil</span>
+                </router-link>
+              </li>
+              <li v-else-if="currentUser && currentUser.role === 'Company'">
+                <router-link class="nav-link" :to="`/profile/company/${currentUser?.idUser}`">
+                  <span>Modifier mon profil</span>
+                </router-link>
+              </li>
+              <li v-else-if="currentUser && currentUser.role === 'Collab'">
+                <router-link class="nav-link" :to="`/profile/collaborator/${currentUser?.idUser}`">
+                  <span>Modifier mon profil</span>
+                </router-link>
               </li>
               <li>
-                <a href="candidate-details.html">Candidate Details</a>
+                <router-link class="nav-link" to="#">
+                  <span>Mes missions</span>
+                </router-link>
+              </li>
+              <li>
+                <router-link class="nav-link" to="#">
+                  <span>Créer un devis </span>
+                </router-link>
+              </li>
+              <li>
+                <router-link class="nav-link" to="#">
+                  <span>Paramètre de compte</span>
+                </router-link>
+              </li>
+              <li class="nav-item">
+                <router-link class="nav-link" to="#" @click="() => token = null">
+                  <span>Déconnexion</span>
+                </router-link>
               </li>
             </ul>
-          </li>
-          <li>
-            <a href="#">Blog</a>
-            <ul class="sub-menu">
-              <li>
-                <a href="blog-grid.html">Blog Grid</a>
-              </li>
-              <li>
-                <a href="blog.html">Blog Left Sidebar</a>
-              </li>
-              <li>
-                <a href="blog-right-sidebar.html">Blog Right Sidebar</a>
-              </li>
-              <li>
-                <a href="blog-details.html">Blog Details</a>
-              </li>
-            </ul>
-          </li>
-          <li>
-            <a href="#">Pages</a>
-            <ul class="sub-menu">
-              <li>
-                <a href="about-us.html">About us</a>
-              </li>
-              <li>
-                <a href="login.html">Login</a>
-              </li>
-              <li>
-                <a href="registration.html">Registration</a>
-              </li>
-              <li>
-                <a href="page-not-found.html">Page Not Found</a>
-              </li>
-            </ul>
-          </li>
-          <li>
-            <a href="contact.html">Contact</a>
           </li>
         </ul>
       </div>

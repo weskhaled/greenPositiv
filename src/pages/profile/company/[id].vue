@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import { ExclamationCircleOutlined } from '@ant-design/icons-vue'
-import dayjs, { Dayjs } from 'dayjs'
 import { Form, Modal, message } from 'ant-design-vue'
 import type { RuleObject } from 'ant-design-vue/es/form'
-import adminApi from '~/api/modules/admin'
 import globalApi from '~/api/modules/global'
 import companyApi from '~/api/modules/company'
 import profileEntrepriseApi from '~/api/modules/profil-entreprise'
@@ -1065,7 +1063,7 @@ onMounted(async() => {
                                       />
                                     </a-form-item>
                                     <a-form-item
-                                      label="siret"
+                                      label="SIRET"
                                       v-bind="validateInfosFacturation.siret"
                                     >
                                       <a-input

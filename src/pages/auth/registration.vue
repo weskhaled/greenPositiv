@@ -4,6 +4,7 @@ import { message } from 'ant-design-vue'
 import adminApi from '~/api/modules/admin'
 import freelancerApi from '~/api/modules/freelancer'
 import agenceApi from '~/api/modules/agence'
+import companyApi from '~/api/modules/company'
 
 const router = useRouter()
 const route = useRoute()
@@ -42,12 +43,113 @@ const formRegisterAgenceState = reactive<any>({
   confidentiality: false,
 })
 
+const formRegisterCompanyState = reactive<any>({
+  username: '',
+  lastName: '',
+  firstName: '',
+  email: '',
+  phone: undefined,
+  password: '',
+  repeatPassword: '',
+
+  name: '',
+  size: 0,
+  departement: undefined,
+  searchable: false,
+})
+
 const formRegisterRef: any = ref(null)
 const formRegisterAgenceRef: any = ref(null)
+const formRegisterCompanyRef: any = ref(null)
 const activeTabKey = ref('1')
 const currentStep = ref(0)
 const currentAgenceStep = ref(0)
+const currentCompanyStep = ref(0)
 const jobs = ref([])
+const departements = ref([])
+const sizeCompanies = ref([])
+
+sizeCompanies.value = [{
+  value: 0,
+  label: '1 personne',
+},
+{
+  value: 1,
+  label: 'Entre 1 et 10',
+},
+{
+  value: 2,
+  label: 'Entre 11 et 49',
+},
+{
+  value: 3,
+  label: 'Entre 50 et 249',
+},
+{
+  value: 4,
+  label: 'Entre 250 et 999',
+},
+{
+  value: 5,
+  label: 'Entre 1000 et 4999',
+},
+{
+  value: 6,
+  label: 'Plus de 5000',
+}]
+departements.value = [{
+  value: 'IT',
+  label: 'IT',
+},
+{
+  value: 'MARKETING',
+  label: 'MARKETING',
+},
+{
+  value: 'ADMINISTRATION',
+  label: 'ADMINISTRATION',
+},
+{
+  value: 'PURCHASING',
+  label: 'PURCHASING',
+},
+{
+  value: 'ACCOUNTING',
+  label: 'ACCOUNTING',
+},
+{
+  value: 'RH',
+  label: 'RH',
+},
+{
+  value: 'OPERATION',
+  label: 'OPERATION',
+},
+{
+  value: 'SALES',
+  label: 'SALES',
+},
+{
+  value: 'MANAGEMENT',
+  label: 'MANAGEMENT',
+},
+{
+  value: 'PRODUCT',
+  label: 'PRODUCT',
+},
+{
+  value: 'COMMUNICATION',
+  label: 'COMMUNICATION',
+}]
+
+const typeSearchable = [{
+  value: 'alone',
+  label: 'chercher des freelancers tout seul',
+},
+{
+  value: 'green',
+  label: 'greenPositiv cherchera pour vous les profils',
+}]
 
 const validaterePassword = async(_rule: RuleObject, value: string) => {
   if (value === '')
@@ -64,6 +166,16 @@ const validaterePasswordAgence = async(_rule: RuleObject, value: string) => {
     return Promise.reject(new Error('veuillez resaisir votre mot de passe'))
 
   else if (value !== formRegisterAgenceState.password)
+    return Promise.reject(new Error('les mots de passes ne sont pas les mêmes'))
+
+  else
+    return Promise.resolve()
+}
+const validaterePasswordCompany = async(_rule: RuleObject, value: string) => {
+  if (value === '')
+    return Promise.reject(new Error('veuillez resaisir votre mot de passe'))
+
+  else if (value !== formRegisterCompanyState.password)
     return Promise.reject(new Error('les mots de passes ne sont pas les mêmes'))
 
   else
@@ -134,6 +246,34 @@ const nextAgenceStep = async() => {
     if (currentAgenceStep.value > 1) {
       try {
         const { data } = await agenceApi.register({ ...formRegisterAgenceState, role: 'Agence' })
+
+        if (data) {
+          message.success('compte créé')
+          await router.push('/')
+        }
+      }
+      catch (error: any) {
+        message.destroy()
+        message.error(`${error.message}`)
+      }
+    }
+  }
+}
+const nextCompanyStep = async() => {
+  if (formRegisterCompanyRef.value) {
+    try {
+      const values = await formRegisterCompanyRef.value.validateFields()
+      if (values)
+        currentCompanyStep.value = ++currentCompanyStep.value
+    }
+    catch (errorInfo: any) {
+      console.error(errorInfo.errorFields)
+    }
+  }
+  else {
+    if (currentCompanyStep.value > 1) {
+      try {
+        const { data } = await companyApi.register({ ...formRegisterCompanyState, role: 'Company' })
 
         if (data) {
           message.success('compte créé')
@@ -260,7 +400,7 @@ onMounted(async() => {
 
                             <a-form-item
                               name="password"
-                              :rules="[{ required: true, min: 8, trigger: 'change' }]"
+                              :rules="[{ required: true, min: 8,message:'la longueur minimale est de 8', trigger: 'change' }]"
                             >
                               <a-input-password v-model:value="formRegisterState.password" placeholder="mot de passe" />
                             </a-form-item>
@@ -553,15 +693,192 @@ onMounted(async() => {
                               </template>
                               {{ formRegisterAgenceState.localisation }}
                             </a-descriptions-item>
-                            <a-descriptions-item :span="2">
-                              <template #label>
-                                <span class="text-md">localisation</span>
-                              </template>
-                              {{ formRegisterAgenceState.localisation }}
-                            </a-descriptions-item>
                           </a-descriptions>
                           <a-form-item :wrapper-col="{ offset: 0, span: 24 }">
                             <a-button type="primary" block @click="nextAgenceStep">
+                              Continuez
+                            </a-button>
+                          </a-form-item>
+                        </div>
+                      </div>
+                    </a-tab-pane>
+                    <a-tab-pane key="3" force-render>
+                      <template #tab>
+                        <span class="px-2 flex items-center">
+                          <span class="i-carbon:enterprise text-md inline-block mr-1" />
+                          Entreprise
+                        </span>
+                      </template>
+                      <div class="px-2">
+                        <a-steps size="small" :current="currentCompanyStep">
+                          <a-step title="premiére étape" @click="currentCompanyStep > 0 && (currentCompanyStep= 0)" />
+                          <a-step title="deuxiéme étape" @click="currentCompanyStep > 0 && (currentCompanyStep= 1)" />
+                          <a-step title="Validation" @click="currentCompanyStep > 1 && (currentCompanyStep= 2)" />
+                        </a-steps>
+                        <div v-if="currentCompanyStep === 0" class="mt-4">
+                          <a-form
+                            ref="formRegisterCompanyRef"
+                            :model="formRegisterCompanyState"
+                            name="basic"
+                            :label-col="{ span: 0 }"
+                            :wrapper-col="{ span: 24 }"
+                            autocomplete="on"
+                          >
+                            <a-form-item
+                              name="username"
+                              :rules="[{ required: true, message: 'Veuillez saisir votre identifiant', trigger: 'change' }]"
+                            >
+                              <a-input v-model:value="formRegisterCompanyState.username" placeholder="Identifant" />
+                            </a-form-item>
+
+                            <a-form-item
+                              name="firstName"
+                              :rules="[{ required: true, message: 'Veuillez saisir votre prénom', trigger: 'change' }]"
+                            >
+                              <a-input v-model:value="formRegisterCompanyState.firstName" placeholder="Nom" />
+                            </a-form-item>
+
+                            <a-form-item
+                              name="lastName"
+                              :rules="[{ required: true, message: 'Veuillez saisir votre nom', trigger: 'change' }]"
+                            >
+                              <a-input v-model:value="formRegisterCompanyState.lastName" placeholder="Prénom" />
+                            </a-form-item>
+
+                            <a-form-item
+                              name="email"
+                              :rules="[{ required: true, message: 'Veuillez saisir votre adresse mail', type: 'email', trigger: 'change' }]"
+                            >
+                              <a-input v-model:value="formRegisterCompanyState.email" placeholder="Email" />
+                            </a-form-item>
+
+                            <a-form-item
+                              name="phone"
+                              :rules="[{ required: true, validator: validatePhone, trigger: 'change' }]"
+                            >
+                              <a-input v-model:value="formRegisterCompanyState.phone" placeholder="votre numéro de téléphone" />
+                            </a-form-item>
+
+                            <a-form-item
+                              name="password"
+                              :rules="[{ required: true, min: 8,message: 'la longueur minimal du mot de passe est 8', trigger: 'change' }]"
+                            >
+                              <a-input-password v-model:value="formRegisterCompanyState.password" placeholder="mot de passe" />
+                            </a-form-item>
+
+                            <a-form-item
+                              name="repeatPassword"
+                              :rules="[{ required: true, validator: validaterePasswordCompany, trigger: 'change' }]"
+                            >
+                              <a-input-password v-model:value="formRegisterCompanyState.repeatPassword" autocomplete="off" placeholder="répéter votre mot de passe" />
+                            </a-form-item>
+
+                            <a-form-item :wrapper-col="{ offset: 0, span: 24 }">
+                              <a-button type="primary" block @click="nextCompanyStep">
+                                Continuez
+                              </a-button>
+                            </a-form-item>
+                          </a-form>
+                        </div>
+                        <div v-else-if="currentCompanyStep === 1" class="mt-4">
+                          <a-form
+                            ref="formRegisterCompanyRef"
+                            :model="formRegisterCompanyState"
+                            name="basic"
+                            :label-col="{ span: 0 }"
+                            :wrapper-col="{ span: 24 }"
+                            autocomplete="on"
+                          >
+                            <a-form-item
+                              name="name"
+                              has-feedback
+                              :rules="[{ required: true, message: 'Veuillez saisir le nom de votre entreprise' }]"
+                            >
+                              <a-input v-model:value="formRegisterCompanyState.name" placeholder="Nom de votre entreprise" />
+                            </a-form-item>
+                            <a-form-item
+                              name="size"
+                              has-feedback
+                              :rules="[{ required: true, message: 'Veuillez saisir la taille de votre entreprise' }]"
+                            >
+                              <label for="level">Choisissez la taille de votre entreprise :</label>
+                              <a-select
+                                v-model:value="formRegisterCompanyState.size" :options="sizeCompanies" placeholder="Choisissez la taille de votre entreprise"
+                              />
+                            </a-form-item>
+                            <a-form-item
+                              name="departement"
+                              has-feedback
+                              :rules="[{ required: true, message: 'Veuillez saisir votre département' }]"
+                            >
+                              <label for="departement">Choisissez le département :</label>
+                              <a-select
+                                v-model:value="formRegisterCompanyState.departement" :options="departements" placeholder="Choisissez votre département"
+                              />
+                            </a-form-item>
+                            <a-form-item
+                              name="searchable"
+                              has-feedback
+                              :rules="[{ required: true, message: 'Veuillez choisir le type de recherche' }]"
+                            >
+                              <label for="searchable">type de recherche :</label>
+                              <a-select
+                                v-model:value="formRegisterCompanyState.searchable" :options="typeSearchable" placeholder="Choisissez le type de recherche"
+                              />
+                            </a-form-item>
+                            <a-form-item :wrapper-col="{ offset: 0, span: 24 }">
+                              <a-button type="primary" block @click="nextCompanyStep">
+                                Continuez
+                              </a-button>
+                            </a-form-item>
+                          </a-form>
+                        </div>
+                        <div v-else-if="currentCompanyStep === 2">
+                          <a-descriptions title="Vos informations" layout="vertical">
+                            <a-descriptions-item>
+                              <template #label>
+                                <span class="text-md">Identifiant</span>
+                              </template>
+                              {{ formRegisterCompanyState.username }}
+                            </a-descriptions-item>
+                            <a-descriptions-item>
+                              <template #label>
+                                <span class="text-md">Téléphone</span>
+                              </template>
+                              {{ formRegisterCompanyState.phone }}
+                            </a-descriptions-item>
+                            <a-descriptions-item :span="2">
+                              <template #label>
+                                <span class="text-md">Nom</span>
+                              </template>
+                              {{ formRegisterCompanyState.name }}
+                            </a-descriptions-item>
+                            <a-descriptions-item>
+                              <template #label>
+                                <span class="text-md">Taille</span>
+                              </template>
+                              {{ sizeCompanies[formRegisterCompanyState.size].label }}
+                            </a-descriptions-item>
+                            <a-descriptions-item>
+                              <template #label>
+                                <span class="text-md">Département</span>
+                              </template>
+                              {{ formRegisterCompanyState.departement }}
+                            </a-descriptions-item>
+                            <a-descriptions-item>
+                              <template #label>
+                                <span class="text-md">Type de recherche</span>
+                              </template>
+                              <div v-if="formRegisterCompanyState.searchable == 'alone'">
+                                {{ typeSearchable[0].label }}
+                              </div>
+                              <div v-else>
+                                {{ typeSearchable[1].label }}
+                              </div>
+                            </a-descriptions-item>
+                          </a-descriptions>
+                          <a-form-item :wrapper-col="{ offset: 0, span: 24 }">
+                            <a-button type="primary" block @click="nextCompanyStep">
                               Continuez
                             </a-button>
                           </a-form-item>
