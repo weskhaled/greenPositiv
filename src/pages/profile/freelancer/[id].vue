@@ -219,15 +219,15 @@ const rulesIban = reactive({
       required: true,
       validator: async(_rule: RuleObject, value: string) => {
         if (formStateIbanModule.type_iban === 'iban') {
-          if (!value)
-            return Promise.reject(new Error('Veuillez saisir votre iban'))
-          if (!Number.isInteger(+value)) {
-            return Promise.reject(new Error('Veuillez saisir que des chiffres'))
+          const numbers = value.slice(2, value.length)
+          if (!value) { return Promise.reject(new Error('Veuillez saisir votre iban')) }
+          else if (!value[0].match('F') || !value[1].match('R') || !/^\d+$/.test(numbers)) {
+            return Promise.reject(new Error('Veuillez saisir ce champ correctement (FR***********)'))
           }
           else {
-            if (value.length !== 14)
+            if (value.length < 27)
             // eslint-disable-next-line prefer-promise-reject-errors
-              return Promise.reject(`${'l\iban doit contenir 14 chiffres'}`)
+              return Promise.reject(`${'l\iban doit contenir au minimu 27 caractéres'}`)
             else
               return Promise.resolve()
           }
