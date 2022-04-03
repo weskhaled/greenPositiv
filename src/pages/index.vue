@@ -22,8 +22,6 @@ const getPosts = async() => {
   const { data } = await adminApi.posts()
   posts[0] = (data.value[data.value.length - 1])
   posts[1] = (data.value[data.value.length - 2])
-  posts[2] = (data.value[data.value.length - 3])
-  console.log('posts', posts)
 }
 
 const getFormData = async() => {
@@ -709,19 +707,7 @@ onMounted(async() => {
               <!--== End Blog Post Item ==-->
 
               <!--== Start Blog Post Item ==-->
-              <div class="post-item">
-                <div class="content">
-                  <div class="author">
-                    By <a href="blog.html">{{ posts[2].author }}</a>
-                  </div>
-                  <h4 class="title">
-                    {{ posts[2].title }}
-                  </h4>
-                  <div class="meta">
-                    <span class="post-date">{{ dayjs(posts[2].createdAt).format("DD MMMM, YYYY") }}</span>
-                  </div>
-                </div>
-              </div>
+
               <!--== End Blog Post Item ==-->
             </div>
           </div>
