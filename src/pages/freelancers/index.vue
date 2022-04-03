@@ -9,6 +9,7 @@ import bookMark from '~/assets/img/icons/bookmark1.png'
 import bookMarkHover from '~/assets/img/icons/bookmark2.png'
 
 const freelancers = ref([])
+const freelancersLoading = ref(false)
 const freelancersUnfiltred = ref([])
 
 const priceRange = ref([50, 810])
@@ -26,6 +27,7 @@ const formStateFilter = reactive<Record<string, any>>({
 
 const getFormData = async() => {
   jobsValues.value = []
+  freelancersLoading.value = true
   await freelancerApi.getAllVisibleAndValidated().then(({ data }) => {
     if (data.value) {
       freelancers.value = data.value
@@ -43,10 +45,11 @@ const getFormData = async() => {
   })))
   jobsName.value = data.value.filter(el => el._id).map(el => el._id)
   jobsName.value.map(el => numberJobs.push(0))
-  await freelancers.value.map((el) => {
+  freelancers.value.map((el) => {
     const index = jobsName.value.indexOf(el.jobCat)
     numberJobs[index]++
   })
+  freelancersLoading.value = false
 }
 const addFavoris = async(id: string) => {
   await companyApi.addFavoris(id).then(async({ data }) => {
@@ -185,9 +188,10 @@ onMounted(async() => {
           <div class="col-xl-10">
             <a-skeleton v-if="!freelancers" avatar active :paragraph="{ rows: 15 }" />
 
-            <div class="row row-gutter-70">
-              <div class="row">
-                <div v-for="item in freelancers" class="col-sm-6 col-md-6 col-lg-4 col-xl-3">
+            <div class="min-h-70 flex items-center justify-center">
+              <a-spin v-if="freelancersLoading" class="mx-auto" />
+              <div v-else class="grid gap-4 grid-cols-4 items-stretch">
+                <div v-for="(item, index) in freelancers" :key="index" class="">
                   <!--== Start Team Item ==-->
                   <div class="team-item">
                     <div class="thumb">
@@ -215,17 +219,12 @@ onMounted(async() => {
                         <br>
                       </div>
                       <div v-else>
-                        <v-row>
-                          <v-col v-for="skill in item.skills">
-                            <a-tag color="green">
-                              {{ skill }}
-                            </a-tag>
-                          </v-col>
-                        </v-row>
-                        <br>
+                        <a-tag v-for="(skill, indexSkill) in item.skills.slice(0,3)" :key="indexSkill" color="green">
+                          {{ skill }}
+                        </a-tag>
                         <br>
                       </div>
-                      <router-link class="btn-theme btn-white btn-sm" :to="`/freelancers/${item._id}`">
+                      <router-link class="btn-theme mt-2 btn-white btn-sm" :to="`/freelancers/${item._id}`">
                         Voir profile
                       </router-link>
 
@@ -256,6 +255,9 @@ onMounted(async() => {
 .green-link {
     background-color: #03a84e !important;
     color: #fff !important;
+}
+.team-item {
+  @apply p-5 min-h-[440px];
 }
 </style>
 <route lang="yaml">
