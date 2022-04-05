@@ -22,6 +22,11 @@ const freelancerApi = {
   updateCertification: async(id: string, params: object) => service.patch(`${BASE_PREFIX}/freelancer/update-certification/${id}`, params),
   deleteCertification: async(id: string) => service.patch(`${BASE_PREFIX}/freelancer/delete-certification/${id}`),
   getAllVisibleAndValidated: async() => useFetch(`${BASE_PREFIX}/freelancer/`).get().json(),
+
+  // upload others documents (kabis/vigilance/sasu)
+  uploadKabisDocuments: async(file: FormData) => service.upload(`${BASE_PREFIX}/freelancer/kabis-documents`, file),
+  uploadVigilanceDocuments: async(file: FormData) => service.upload(`${BASE_PREFIX}/freelancer/vigilance-documents`, file),
+  uploadSasuDocuments: async(file: FormData) => service.upload(`${BASE_PREFIX}/freelancer/sasu-documents`, file),
 }
 
 export default freelancerApi
