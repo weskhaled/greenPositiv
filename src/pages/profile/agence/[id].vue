@@ -55,6 +55,7 @@ const offers: Ref<any[]> = ref([])
 const profileAvatar = ref('')
 const userDocument = ref(null)
 const profileEntreprise = ref(null)
+const profileEntrepriseLoading = ref(false)
 const legalForms = ref([])
 const countries = ref([])
 const countriesIban = ref([])
@@ -932,16 +933,20 @@ const validateInfosContactDetails = useFormContactDetails.validateInfos
 const onSubmitContactDetails = async() => {
   validateContactDetails()
     .then(async() => {
+      profileEntrepriseLoading.value = true
       const params = toRaw(formStateContactDetails)
       params.id_agence = props.id
       const { data } = await profileEntrepriseApi.updateContactDetailsAgence(params)
-      message.info(data.message)
+      if (data) {
+        message.info(data.message)
+        currentStepProfileEtprs.value < 4 && (currentStepProfileEtprs.value += 1)
+      }
       profileEntreprise.value = null
       getFormData()
     })
     .catch((err) => {
       console.log('error', err)
-    })
+    }).finally(() => profileEntrepriseLoading.value = false)
 }
 /* end bloc contact details */
 /* bloc legal representative */
@@ -957,16 +962,20 @@ const onSubmitLegalRepresentative = async() => {
   }
   validateLegalRepresentative()
     .then(async() => {
+      profileEntrepriseLoading.value = true
       const params = toRaw(formStateLegalRepresentative)
       params.id_agence = props.id
       const { data } = await profileEntrepriseApi.updateLegalRepresentativeAgence(params)
-      message.info(data.message)
+      if (data) {
+        message.info(data.message)
+        currentStepProfileEtprs.value < 4 && (currentStepProfileEtprs.value += 1)
+      }
       profileEntreprise.value = null
       getFormData()
     })
     .catch((err) => {
       console.log('error', err)
-    })
+    }).finally(() => profileEntrepriseLoading.value = false)
 }
 /* end bloc legal representative */
 /* bloc taxe */
@@ -976,17 +985,21 @@ const validateInfosTaxe = useFormTaxe.validateInfos
 const onSubmitTaxe = async() => {
   validateTaxe()
     .then(async() => {
+      profileEntrepriseLoading.value = true
       const params = toRaw(formStateTaxe)
       params.id_agence = props.id
       const { data } = await profileEntrepriseApi.updateTaxeAgence(params)
-      message.info(data.message)
+      if (data) {
+        message.info(data.message)
+        currentStepProfileEtprs.value < 4 && (currentStepProfileEtprs.value += 1)
+      }
       profileEntreprise.value = null
       getFormData()
     })
     .catch((err) => {
       console.log('error', err)
       message.error(err.message)
-    })
+    }).finally(() => profileEntrepriseLoading.value = false)
 }
 /* end bloc taxe */
 /* bloc legal mention */
@@ -996,17 +1009,21 @@ const validateInfosLegalMention = useFormLegalMention.validateInfos
 const onSubmitLegalMentions = async() => {
   validateLegalMention()
     .then(async() => {
+      profileEntrepriseLoading.value = true
       const params = toRaw(formStateLegalMention)
       params.id_agence = props.id
       const { data } = await profileEntrepriseApi.updateLegalMentionAgence(params)
-      message.info(data.message)
+      if (data) {
+        message.info(data.message)
+        currentStepProfileEtprs.value < 4 && (currentStepProfileEtprs.value += 1)
+      }
       profileEntreprise.value = null
       getFormData()
     })
     .catch((err) => {
       console.log('error', err)
       message.error(err.message)
-    })
+    }).finally(() => profileEntrepriseLoading.value = false)
 }
 /* end bloc legal mention */
 /* bloc reference */
@@ -1137,13 +1154,17 @@ const deleteOffer = (id: string) => {
   })
 }
 const handleChangeUpload = async(event, offer) => {
-  console.log(offer)
   if (event.file.type === 'application/pdf') {
     const formData = new FormData()
     formData.append('documents', event.file)
     if (offer.documents?.length)
       formData.append('old_documents', offer.documents)
-    await agenceApi.uploadDocumentsOffer(offer._id, formData)
+
+    message.loading('téléchargement en cours', 0)
+    const { data } = await agenceApi.uploadDocumentsOffer(offer._id, formData)
+    message.destroy()
+    if (data)
+      message.info(data.message)
   }
 }
 /* end bloc offer */
@@ -1775,6 +1796,7 @@ onMounted(async() => {
                                   </a-form-item>
                                   <a-form-item :wrapper-col="{ span: 24, offset: 0 }">
                                     <a-button
+                                      :loading="profileEntrepriseLoading"
                                       block
                                       type="primary"
                                       @click.prevent="onSubmitContactDetails"
@@ -1938,6 +1960,7 @@ onMounted(async() => {
                                     </a-form-item>
                                     <a-form-item :wrapper-col="{ span: 24, offset: 0 }">
                                       <a-button
+                                        :loading="profileEntrepriseLoading"
                                         block
                                         type="primary"
                                         @click.prevent="onSubmitLegalRepresentative"
@@ -1970,6 +1993,7 @@ onMounted(async() => {
                                     </a-form-item>
                                     <a-form-item :wrapper-col="{ span: 24, offset: 0 }">
                                       <a-button
+                                        :loading="profileEntrepriseLoading"
                                         block
                                         type="primary"
                                         @click.prevent="onSubmitTaxe"
@@ -2049,6 +2073,7 @@ onMounted(async() => {
 
                                     <a-form-item :wrapper-col="{ span: 24, offset: 0 }">
                                       <a-button
+                                        :loading="profileEntrepriseLoading"
                                         block
                                         type="primary"
                                         @click.prevent="onSubmitLegalMentions"
