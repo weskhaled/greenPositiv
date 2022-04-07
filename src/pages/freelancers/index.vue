@@ -56,10 +56,8 @@ const getFormData = async() => {
     })
   }
   else if (currentUser?.value?.role === 'Company') {
-    console.log('id ', currentUser?.value?.idUser)
     await companyApi.profile(currentUser?.value?.idUser).then(({ data }) => {
       favorites.value = data.value.favorites.filter(el => el._id).map(el => el._id)
-      console.log('favorites ', favorites.value)
     })
   }
   freelancersLoading.value = false
