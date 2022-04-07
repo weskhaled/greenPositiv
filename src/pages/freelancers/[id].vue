@@ -554,17 +554,7 @@ onMounted(async() => {
                   v-else
                   status="404"
                   title="Certifications non trouvées"
-                  sub-title="veuillez ajouter vos certifications"
-                >
-                  <template #extra>
-                    <a-button
-                      type="primary"
-                      @click="visibleModalAddCertification = true"
-                    >
-                      Ajouter
-                    </a-button>
-                  </template>
-                </a-result>
+                />
               </a-card>
             </div>
             <div class>

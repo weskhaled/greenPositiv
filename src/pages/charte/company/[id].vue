@@ -16,6 +16,7 @@ const formStateCharte = reactive<Record<string, any>>({
   role: '',
   signed_company: undefined,
 })
+const profileEntrepriseLoading = ref(false)
 
 const getFormData = async() => {
   companyApi.profile(props.id).then(({ data }) => {
@@ -31,10 +32,14 @@ const updateProfile = async(profileData: any) => {
   data && message.info(data.message)
   profile.value = null
   getFormData()
+  profileEntrepriseLoading.value = false
 }
 onMounted(async() => {
   getFormData()
 })
+const onLoad = () => {
+  profileEntrepriseLoading.value = true
+}
 </script>
 <template>
   <main class="main-content">
@@ -187,15 +192,17 @@ onMounted(async() => {
         </div>
         <br>
         <div v-if="formStateCharte.role === 'Company'">
-          <button
-            v-if="!formStateCharte.signed_company" class="btn-theme center m-2"
-            @click="updateProfile({ signed_company: true })"
+          <a-button
+            v-if="!formStateCharte.signed_company"
+            :loading="profileEntrepriseLoading"
+            class="btn-theme center m-2"
+            @click.prevent="onLoad();updateProfile({ signed_company: true })"
           >
             Signez notre charte
-          </button>
-          <button v-else disabled class="btn-theme center m-2">
+          </a-button>
+          <a-button v-else disabled class="btn-theme center m-2">
             Charte signé <i class="icofont-check" />
-          </button>
+          </a-button>
         </div>
       </div>
     </section>

@@ -2,10 +2,16 @@
 import { ExclamationCircleOutlined } from '@ant-design/icons-vue'
 import { Form, Modal, message } from 'ant-design-vue'
 import type { RuleObject } from 'ant-design-vue/es/form'
+import SwiperCore, { Controller, Pagination } from 'swiper'
+import { Swiper, SwiperSlide } from 'swiper/vue'
 import globalApi from '~/api/modules/global'
 import companyApi from '~/api/modules/company'
 import profileEntrepriseApi from '~/api/modules/profil-entreprise'
 import { currentUser } from '~/stores'
+import 'swiper/css/pagination'
+
+SwiperCore.use([Controller, Pagination])
+
 const useForm = Form.useForm
 const props = defineProps<{ id: string }>()
 const router = useRouter()
@@ -34,6 +40,13 @@ const visibleModalInformationSignatureCharte = ref(false)
 const visibleModalGreenQuestion = ref(false)
 const visibleModalInformationValidated = ref(false)
 const visibleModalAddCollaborator = ref(false)
+const profileEntrepriseLoading = ref(false)
+
+const controlledSwiper = ref(null)
+const setControlledSwiper = (swiper) => {
+  controlledSwiper.value = swiper
+}
+
 typeSearchable.value = [{
   value: 'alone',
   label: 'chercher des freelancers tout seul',
@@ -307,6 +320,7 @@ const { resetFields, validate, validateInfos: collaboratorValidateInfos } = useF
 const onSubmitCollab = async() => {
   validate()
     .then(async() => {
+      profileEntrepriseLoading.value = true
       const params = toRaw(modelRefCollaborator)
       const { data } = await companyApi.createCollaborator(params)
       message.info(data.message)
@@ -315,7 +329,7 @@ const onSubmitCollab = async() => {
     })
     .catch((err) => {
       console.log('error', err)
-    })
+    }).finally(() => profileEntrepriseLoading.value = false)
 }
 
 const deleteCollab = (id: string) => {
@@ -415,6 +429,9 @@ const getFormData = async() => {
     }
   })
 }
+const onLoad = () => {
+  profileEntrepriseLoading.value = true
+}
 const getScore = () => {
   if (!profile.value?.company)
     return 0
@@ -431,6 +448,7 @@ const updateProfile = async(profileData: any) => {
   const { data } = await companyApi.updateProfile(profileData)
   data && message.info(data.message)
   getFormData()
+  profileEntrepriseLoading.value = false
 }
 
 /* bloc contact */
@@ -440,6 +458,7 @@ const validateInfosContact = useFormContact.validateInfos
 const onSubmitContact = async() => {
   validateContact()
     .then(async() => {
+      profileEntrepriseLoading.value = true
       const params = toRaw(formStateContact)
       params.id_company = props.id
       const { data } = await profileEntrepriseApi.updateContactComptabilityCompany(params)
@@ -449,7 +468,7 @@ const onSubmitContact = async() => {
     })
     .catch((err) => {
       console.log('error', err)
-    })
+    }).finally(() => profileEntrepriseLoading.value = false)
 }
 /* bloc end contact */
 /* bloc facturation */
@@ -459,6 +478,7 @@ const validateInfosFacturation = useFormFacturation.validateInfos
 const onSubmitFacturation = async() => {
   validateFacturation()
     .then(async() => {
+      profileEntrepriseLoading.value = true
       const params = toRaw(formStateFacturation)
       params.id_company = props.id
       const { data } = await profileEntrepriseApi.updateFacturationCompany(params)
@@ -468,7 +488,7 @@ const onSubmitFacturation = async() => {
     })
     .catch((err) => {
       console.log('error', err)
-    })
+    }).finally(() => profileEntrepriseLoading.value = false)
 }
 /* end bloc facturation */
 /* bloc profil Entreprise */
@@ -478,11 +498,10 @@ const validateInfosProfileEntreprise = useFormProfileEntreprise.validateInfos
 const onSubmitProfileEntreprise = async() => {
   validateProfileEntreprise()
     .then(async() => {
-      console.log('passed validators')
+      profileEntrepriseLoading.value = true
       const formData = new FormData()
       formData.append('name', formStateProfileEntreprise.name)
       formData.append('size', formStateProfileEntreprise.size)
-      console.log('to update ', formStateProfileEntreprise.sector_activity)
       formData.append('sector_activity', formStateProfileEntreprise.sector_activity)
       if (formStateProfileEntreprise.logo)
         formData.append('logo', formStateProfileEntreprise.logo[0].originFileObj)
@@ -493,7 +512,7 @@ const onSubmitProfileEntreprise = async() => {
     })
     .catch((err) => {
       console.log('error', err)
-    })
+    }).finally(() => profileEntrepriseLoading.value = false)
 }
 /* end bloc profil Entreprise */
 const beforeUploadProfileAvatar = async(file: any) => {
@@ -528,7 +547,6 @@ const onFinish = async(values: any) => {
   if (values.avatar) {
     const formData = new FormData()
     formData.append('image', values.avatar[0].originFileObj)
-    console.log('avatar ', values.avatar[0].originFileObj)
 
     if (profile.value.company?.image)
       formData.append('old_image', 'test')
@@ -723,7 +741,7 @@ onMounted(async() => {
                             <a-switch v-model:checked="formStateProfile.active_collab" />
                           </a-form-item>
                           <a-form-item class="mb-0" :wrapper-col="{ span: 2, offset: 20 }">
-                            <a-button size="large" type="primary" html-type="submit">
+                            <a-button size="large" type="primary" html-type="submit" :loading="profileEntrepriseLoading" @click="onLoad()">
                               Enregistrer
                             </a-button>
                           </a-form-item>
@@ -835,36 +853,58 @@ onMounted(async() => {
                 <div class>
                   <a-card title="Collaborateurs" :bordered="false" class="rounded-sm">
                     <div v-if="profile && profile?.worked_with?.length">
-                      <div class="row">
-                        <div class="col-sm-6 col-md-6 col-lg-4 col-xl-3">
-                          <!--== Start Team Item ==-->
-                          <div v-for="item in profile?.worked_with" class="team-item">
-                            <div class="content">
-                              <h4 class="title">
-                                <a href="candidate-details.html">{{ item.username }}</a>
-                                <span v-if="item.validated" class="i-carbon-checkmark-filled text-green-600 text-xl inline-block" />
-                                <span v-else class="i-carbon-close-filled text-red-600 text-xl inline-block" />
-                              </h4>
-                              <h5 class="sub-title">
-                                {{ item.departement }}
-                              </h5>
-                              <div class="rating-box">
-                                <i class="icofont-star" />
-                                <i class="icofont-star" />
-                                <i class="icofont-star" />
-                                <i class="icofont-star" />
-                                <i class="icofont-star" />
-                              </div>
-                              <p class="desc">
-                                {{ item.email }}
-                              </p>
+                      <swiper
+                        :modules="[Controller]"
+                        :slides-per-view="4" class="p-3"
+                        :pagination="{
+                          clickable: true,
+                        }"
+                        :grab-cursor="true"
+                        @swiper="setControlledSwiper"
+                      >
+                        <swiper-slide
+                          v-for="(item, index) in profile?.worked_with"
+                          :key="index"
+                        >
+                          <a-card class="mr-2" hoverable>
+                            <template #actions>
+                              <span key="edit" class="i-ant-design-delete-twotone inline-block" @click="deleteCollab(item._id)" />
+                            </template>
+                            <a-card-meta :title="item.username">
+                              <template #description>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    Email:
+                                  </span>
+                                  {{ item.email }}
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    Département:
+                                  </span>
+                                  {{ item.departement }}
+                                </div>
+                                <div class="flex items-center">
+                                  <div class="rating-box">
+                                    <i class="icofont-star" />
+                                    <i class="icofont-star" />
+                                    <i class="icofont-star" />
+                                    <i class="icofont-star" />
+                                    <i class="icofont-star" />
+                                  </div>
+                                </div>
+                              </template>
+                            </a-card-meta>
+                          </a-card>
+                        </swiper-slide>
+                        <swiper-slide>
+                          <a-card class="m-auto" hoverable style="width: 150px;" body-style="height: 100%;" @click="visibleModalAddCollaborator = true">
+                            <div class="w-full h-full flex items-center justify-center">
+                              <span class="i-ant-design-plus-square-twotone ml-1 inline-block text-4xl text-green-300" />
                             </div>
-                            <span class="bookmark-icon i-carbon-trash-can text-xl inline-block" @click="deleteCollab(item._id)" />
-                            <span class="bookmark-icon-hover i-carbon-trash-can text-xl inline-block" @click="deleteCollab(item._id)" />
-                          </div>
-                          <!--== End Team Item ==-->
-                        </div>
-                      </div>
+                          </a-card>
+                        </swiper-slide>
+                      </swiper>
                     </div>
                     <a-result
                       v-else
@@ -886,44 +926,59 @@ onMounted(async() => {
                   <a-card title="Freelance Favoris" :bordered="false" class="rounded-sm">
                     <div v-if="profile && profile?.favorites?.length">
                       <div class="row row-gutter-70">
-                        <div class="row">
-                          <div v-for="item in profile?.favorites" class="col-sm-6 col-md-6 col-lg-4 col-xl-3">
-                            <!--== Start Team Item ==-->
-                            <div class="team-item">
-                              <div class="thumb">
-                                <a-avatar
-                                  :src="item?.image"
-                                  shape="square"
-                                  :size="{ xs: 24, sm: 32, md: 40, lg: 64, xl: 120, xxl: 160 }"
-                                />
-                              </div>
-                              <div class="content">
-                                <h4 class="title">
-                                  <routrer-link :to="`/profile/${item._id}`">
+                        <swiper
+                          :modules="[Controller]"
+                          :slides-per-view="4" class="p-3"
+                          :pagination="{
+                            clickable: true,
+                          }"
+                          :grab-cursor="true"
+                          @swiper="setControlledSwiper"
+                        >
+                          <swiper-slide
+                            v-for="(item, index) in profile?.favorites"
+                            :key="index"
+                          >
+                            <a-card class="mr-2" hoverable>
+                              <template #actions>
+                                <span key="edit" class="i-ant-design-delete-twotone inline-block" @click="deleteFavoris(item._id)" />
+                                <router-link key="show" class="i-ant-design-user-outlined inline-block" :to="`/freelancers/${item._id}`" />
+                              </template>
+                              <a-card-meta :title="item.title_profile">
+                                <template #description>
+                                  <div class="flex items-center justify-center">
+                                    <a-avatar
+                                      :src="item?.image"
+                                      shape="square"
+                                      :size="{ xs: 24, sm: 32, md: 40, lg: 64, xl: 120, xxl: 160 }"
+                                    />
+                                  </div>
+                                  <br>
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      Nom et prénom:
+                                    </span>
                                     {{ item.firstName }} {{ item.lastName }}
-                                  </routrer-link>
-                                </h4>
-                                <a href="#" class="flex items-center text-gray-400 text-hover-primary mb-2">
-                                  <span class="i-carbon-email text-xl inline-block mr-1" />
-                                  {{ item?.email }}
-                                </a>
-                                <a href="#" class="flex items-center text-gray-400 text-hover-primary mb-2">
-                                  <span class="i-carbon-phone text-xl inline-block mr-1" />
-                                  {{ item?.phone }}
-                                </a>
-                                <h5 class="sub-title">
-                                  {{ item.title_profile }}
-                                </h5>
-                                <router-link class="btn-theme btn-white btn-sm" :to="`/freelancers/${item._id}`">
-                                  Voir profile
-                                </router-link>
-                                <span class="bookmark-icon i-carbon-trash-can text-xl inline-block" @click="deleteFavoris(item._id)" />
-                                <span class="bookmark-icon-hover i-carbon-trash-can text-xl inline-block" @click="deleteFavoris(item._id)" />
-                              </div>
-                              <!--== End Team Item ==-->
-                            </div>
-                          </div>
-                        </div>
+                                  </div>
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      Email:
+                                    </span>
+                                    <span class="i-carbon-email text-xl inline-block mr-1" />
+                                    {{ item.email }}
+                                  </div>
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      Téléphone:
+                                    </span>
+                                    <span class="i-carbon-phone text-xl inline-block mr-1" />
+                                    {{ item?.phone }}
+                                  </div>
+                                </template>
+                              </a-card-meta>
+                            </a-card>
+                          </swiper-slide>
+                        </swiper>
                       </div>
                     </div>
                     <a-result
@@ -1038,6 +1093,7 @@ onMounted(async() => {
                                     <a-button
                                       block
                                       type="primary"
+                                      :loading="profileEntrepriseLoading"
                                       @click.prevent="onSubmitProfileEntreprise"
                                     >
                                       Enregistrer
@@ -1102,6 +1158,7 @@ onMounted(async() => {
                                       <a-button
                                         block
                                         type="primary"
+                                        :loading="profileEntrepriseLoading"
                                         @click.prevent="onSubmitFacturation"
                                       >
                                         Enregistrer
@@ -1143,6 +1200,7 @@ onMounted(async() => {
                                       <a-button
                                         block
                                         type="primary"
+                                        :loading="profileEntrepriseLoading"
                                         @click.prevent="onSubmitContact"
                                       >
                                         Enregistrer
@@ -1206,6 +1264,7 @@ onMounted(async() => {
     <template #footer>
       <a-button
         type="primary"
+        :loading="profileEntrepriseLoading"
         @click.prevent="onSubmitCollab"
       >
         Ajouter

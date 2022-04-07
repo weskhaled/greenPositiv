@@ -904,8 +904,11 @@ const updateProfile = async(profileData: any) => {
   const { data } = await agenceApi.updateProfile(profileData)
   data && message.info(data.message)
   getFormData()
+  profileEntrepriseLoading.value = false
 }
-
+const onLoad = () => {
+  profileEntrepriseLoading.value = true
+}
 /* bloc iban modules */
 const useFormIbanModule = useForm(formStateIbanModule, rulesIban)
 const validateIbanModule = useFormIbanModule.validate
@@ -1391,7 +1394,7 @@ onMounted(async() => {
                             <a-input v-model:value="formStateProfile.url_linkedin" />
                           </a-form-item>
                           <a-form-item class="mb-0" :wrapper-col="{ span: 2, offset: 20 }">
-                            <a-button size="large" type="primary" html-type="submit">
+                            <a-button size="large" type="primary" html-type="submit" :loading="profileEntrepriseLoading" @click="onLoad()">
                               Enregistrer
                             </a-button>
                           </a-form-item>

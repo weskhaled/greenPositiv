@@ -10,6 +10,7 @@ const router = useRouter()
 const route = useRoute()
 const { t } = useI18n()
 const params = useUrlSearchParams('history')
+const profileEntrepriseLoading = ref(false)
 
 const formRegisterState = reactive<any>({
   username: '',
@@ -217,6 +218,7 @@ const nextStep = async() => {
   else {
     if (currentStep.value > 1) {
       try {
+        profileEntrepriseLoading.value = true
         const { data } = await freelancerApi.register({ ...formRegisterState, role: 'Freelancer' })
 
         if (data) {
@@ -225,6 +227,7 @@ const nextStep = async() => {
         }
       }
       catch (error: any) {
+        profileEntrepriseLoading.value = false
         message.destroy()
         message.error(`${error.message}`)
       }
@@ -245,6 +248,7 @@ const nextAgenceStep = async() => {
   else {
     if (currentAgenceStep.value > 1) {
       try {
+        profileEntrepriseLoading.value = true
         const { data } = await agenceApi.register({ ...formRegisterAgenceState, role: 'Agence' })
 
         if (data) {
@@ -253,6 +257,7 @@ const nextAgenceStep = async() => {
         }
       }
       catch (error: any) {
+        profileEntrepriseLoading.value = false
         message.destroy()
         message.error(`${error.message}`)
       }
@@ -273,6 +278,7 @@ const nextCompanyStep = async() => {
   else {
     if (currentCompanyStep.value > 1) {
       try {
+        profileEntrepriseLoading.value = true
         const { data } = await companyApi.register({ ...formRegisterCompanyState, role: 'Company' })
 
         if (data) {
@@ -281,6 +287,7 @@ const nextCompanyStep = async() => {
         }
       }
       catch (error: any) {
+        profileEntrepriseLoading.value = false
         message.destroy()
         message.error(`${error.message}`)
       }
@@ -536,7 +543,7 @@ onMounted(async() => {
                             </a-descriptions-item>
                           </a-descriptions>
                           <a-form-item :wrapper-col="{ offset: 0, span: 24 }">
-                            <a-button type="primary" block @click="nextStep">
+                            <a-button type="primary" block :loading="profileEntrepriseLoading" @click="nextStep">
                               Continuez
                             </a-button>
                           </a-form-item>
@@ -695,7 +702,7 @@ onMounted(async() => {
                             </a-descriptions-item>
                           </a-descriptions>
                           <a-form-item :wrapper-col="{ offset: 0, span: 24 }">
-                            <a-button type="primary" block @click="nextAgenceStep">
+                            <a-button type="primary" block :loading="profileEntrepriseLoading" @click="nextAgenceStep">
                               Continuez
                             </a-button>
                           </a-form-item>
@@ -878,7 +885,7 @@ onMounted(async() => {
                             </a-descriptions-item>
                           </a-descriptions>
                           <a-form-item :wrapper-col="{ offset: 0, span: 24 }">
-                            <a-button type="primary" block @click="nextCompanyStep">
+                            <a-button type="primary" block :loading="profileEntrepriseLoading" @click="nextCompanyStep">
                               Continuez
                             </a-button>
                           </a-form-item>

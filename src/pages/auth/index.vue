@@ -5,13 +5,18 @@ import authApi from '~/api/modules/auth'
 
 const router = useRouter()
 const { t } = useI18n()
+const profileEntrepriseLoading = ref(false)
 
 const formState = reactive<any>({
   username: 'khaled',
   password: 'azerty123',
   remember: true,
 })
+const onLoad = () => {
+  profileEntrepriseLoading.value = true
+}
 const onFinish = async(values: any) => {
+  profileEntrepriseLoading.value = true
   const { username, password } = values
   try {
     const { data } = await authApi.login({ username, password })
@@ -20,6 +25,7 @@ const onFinish = async(values: any) => {
       token.value = data.token
       const { data: currentUserData } = await authApi.currentUser()
       if (currentUserData) {
+        profileEntrepriseLoading.value = false
         currentUser.value = currentUserData
         message.success('Bienvenue')
         router.push('/')
@@ -31,6 +37,7 @@ const onFinish = async(values: any) => {
     }
   }
   catch (error: any) {
+    profileEntrepriseLoading.value = false
     message.destroy()
     message.error(`${error.message}`)
   }
@@ -110,7 +117,7 @@ onMounted(() => {
                   </a-form-item>
 
                   <a-form-item :wrapper-col="{ offset: 0, span: 24 }">
-                    <a-button type="primary" block html-type="submit">
+                    <a-button type="primary" block html-type="submit" :loading="profileEntrepriseLoading">
                       Connexion
                     </a-button>
                   </a-form-item>

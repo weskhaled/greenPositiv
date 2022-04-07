@@ -228,10 +228,10 @@ onMounted(async() => {
                         Voir profile
                       </router-link>
 
-                      <div v-if="currentUser && currentUser.role == 'Company'" class="bookmark-icon">
+                      <div v-if="currentUser && (currentUser.role == 'Company'|| currentUser.role == 'Collab')" class="bookmark-icon">
                         <img :src="bookMark" alt="Image-HasTech">
                       </div>
-                      <div v-if="currentUser && currentUser.role == 'Company'" class="bookmark-icon-hover">
+                      <div v-if="currentUser && (currentUser.role == 'Company'|| currentUser.role == 'Collab')" class="bookmark-icon-hover">
                         <img :src="bookMarkHover" alt="Image-HasTech" @click="addFavoris(item._id)">
                       </div>
                     </div>

@@ -67,6 +67,8 @@ const visibleModalInformationDocumentVal = ref(false)
 const visibleModalInformationSignatureCharte = ref(false)
 const visibleModalGreenQuestion = ref(false)
 const visibleModalInformationValidated = ref(false)
+const profileEntrepriseLoading = ref(false)
+
 // const formState = reactive<Record<string, any>>({
 //   'input-number': 3,
 //   'checkbox-group': ['A', 'B'],
@@ -973,6 +975,9 @@ const getFormData = async() => {
     label: 'pas encore choisi',
   }]
 }
+const onLoad = () => {
+  profileEntrepriseLoading.value = true
+}
 const getScore = () => {
   if (!profile.value?.freelancer)
     return 0
@@ -1001,11 +1006,10 @@ const resetModuleIban = () => {
 }
 const updateProfile = async(profileData: any) => {
   profileData.disponibility_freq = calcDisponibilityFreq(+formStateProfile.disponibility_freq, false)
-  console.log('skills ', profileData)
-
   const { data } = await freelancerApi.updateProfile(profileData)
   data && message.info(data.message)
   getFormData()
+  profileEntrepriseLoading.value = false
 }
 
 /* bloc iban modules */
@@ -1015,6 +1019,7 @@ const validateInfosIbanModule = useFormIbanModule.validateInfos
 const onSubmitIbanModule = async() => {
   validateIbanModule()
     .then(async() => {
+      profileEntrepriseLoading.value = true
       const params = toRaw(formStateIbanModule)
       params.id_freelancer = props.id
       params.type_iban = formStateTypeIban.type_iban
@@ -1025,7 +1030,7 @@ const onSubmitIbanModule = async() => {
     })
     .catch((err) => {
       console.log('error', err)
-    })
+    }).finally(() => profileEntrepriseLoading.value = false)
 }
 /* bloc end iban modules */
 /* bloc contact details */
@@ -1035,6 +1040,7 @@ const validateInfosContactDetails = useFormContactDetails.validateInfos
 const onSubmitContactDetails = async() => {
   validateContactDetails()
     .then(async() => {
+      profileEntrepriseLoading.value = true
       const params = toRaw(formStateContactDetails)
       params.id_freelancer = props.id
       const { data } = await profileEntrepriseApi.updateContactDetails(params)
@@ -1044,7 +1050,7 @@ const onSubmitContactDetails = async() => {
     })
     .catch((err) => {
       console.log('error', err)
-    })
+    }).finally(() => profileEntrepriseLoading.value = false)
 }
 /* end bloc contact details */
 /* bloc legal representative */
@@ -1060,6 +1066,7 @@ const onSubmitLegalRepresentative = async() => {
   }
   validateLegalRepresentative()
     .then(async() => {
+      profileEntrepriseLoading.value = true
       const params = toRaw(formStateLegalRepresentative)
       params.id_freelancer = props.id
       const { data } = await profileEntrepriseApi.updateLegalRepresentative(params)
@@ -1069,7 +1076,7 @@ const onSubmitLegalRepresentative = async() => {
     })
     .catch((err) => {
       console.log('error', err)
-    })
+    }).finally(() => profileEntrepriseLoading.value = false)
 }
 /* end bloc legal representative */
 /* bloc taxe */
@@ -1079,6 +1086,7 @@ const validateInfosTaxe = useFormTaxe.validateInfos
 const onSubmitTaxe = async() => {
   validateTaxe()
     .then(async() => {
+      profileEntrepriseLoading.value = true
       const params = toRaw(formStateTaxe)
       params.id_freelancer = props.id
       const { data } = await profileEntrepriseApi.updateTaxe(params)
@@ -1089,7 +1097,7 @@ const onSubmitTaxe = async() => {
     .catch((err) => {
       console.log('error', err)
       message.error(err.message)
-    })
+    }).finally(() => profileEntrepriseLoading.value = false)
 }
 /* end bloc taxe */
 /* bloc legal mention */
@@ -1099,6 +1107,7 @@ const validateInfosLegalMention = useFormLegalMention.validateInfos
 const onSubmitLegalMentions = async() => {
   validateLegalMention()
     .then(async() => {
+      profileEntrepriseLoading.value = true
       const params = toRaw(formStateLegalMention)
       params.id_freelancer = props.id
       const { data } = await profileEntrepriseApi.updateLegalMention(params)
@@ -1109,7 +1118,7 @@ const onSubmitLegalMentions = async() => {
     .catch((err) => {
       console.log('error', err)
       message.error(err.message)
-    })
+    }).finally(() => profileEntrepriseLoading.value = false)
 }
 /* end bloc legal mention */
 /* bloc experience */
@@ -1117,6 +1126,7 @@ const { resetFields, validate, validateInfos: experienceValidateInfos } = useFor
 const onSubmit = async() => {
   validate()
     .then(async() => {
+      profileEntrepriseLoading.value = true
       const params = toRaw(modelRefExperience)
       if (params.id) {
         const id = params.id
@@ -1136,7 +1146,7 @@ const onSubmit = async() => {
     })
     .catch((err) => {
       console.log('error', err)
-    })
+    }).finally(() => profileEntrepriseLoading.value = false)
 }
 const updateExperience = (item) => {
   modelRefExperience.id = item._id
@@ -1164,7 +1174,7 @@ const deleteExperience = (id: string) => {
           getFormData()
         }).catch(err => message.error(`Oops errors! ${err}`))
       },
-      cancelText: 'Click to destroy all',
+      cancelText: 'Retour',
       onCancel() {
         Modal.destroyAll()
       },
@@ -1180,6 +1190,7 @@ const validateInfosFormation = useFormFormation.validateInfos
 const onSubmitForm = async() => {
   validateFormation()
     .then(async() => {
+      profileEntrepriseLoading.value = true
       const params = toRaw(modelRefFormation)
       if (params.id) {
         const id = params.id
@@ -1198,7 +1209,7 @@ const onSubmitForm = async() => {
     })
     .catch((err) => {
       console.log('error', err)
-    })
+    }).finally(() => profileEntrepriseLoading.value = false)
 }
 const updateFormation = (item) => {
   modelRefFormation.id = item._id
@@ -1237,6 +1248,7 @@ const validateInfosCertification = useFormCertification.validateInfos
 const onSubmitCert = async() => {
   validateCertification()
     .then(async() => {
+      profileEntrepriseLoading.value = true
       const params = toRaw(modelRefCertification)
       if (params.id) {
         const id = params.id
@@ -1255,7 +1267,7 @@ const onSubmitCert = async() => {
     })
     .catch((err) => {
       console.log('error', err)
-    })
+    }).finally(() => profileEntrepriseLoading.value = false)
 }
 const updateCertification = (item) => {
   modelRefCertification.id = item._id
@@ -1561,7 +1573,7 @@ onMounted(async() => {
                             <a-input v-model:value="formStateProfile.url_linkedin" />
                           </a-form-item>
                           <a-form-item class="mb-0" :wrapper-col="{ span: 2, offset: 20 }">
-                            <a-button size="large" type="primary" html-type="submit">
+                            <a-button size="large" type="primary" html-type="submit" :loading="profileEntrepriseLoading" @click="onLoad()">
                               Enregistrer
                             </a-button>
                           </a-form-item>
@@ -1940,7 +1952,7 @@ onMounted(async() => {
                         class="mt-3"
                         type="primary"
                         block
-                        @click="updateProfile({ ...profile.freelancer, skills: skillsValue })"
+                        @click="onLoad();updateProfile({ ...profile.freelancer, skills: skillsValue })"
                       >
                         Ajouter vos compétences
                       </a-button>
@@ -2086,8 +2098,8 @@ onMounted(async() => {
                       <a-button
                         class="mt-3"
                         type="primary"
-
-                        @click="updateProfile({ passion: passionValue, interest: interestValue})"
+                        :loading="profileEntrepriseLoading"
+                        @click="onLoad();updateProfile({ passion: passionValue, interest: interestValue})"
                       >
                         Modifier
                       </a-button>
@@ -2213,6 +2225,7 @@ onMounted(async() => {
                                   </a-form-item>
                                   <a-form-item :wrapper-col="{ span: 24, offset: 0 }">
                                     <a-button
+                                      :loading="profileEntrepriseLoading"
                                       block
                                       type="primary"
                                       @click.prevent="onSubmitContactDetails"
@@ -2378,6 +2391,7 @@ onMounted(async() => {
                                       <a-button
                                         block
                                         type="primary"
+                                        :loading="profileEntrepriseLoading"
                                         @click.prevent="onSubmitLegalRepresentative"
                                       >
                                         Enregistrer
@@ -2410,6 +2424,7 @@ onMounted(async() => {
                                       <a-button
                                         block
                                         type="primary"
+                                        :loading="profileEntrepriseLoading"
                                         @click.prevent="onSubmitTaxe"
                                       >
                                         Enregistrer
@@ -2477,6 +2492,7 @@ onMounted(async() => {
                                       <a-button
                                         block
                                         type="primary"
+                                        :loading="profileEntrepriseLoading"
                                         @click.prevent="onSubmitLegalMentions"
                                       >
                                         Enregistrer
@@ -2732,6 +2748,7 @@ onMounted(async() => {
                                         v-if="formStateTypeIban.type_iban !== 'empty'"
                                         block
                                         type="primary"
+                                        :loading="profileEntrepriseLoading"
                                         @click.prevent="onSubmitIbanModule"
                                       >
                                         Enregistrer
@@ -2878,6 +2895,7 @@ onMounted(async() => {
     <template #footer>
       <a-button
         type="primary"
+        :loading="profileEntrepriseLoading"
         @click.prevent="onSubmit"
       >
         {{ modelRefExperience.id ? 'Modifier' : 'Ajouter' }}

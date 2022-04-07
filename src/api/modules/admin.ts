@@ -7,6 +7,7 @@ const adminApi = {
   posts: async() => useFetch(`${BASE_PREFIX}/posts/`).get().json(),
   getPostById: async(id: string) => useFetch(`${BASE_PREFIX}/posts/${id}`).get().json(),
   skills: async() => useFetch(`${BASE_PREFIX}/skills/`).get().json(),
+  addSubscription: async(email: string) => useFetch(`${BASE_PREFIX}/subscriptions/`).post({ email }).json(),
 }
 
 export default adminApi

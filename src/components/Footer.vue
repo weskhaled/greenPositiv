@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { message } from 'ant-design-vue'
 import { isDark, toggleDark } from '~/composables'
 import logo from '~/assets/img/Green_positive.png'
+import adminApi from '~/api/modules/admin'
 
 const { t, availableLocales, locale } = useI18n()
-
 const toggleLocales = () => {
   // change to some real logic
   const locales = availableLocales
@@ -16,6 +17,22 @@ const scrollTop = () => {
     left: 0,
     behavior: 'smooth',
   })
+}
+const email = ref('')
+
+const addSubscription = () => {
+  console.log('email ', email.value)
+  adminApi.addSubscription(email.value).then(({ data }) => {
+    if (data && data.value.message === 'Abonnement créé avec succés')
+      message.success(data.value.message)
+    else message.warning(data.value.message)
+  })
+}
+const onFinishFailed = (errorInfo: any) => {
+  console.log('Failed:', errorInfo)
+}
+const onFinish = (done: any) => {
+  console.log('Done:', done)
 }
 </script>
 
@@ -35,12 +52,12 @@ const scrollTop = () => {
           </div>
           <div class="col-lg-7">
             <div class="footer-newsletter-form">
-              <form action="#">
-                <input type="email" placeholder="Saisir votre email">
-                <button type="submit" class="btn-newsletter">
+              <a-form>
+                <a-input v-model:value="email" type="email" placeholder="Saisir votre email" />
+                <button type="submit" @click.prevent="addSubscription()">
                   Abonnez vous
                 </button>
-              </form>
+              </a-form>
             </div>
           </div>
         </div>
