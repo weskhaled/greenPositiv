@@ -132,6 +132,8 @@ const modelRefCollaborator = reactive({
   username: '',
   email: '',
   password: '',
+  firstName: '',
+  lastName: '',
   departement: undefined,
   validated: undefined,
 })
@@ -874,6 +876,12 @@ onMounted(async() => {
                               <template #description>
                                 <div class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
+                                    Nom :
+                                  </span>
+                                  {{ item.firstName }} {{ item.firstName }}
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
                                     Email:
                                   </span>
                                   {{ item.email }}
@@ -1236,6 +1244,18 @@ onMounted(async() => {
           <a-input
             v-model:value="modelRefCollaborator.username"
             @blur="validate('username', { trigger: 'blur' }).catch(() => { })"
+          />
+        </a-form-item>
+        <a-form-item label="Nom :" v-bind="collaboratorValidateInfos.lastName">
+          <a-input
+            v-model:value="modelRefCollaborator.lastName"
+            @blur="validate('lastName', { trigger: 'blur' }).catch(() => { })"
+          />
+        </a-form-item>
+        <a-form-item label="Prénom :" v-bind="collaboratorValidateInfos.lastName">
+          <a-input
+            v-model:value="modelRefCollaborator.firstName"
+            @blur="validate('firstName', { trigger: 'blur' }).catch(() => { })"
           />
         </a-form-item>
         <a-form-item label="email :" v-bind="collaboratorValidateInfos.email">

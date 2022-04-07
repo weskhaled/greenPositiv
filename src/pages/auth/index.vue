@@ -98,14 +98,14 @@ onMounted(() => {
                 >
                   <a-form-item
                     name="username"
-                    :rules="[{ required: true, message: 'Please input your username!' }]"
+                    :rules="[{ required: true, message: 'veuillez saisir votre identifiant' }]"
                   >
                     <a-input v-model:value="formState.username" />
                   </a-form-item>
 
                   <a-form-item
                     name="password"
-                    :rules="[{ required: true, message: 'Please input your password!' }]"
+                    :rules="[{ required: true, message: 'veuillez saisir votre mot de passe ' }]"
                   >
                     <a-input-password v-model:value="formState.password" />
                   </a-form-item>
