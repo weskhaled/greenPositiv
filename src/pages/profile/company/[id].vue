@@ -1394,6 +1394,9 @@ onMounted(async() => {
   font-size: 16px;
   font-weight: bold;
 }
+.ant-card-meta-title {
+    text-align: center !important;
+}
 </style>
 <route lang="yaml">
 meta:

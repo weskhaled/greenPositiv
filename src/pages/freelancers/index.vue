@@ -24,6 +24,7 @@ const formStateFilter = reactive<Record<string, any>>({
   max: 810,
   jobCats: [],
 })
+const favorites = ref([])
 
 const getFormData = async() => {
   jobsValues.value = []
@@ -49,9 +50,22 @@ const getFormData = async() => {
     const index = jobsName.value.indexOf(el.jobCat)
     numberJobs[index]++
   })
+  if (currentUser?.value?.role === 'Collab') {
+    await companyApi.getCollabFavoriteList().then(({ data }) => {
+      favorites.value = data.favorites.filter(el => el._id).map(el => el._id)
+    })
+  }
+  else if (currentUser?.value?.role === 'Company') {
+    console.log('id ', currentUser?.value?.idUser)
+    await companyApi.profile(currentUser?.value?.idUser).then(({ data }) => {
+      favorites.value = data.value.favorites.filter(el => el._id).map(el => el._id)
+      console.log('favorites ', favorites.value)
+    })
+  }
   freelancersLoading.value = false
 }
 const addFavoris = async(id: string) => {
+  favorites.value.push(id)
   await companyApi.addFavoris(id).then(async({ data }) => {
     message.success(data.message)
   }).catch((err) => {
@@ -227,11 +241,16 @@ onMounted(async() => {
                       <router-link class="btn-theme mt-2 btn-white btn-sm" :to="`/freelancers/${item._id}`">
                         Voir profile
                       </router-link>
-
-                      <div v-if="currentUser && (currentUser.role == 'Company'|| currentUser.role == 'Collab')" class="bookmark-icon">
+                      <div v-if="currentUser && (currentUser.role == 'Company'|| currentUser.role == 'Collab') && favorites.includes(item._id)" class="bookmark-icon">
+                        <img :src="bookMarkHover" alt="Image-HasTech">
+                      </div>
+                      <div v-if="currentUser && (currentUser.role == 'Company'|| currentUser.role == 'Collab') && favorites.includes(item._id)" class="bookmark-icon-hover">
+                        <img :src="bookMarkHover" alt="Image-HasTech">
+                      </div>
+                      <div v-if="currentUser && (currentUser.role == 'Company'|| currentUser.role == 'Collab') && !favorites.includes(item._id)" class="bookmark-icon">
                         <img :src="bookMark" alt="Image-HasTech">
                       </div>
-                      <div v-if="currentUser && (currentUser.role == 'Company'|| currentUser.role == 'Collab')" class="bookmark-icon-hover">
+                      <div v-if="currentUser && (currentUser.role == 'Company'|| currentUser.role == 'Collab') && !favorites.includes(item._id)" class="bookmark-icon-hover">
                         <img :src="bookMarkHover" alt="Image-HasTech" @click="addFavoris(item._id)">
                       </div>
                     </div>
