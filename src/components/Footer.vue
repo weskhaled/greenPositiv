@@ -21,18 +21,11 @@ const scrollTop = () => {
 const email = ref('')
 
 const addSubscription = () => {
-  console.log('email ', email.value)
   adminApi.addSubscription(email.value).then(({ data }) => {
     if (data && data.value.message === 'Abonnement créé avec succés')
       message.success(data.value.message)
     else message.warning(data.value.message)
   })
-}
-const onFinishFailed = (errorInfo: any) => {
-  console.log('Failed:', errorInfo)
-}
-const onFinish = (done: any) => {
-  console.log('Done:', done)
 }
 </script>
 
