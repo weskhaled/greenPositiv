@@ -106,7 +106,7 @@ onMounted(async() => {
               </h2>
               <nav class="breadcrumb-area">
                 <ul class="breadcrumb justify-content-center">
-                  <li><a href="index.html">Acceuil</a></li>
+                  <li><a href="index.html">Accueil</a></li>
                   <li class="breadcrumb-sep">
                     //
                   </li>
