@@ -59,11 +59,8 @@ onMounted(async() => {
                   <div class="col-12 col-lg-8">
                     <div class="slider-content">
                       <h2 class="title">
-                        <span class="counter" data-counterup-delay="80">2,568</span> job available <br>You can choose your dream job
+                        Des milliers de freelances disponibles pour réaliser votre transition écologique
                       </h2>
-                      <p class="desc">
-                        Find great job for build your bright career. Have many job in this plactform.
-                      </p>
                     </div>
                   </div>
                   <div class="col-12">
@@ -80,7 +77,7 @@ onMounted(async() => {
                               <div class="form-group">
                                 <select class="form-control">
                                   <option value="0" selected>
-                                    Choisir un pays
+                                    Villes
                                   </option>
                                   <option v-for="item in countries" :key="item.value" :value="item.value">
                                     {{ item.label }}
@@ -145,7 +142,7 @@ onMounted(async() => {
           <div class="col-12">
             <div class="section-title text-center">
               <h3 class="title">
-                Catégories de métier
+                Recherchez votre freelance idéal à travers les 10 catégories de métiers 100% <span class="text-green-500">GREEN</span>
               </h3>
             </div>
           </div>
@@ -175,10 +172,10 @@ onMounted(async() => {
           <div class="col-12">
             <div class="section-title text-center">
               <h3 class="title">
-                How It Work? Freelance
+                Je suis un Freelance
               </h3>
               <div class="desc">
-                <p>Many desktop publishing packages and web page editors</p>
+                <p>Trouvez la mission green qui correspond le mieux à votre profil !</p>
               </div>
             </div>
           </div>
@@ -197,11 +194,8 @@ onMounted(async() => {
                   </div>
                   <div class="content">
                     <h4 class="title">
-                      Create an Account
+                      Créer votre compte
                     </h4>
-                    <p class="desc">
-                      It is long established fact reader distracted readable content
-                    </p>
                   </div>
                   <div class="shape-arrow-icon">
                     <img class="shape-icon" src="../assets/img/icons/right-arrow.png" alt="Image-HasTech">
@@ -221,11 +215,8 @@ onMounted(async() => {
                   </div>
                   <div class="content">
                     <h4 class="title">
-                      CV/Resume
+                      Renseignez vos expériences et votre formation
                     </h4>
-                    <p class="desc">
-                      It is long established fact reader distracted readable content
-                    </p>
                   </div>
                   <div class="shape-arrow-icon">
                     <img class="shape-icon" src="../assets/img/icons/right-arrow.png" alt="Image-HasTech">
@@ -245,11 +236,8 @@ onMounted(async() => {
                   </div>
                   <div class="content">
                     <h4 class="title">
-                      Find Your Job
+                      Téléchargez vos informations légales
                     </h4>
-                    <p class="desc">
-                      It is long established fact reader distracted readable content
-                    </p>
                   </div>
                   <div class="shape-arrow-icon">
                     <img class="shape-icon" src="../assets/img/icons/right-arrow.png" alt="Image-HasTech">
@@ -269,11 +257,8 @@ onMounted(async() => {
                   </div>
                   <div class="content">
                     <h4 class="title">
-                      Save & Apply
+                      Votre profil est visible par les entreprises
                     </h4>
-                    <p class="desc">
-                      It is long established fact reader distracted readable content
-                    </p>
                   </div>
                   <div class="shape-arrow-icon d-none">
                     <img class="shape-icon" src="../assets/img/icons/right-arrow.png" alt="Image-HasTech">
@@ -296,10 +281,10 @@ onMounted(async() => {
           <div class="col-12">
             <div class="section-title text-center">
               <h3 class="title">
-                How It Work? Entreprise
+                Nous sommes une entreprise
               </h3>
               <div class="desc">
-                <p>Many desktop publishing packages and web page editors</p>
+                <p><b>Entreprises : Simplifiez votre sourcing, pérennisez vos freelances !</b></p>
               </div>
             </div>
           </div>
@@ -318,11 +303,8 @@ onMounted(async() => {
                   </div>
                   <div class="content">
                     <h4 class="title">
-                      Create an Account
+                      Créer votre compte
                     </h4>
-                    <p class="desc">
-                      It is long established fact reader distracted readable content
-                    </p>
                   </div>
                   <div class="shape-arrow-icon">
                     <img class="shape-icon" src="../assets/img/icons/right-arrow.png" alt="Image-HasTech">
@@ -342,11 +324,8 @@ onMounted(async() => {
                   </div>
                   <div class="content">
                     <h4 class="title">
-                      CV/Resume
+                      Renseignez les informations de votre recherche
                     </h4>
-                    <p class="desc">
-                      It is long established fact reader distracted readable content
-                    </p>
                   </div>
                   <div class="shape-arrow-icon">
                     <img class="shape-icon" src="../assets/img/icons/right-arrow.png" alt="Image-HasTech">
@@ -366,11 +345,8 @@ onMounted(async() => {
                   </div>
                   <div class="content">
                     <h4 class="title">
-                      Find Your Job
+                      Recherchez le profil freelance idéal pour votre projet, ou bien confiez-nous la mission
                     </h4>
-                    <p class="desc">
-                      It is long established fact reader distracted readable content
-                    </p>
                   </div>
                   <div class="shape-arrow-icon">
                     <img class="shape-icon" src="../assets/img/icons/right-arrow.png" alt="Image-HasTech">
@@ -390,11 +366,8 @@ onMounted(async() => {
                   </div>
                   <div class="content">
                     <h4 class="title">
-                      Save & Apply
+                      Débutez la mission !
                     </h4>
-                    <p class="desc">
-                      It is long established fact reader distracted readable content
-                    </p>
                   </div>
                   <div class="shape-arrow-icon d-none">
                     <img class="shape-icon" src="../assets/img/icons/right-arrow.png" alt="Image-HasTech">
@@ -409,8 +382,65 @@ onMounted(async() => {
       </div>
     </section>
     <!--== End Work Process Enterprise Area Wrapper ==-->
+    <!--== Start Advantages Green Area Wrapper ==-->
+    <section class="work-process-area">
+      <div class="container" data-aos="fade-down">
+        <div class="row">
+          <div class="col-12">
+            <div class="section-title text-center">
+              <h3 class="title">
+                Quels sont les avantages de passer par Green Positiv ?
+              </h3>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-12">
+            <p class="justify-self-auto desc">
+              1 - Première plateforme de Freelancers 100% GreenNotre équipe met un point d’honneur à vérifier chaque profil pour qu’ils soient en adéquation avec votre projet de transition écologique !<br>
+              2 - Une facturation 100% transparente Obtenez rapidement un devis de la part de nos talentueux freelance. 0 frais caché ! <br>
+              3  -  Restez  informé  des  obligations  d’entreprise  en  matière  de  transition  écologique  avec  notre blog régulièrement mis à jour. <br>
+              4 - Green Positiv est la première plateforme à vous proposer non seulement des freelances, mais également   des   entreprises   offrant   des   solutions   innovantes   pour   réaliser   votre   transition écologique.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!--== End Advantages Green Area Wrapper ==-->
+    <!--== Start NewsLetter Area Wrapper ==-->
+    <!--==
+    <section class="sec-overlay sec-overlay-theme bg-img" data-bg-img="../assets/img/photos/bg1.jpg">
+      <div class="container pt--0 pb--0">
+        <div class="row justify-content-center divider-style1">
+          <div class="col-lg-10 col-xl-7">
+            <div class="divider-content text-center">
+              <h4 class="sub-title" data-aos="fade-down">
+                NewsLetter
+              </h4>
+              <h2 class="title" data-aos="fade-down">
+                N’oubliez pas de vous inscrire à notre newsletter si vous souhaitez recevoir des informations par rapport à la transition écologique des entreprises.
+              </h2>
+              <div class="divider-btn-group">
+                <a class="header-action-area" href="#footer">
+                  <span class="btn-registration">
+                    Abonnez vous
+                  </span>
+                </a>
+                <a class="btn-divider btn-divider-app-store" data-aos="fade-down" href="page-not-found.html">
+                  <img src="../assets/img/photos/mac-os.png" width="201" height="63" class="icon" alt="Image-HasTech">
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bg-layer-style1" />
+      <div class="bg-layer-style2" />
+    </section>==-->
+    <!--== EndNewsLetter Wrapper ==-->
 
     <!--== Start Divider Area Wrapper ==-->
+    <!--==
     <section class="sec-overlay sec-overlay-theme bg-img" data-bg-img="../assets/img/photos/bg1.jpg">
       <div class="container pt--0 pb--0">
         <div class="row justify-content-center divider-style1">
@@ -436,10 +466,11 @@ onMounted(async() => {
       </div>
       <div class="bg-layer-style1" />
       <div class="bg-layer-style2" />
-    </section>
+    </section>==-->
     <!--== End Divider Area Wrapper ==-->
 
     <!--== Start Testimonial Area Wrapper ==-->
+    <!--==
     <section class="testimonial-area bg-color-gray">
       <div class="container" data-aos="fade-down">
         <div class="row">
@@ -459,7 +490,6 @@ onMounted(async() => {
             <div class="swiper testi-slider-container">
               <div class="swiper-wrapper">
                 <div class="swiper-slide">
-                  <!--== Start Testimonial Item ==-->
                   <div class="testimonial-item">
                     <div class="testi-inner-content">
                       <div class="testi-author">
@@ -490,10 +520,8 @@ onMounted(async() => {
                       </div>
                     </div>
                   </div>
-                  <!--== End Testimonial Item ==-->
                 </div>
                 <div class="swiper-slide">
-                  <!--== Start Testimonial Item ==-->
                   <div class="testimonial-item">
                     <div class="testi-inner-content">
                       <div class="testi-author">
@@ -524,10 +552,8 @@ onMounted(async() => {
                       </div>
                     </div>
                   </div>
-                  <!--== End Testimonial Item ==-->
                 </div>
                 <div class="swiper-slide">
-                  <!--== Start Testimonial Item ==-->
                   <div class="testimonial-item">
                     <div class="testi-inner-content">
                       <div class="testi-author">
@@ -558,10 +584,8 @@ onMounted(async() => {
                       </div>
                     </div>
                   </div>
-                  <!--== End Testimonial Item ==-->
                 </div>
                 <div class="swiper-slide">
-                  <!--== Start Testimonial Item ==-->
                   <div class="testimonial-item">
                     <div class="testi-inner-content">
                       <div class="testi-author">
@@ -592,10 +616,8 @@ onMounted(async() => {
                       </div>
                     </div>
                   </div>
-                  <!--== End Testimonial Item ==-->
                 </div>
                 <div class="swiper-slide">
-                  <!--== Start Testimonial Item ==-->
                   <div class="testimonial-item">
                     <div class="testi-inner-content">
                       <div class="testi-author">
@@ -626,21 +648,18 @@ onMounted(async() => {
                       </div>
                     </div>
                   </div>
-                  <!--== End Testimonial Item ==-->
                 </div>
               </div>
-
-              <!--== Add Swiper Pagination ==-->
               <div class="swiper-pagination" />
             </div>
           </div>
         </div>
       </div>
-    </section>
+    </section> ==-->
     <!--== End Testimonial Area Wrapper ==-->
 
     <!--== Start Blog Area Wrapper ==-->
-    <section class="blog-area blog-home-area">
+    <!--== <section class="blog-area blog-home-area">
       <div class="container">
         <div class="row">
           <div class="col-12">
@@ -656,7 +675,6 @@ onMounted(async() => {
         </div>
         <div class="row align-items-center post-home-style row-gutter-40">
           <div class="col-md-6 col-lg-4" data-aos="fade-right">
-            <!--== Start Blog Post Item ==-->
             <div class="post-item">
               <div class="thumb mb--0">
                 <a :href="`/blog/${posts[0]._id}`">
@@ -675,10 +693,8 @@ onMounted(async() => {
                 </div>
               </div>
             </div>
-            <!--== End Blog Post Item ==-->
           </div>
           <div class="col-md-6 col-lg-4" data-aos="fade-left">
-            <!--== Start Blog Post Item ==-->
             <div class="post-item">
               <div class="thumb mb--0">
                 <a :href="`/blog/${posts[1]._id}`">
@@ -686,11 +702,9 @@ onMounted(async() => {
                 </a>
               </div>
             </div>
-            <!--== End Blog Post Item ==-->
           </div>
           <div class="col-lg-4" data-aos="fade-left">
             <div class="post-home-list-style">
-              <!--== Start Blog Post Item ==-->
               <div class="post-item">
                 <div class="content">
                   <div class="author">
@@ -704,16 +718,11 @@ onMounted(async() => {
                   </div>
                 </div>
               </div>
-              <!--== End Blog Post Item ==-->
-
-              <!--== Start Blog Post Item ==-->
-
-              <!--== End Blog Post Item ==-->
             </div>
           </div>
         </div>
       </div>
-    </section>
+    </section>==-->
     <!--== End Blog Area Wrapper ==-->
   </main>
 </template>

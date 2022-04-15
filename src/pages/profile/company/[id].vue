@@ -1421,4 +1421,6 @@ onMounted(async() => {
 <route lang="yaml">
 meta:
   layout: home
+  requiresAuth: true
+  roles: [Company]
 </route>

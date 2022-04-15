@@ -31,19 +31,19 @@ const addSubscription = () => {
 
 <template>
   <!--== Start Footer Area Wrapper ==-->
-  <footer class="footer-area">
+  <footer id="footer" class="footer-area">
     <!--== Start Footer Top ==-->
     <div class="footer-top">
       <div class="container pt--0 pb--0">
         <div class="row">
-          <div class="col-lg-5">
+          <div class="col-lg-7">
             <div class="footer-newsletter-content">
-              <h4 class="title">
-                Abonnez-vous à notre newsletter ! Optez pour le Green ..
-              </h4>
+              <h6 class="title">
+                N’oubliez pas de vous inscrire à notre newsletter si vous souhaitez recevoir des informations par rapport à la transition écologique des entreprises.
+              </h6>
             </div>
           </div>
-          <div class="col-lg-7">
+          <div class="col-lg-5">
             <div class="footer-newsletter-form">
               <a-form>
                 <a-input v-model:value="email" type="email" placeholder="Saisir votre email" />

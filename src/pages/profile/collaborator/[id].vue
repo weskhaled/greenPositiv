@@ -408,4 +408,6 @@ onMounted(async() => {
 <route lang="yaml">
 meta:
   layout: home
+  requiresAuth: true
+  roles: [Collab]
 </route>
