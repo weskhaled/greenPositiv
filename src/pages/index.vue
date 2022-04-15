@@ -659,16 +659,16 @@ onMounted(async() => {
     <!--== End Testimonial Area Wrapper ==-->
 
     <!--== Start Blog Area Wrapper ==-->
-    <!--== <section class="blog-area blog-home-area">
+    <section class="blog-area blog-home-area">
       <div class="container">
         <div class="row">
           <div class="col-12">
             <div class="section-title text-center">
               <h3 class="title">
-                Nouveaux articles
+                L'actualité <span class="text-green-500">Green</span>
               </h3>
               <div class="desc">
-                <p>Lorem ipsum</p>
+                <h2>Retrouvez dans notre Blog toute l'actualité de la transition écologique des entreprises.</h2>
               </div>
             </div>
           </div>
@@ -722,7 +722,7 @@ onMounted(async() => {
           </div>
         </div>
       </div>
-    </section>==-->
+    </section>
     <!--== End Blog Area Wrapper ==-->
   </main>
 </template>
