@@ -11,6 +11,8 @@ import { currentUser } from '~/stores'
 import 'swiper/css/pagination'
 
 SwiperCore.use([Controller, Pagination])
+const { isSupported, copy } = useClipboard()
+const permissionWrite = usePermission('clipboard-write')
 
 const useForm = Form.useForm
 const props = defineProps<{ id: string }>()
@@ -559,6 +561,12 @@ const onFinish = async(values: any) => {
 const onFinishFailed = (errorInfo: any) => {
   console.log('Failed:', errorInfo)
 }
+const copyToClipboard = (idCollab) => {
+  let urlLocation: any = `${window.location.href}`.split('/')
+  urlLocation.pop()
+  urlLocation = urlLocation.join('/')
+  copy(`${urlLocation}/validateCollab?id=${currentUser.value.idUser}&idCollab=${idCollab}`)
+}
 onMounted(async() => {
   console.log('props id ', props.id)
   getFormData()
@@ -642,7 +650,7 @@ onMounted(async() => {
                       class="flex items-center text-gray-400 text-hover-primary me-5 mb-2"
                     >
                       <span class="i-carbon-user-multiple text-xl inline-block mr-1" />
-                      {{ sizeCompanies[profileEntreprise?.profile?.size].label }}
+                      {{ sizeCompanies[profileEntreprise?.profile?.size]?.label }}
                     </a>
                     <a href="#" class="flex items-center text-gray-400 text-hover-primary mb-2">
                       <span class="i-carbon-email text-xl inline-block mr-1" />
@@ -871,6 +879,7 @@ onMounted(async() => {
                           <a-card class="mr-2" hoverable>
                             <template #actions>
                               <span key="edit" class="i-ant-design-delete-twotone inline-block" @click="deleteCollab(item._id)" />
+                              <span v-if="isSupported" key="edit" class="i-ant-design-copy-twotone inline-block" @click="copyToClipboard(`${item._id}`)" />
                             </template>
                             <a-card-meta :title="item.username">
                               <template #description>
