@@ -1,7 +1,8 @@
 import type { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 import axios from 'axios'
+import { useJwt } from '@vueuse/integrations/useJwt'
 import { message } from 'ant-design-vue'
-import { token } from '~/stores'
+import { refreshToken, token } from '~/stores'
 import showCodeMessage from '~/api/code'
 import type { instanceObject } from '~/utils/format'
 import { formatJsonToUrlParams } from '~/utils/format'
@@ -41,11 +42,17 @@ http.interceptors.response.use(
     message.info(JSON.stringify(response.status))
     return response
   },
-  (error: AxiosError) => {
+  async(error: AxiosError) => {
     const { response } = error
     if (response) {
-      if (response.status === 401)
-        token.value = null
+      if (response.status === 401) {
+        if (refreshToken.value) {
+          const encodedJwt = ref(refreshToken.value)
+          const { payload } = useJwt(encodedJwt)
+          const { data } = await useFetch(`${BASE_PREFIX}/auth/refresh`).post({ email: payload.value?.emailConnected, username: payload.value?.usernameConnected, refreshToken: refreshToken.value }).json()
+          data.value && (token.value = data.value.token)
+        }
+      }
 
       message.error(showCodeMessage(response.status))
       return Promise.reject(response.data)
@@ -69,7 +76,9 @@ const service = {
   },
 }
 
-watch(token, () => {
+watch(token, (newVal, oldVal) => {
+  console.log('token watch')
+  console.log(newVal, oldVal)
   http.interceptors.request.use((config: any) => {
     if (token.value && token.value.length)
       config.headers.token = token.value

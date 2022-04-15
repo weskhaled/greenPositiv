@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { message } from 'ant-design-vue'
-import { currentUser, token } from '~/stores'
+import { currentUser, refreshToken, token } from '~/stores'
 import authApi from '~/api/modules/auth'
 
 const router = useRouter()
@@ -23,6 +23,7 @@ const onFinish = async(values: any) => {
 
     if (data) {
       token.value = data.token
+      refreshToken.value = data.refreshToken
       const { data: currentUserData } = await authApi.currentUser()
       if (currentUserData) {
         profileEntrepriseLoading.value = false
@@ -32,7 +33,7 @@ const onFinish = async(values: any) => {
       }
       else {
         currentUser.value = null
-        token.value = null
+        // token.value = null
       }
     }
   }

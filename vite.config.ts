@@ -30,6 +30,16 @@ export default defineConfig({
     // https://github.com/hannoeru/vite-plugin-pages
     Pages({
       extensions: ['vue', 'md'],
+      pagesDir: [
+        { dir: 'src/**/pages', baseRoute: '' },
+      ],
+      extendRoute(route) {
+        // Augment the route with meta that indicates that the route requires authentication.
+        return {
+          ...route,
+          meta: { ...route.meta, requiresAuth: route.meta?.requiresAuth === 'requiresAuth' },
+        }
+      },
     }),
 
     // https://github.com/JohnCampionJr/vite-plugin-vue-layouts

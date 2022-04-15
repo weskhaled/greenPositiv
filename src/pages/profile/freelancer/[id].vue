@@ -16,8 +16,8 @@ const activeKey = ref('1')
 const activeKeyProfileEtprs = ref('1')
 const currentStepProfileEtprs = ref(0)
 const formItemLayout = {
-  labelCol: { span: 6 },
-  wrapperCol: { span: 16 },
+  labelCol: { span: 8 },
+  wrapperCol: { span: 14 },
 }
 const socials = reactive({
   facebook: {
@@ -3179,4 +3179,6 @@ onMounted(async() => {
 <route lang="yaml">
 meta:
   layout: home
+  requiresAuth: true
+  roles: [Freelancer]
 </route>
