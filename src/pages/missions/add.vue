@@ -1,19 +1,18 @@
 <script setup lang="ts">
-import { Form, Modal, message } from 'ant-design-vue'
+import { message } from 'ant-design-vue'
 import type { RuleObject } from 'ant-design-vue/es/form'
 import dayjs, { Dayjs } from 'dayjs'
 
 import adminApi from '~/api/modules/admin'
+import companyApi from '~/api/modules/company'
 import globalApi from '~/api/modules/global'
 
 const router = useRouter()
 const route = useRoute()
 
 const activeTabKey = ref('1')
-const formMission: any = ref(null)
 const currentStep = ref(0)
 const profileEntrepriseLoading = ref(false)
-const mission = ref(null)
 const skillsNeededValue = ref([])
 const skillsAppreciatedValue = ref([])
 const languagesValue = ref([])
@@ -42,14 +41,14 @@ const formStateMission = reactive<Record<string, any>>({
   price_per_day: 0,
   period_per_month: 1,
   show_price: true,
-  work_frequence: null,
+  work_frequence: 0,
   telework: false,
-  nb_days_telework: 1,
+  nb_days_telework: 0,
   local_city: '',
   comments: '',
   document: null,
   supp_month: true,
-  budget: null,
+  budget: 0,
 })
 levels.value = [{
   value: 'Junior',
@@ -96,6 +95,7 @@ const rulesMission = reactive({
     },
   ],
 })
+
 const validateBudget = async(_rule: RuleObject, value: any) => {
   if (!formStateMission.budget)
     return Promise.reject(new Error('Veuillez saisir le tarif du freelance'))
@@ -110,7 +110,6 @@ const validatePeriodPrice = async(_rule: RuleObject, value: any) => {
   if (!Number.isInteger(+formStateMission.price_per_day))
     return Promise.reject(new Error('Veuillez saisir que des chiffres'))
 }
-
 const validatePeriodMonth = async(_rule: RuleObject, value: any) => {
   if (!formStateMission.period_per_month)
     return Promise.reject(new Error('Veuillez saisir le nombre de mosi de travail estimé'))
@@ -144,62 +143,80 @@ const calcWorkFreq = (params: number, toSlide = true) => {
       return 4
   }
 }
+
+const addMission = async() => {
+  try {
+    const formData = new FormData()
+    formData.append('title_profile', formStateMission.title_profile)
+    formData.append('level', formStateMission.level)
+    formData.append('jobCat', formStateMission.jobCat)
+    formData.append('skillsNeeded', formStateMission.skillsNeeded.join())
+    formData.append('skillsAppreciated', formStateMission.skillsAppreciated.join())
+    formData.append('languages', formStateMission.languages.join())
+    formData.append('name', formStateMission.name)
+    formData.append('description', formStateMission.description)
+    formData.append('skills', formStateMission.skills.join())
+    formData.append('city', formStateMission.city)
+    formData.append('objectif', formStateMission.objectif)
+    formData.append('dateBegin', formStateMission.dateBegin)
+    formData.append('period_per_month', formStateMission.period_per_month)
+    formData.append('price_per_day', formStateMission.price_per_day)
+    formData.append('show_price', formStateMission.show_price)
+    formData.append('work_frequence', formStateMission.work_frequence)
+    formData.append('telework', formStateMission.telework)
+    formData.append('nb_days_telework', formStateMission.nb_days_telework)
+    formData.append('local_city', formStateMission.local_city)
+    formData.append('comments', formStateMission.comments)
+    formData.append('document', formStateMission.document)
+    formData.append('supp_month', formStateMission.supp_month)
+    formData.append('budget', formStateMission.budget)
+
+    const { data } = await companyApi.addMission(formData)
+    if (data) {
+      message.info(data.message)
+      router.push('/missions')
+    }
+    else {
+      message.error(data.message)
+      profileEntrepriseLoading.value = false
+    }
+  }
+
+  catch (error: any) {
+    profileEntrepriseLoading.value = false
+    message.destroy()
+    message.error(`${error.message}`)
+  }
+}
 const nextStep = async() => {
-  if (currentStep.value == 0) {
+  if (currentStep.value === 0) {
     if (formStateMission.title_profile && formStateMission.jobCat && formStateMission.level
       && skillsNeededValue.value.length <= 2 && skillsAppreciatedValue.value.length <= 12) {
       formStateMission.skillsNeeded = skillsNeededValue.value
       formStateMission.skillsAppreciated = skillsAppreciatedValue.value
+      formStateMission.languages = languagesValue.value
       currentStep.value = ++currentStep.value
     }
   }
-  else if (currentStep.value == 1) {
-    console.log('currentStep ', currentStep.value)
+  else if (currentStep.value === 1) {
     formStateMission.work_frequence = calcWorkFreq(+formStateMission.work_frequence, false)
     if (formStateMission.nb_days_telework)
       formStateMission.nb_days_telework = calcWorkFreq(+formStateMission.nb_days_telework, false)
 
-    console.log('formStateMission ', formStateMission)
     currentStep.value = ++currentStep.value
   }
-  else if (currentStep.value == 3) {
-    console.log('test 3 last')
-    console.log('formStateMission final ', formStateMission)
-  }
-  else if (currentStep.value == 4) {
+  else if (currentStep.value === 3) {
     try {
-      console.log('data to send ', formStateMission)
       profileEntrepriseLoading.value = true
-      //  const { data } = await freelancerApi.register({ ...formRegisterState, role: 'Freelancer' })
-    /*
-        if (data) {
-          message.success('compte créé')
-          await router.push('/')
-        } */
+      addMission()
     }
     catch (error: any) {
-      console.log('error', error)
-
-    /*
-        profileEntrepriseLoading.value = false
-        message.destroy()
-        message.error(`${error.message}`)
-        */
+      profileEntrepriseLoading.value = false
+      message.destroy()
+      message.error(`${error.message}`)
     }
   }
   else { currentStep.value = ++currentStep.value }
-  /*
-  if (formStateMission.value) {
-    try {
-      const values = await formMission.value.validateFields()
-      if (values)
-        currentStep.value = ++currentStep.value
-    }
-    catch (errorInfo: any) {
-      console.error(errorInfo.errorFields)
-    }
-  }
-  else { */
 }
 
 const getFormData = async() => {
@@ -210,8 +227,6 @@ const getFormData = async() => {
     })))
     jobsName.value = jobs.value.map(j => j.label)
     jobsId.value = jobs.value.map(j => j.value)
-    console.log('jobsName ', jobsName)
-    console.log('jobsId ', jobsId)
   })
 
   globalApi.languages().then(({ data }) => {
@@ -228,22 +243,21 @@ const getFormData = async() => {
   })
 }
 
+const beforeUploadDocument = async(file: any) => {
+  const isLt2M = file.size / 1024 / 1024 < 2
+  if (!isLt2M)
+    message.error('Image must smaller than 2MB!')
+  else
+    formStateMission.document = file
+  return false
+}
+
 onMounted(async() => {
   getFormData()
 })
-const onFinish = async(values: any) => {
-  /*
-  if (values.avatar) {
-    const formData = new FormData()
-    formData.append('image', values.avatar[0].originFileObj)
-    if (profile.value.freelancer?.image)
-      formData.append('old_image', 'test')
-    await freelancerApi.uploadProfile(formData)
-  }
-  updateProfile({ ...profile, ...values }) */
-}
+
 const onFinishFailed = (errorInfo: any) => {
-  // console.log('Failed:', errorInfo)
+  console.log('Failed:', errorInfo)
 }
 </script>
 <template>
@@ -289,7 +303,7 @@ const onFinishFailed = (errorInfo: any) => {
                 <div>
                   <div>
                     <a-steps
-                      v-model:current="activeTabKey"
+                      v-model:current="currentStep"
                       type="navigation"
                       size="small"
                       :style="{
@@ -298,22 +312,22 @@ const onFinishFailed = (errorInfo: any) => {
                       }"
                     >
                       <a-step
-                        :status="(formStateMission?.title_profile && formStateMission?.level) ? 'finish' : (currentStep === 0 ? 'process' : 'wait')"
+                        :status="(formStateMission.title_profile && formStateMission.level) ? 'finish' : (currentStep === 0 ? 'process' : 'wait')"
                         title="Freelance"
                       />
                       <a-step
-                        :disabled="!(formStateMission?.title_profile && formStateMission?.level)"
-                        :status="(formStateMission?.dateBegin && formStateMission?.local_city) ? 'finish' : (currentStep === 1 ? 'process' : 'wait')"
+                        :disabled="!(formStateMission.title_profile && formStateMission.level)"
+                        :status="(formStateMission.dateBegin && formStateMission.local_city) ? 'finish' : (currentStep === 1 ? 'process' : 'wait')"
                         title="Condition"
                       />
                       <a-step
-                        :disabled="!(formStateMission?.local_city && formStateMission?.dateBegin)"
-                        :status="(formStateMission?.objectif.length > 20 && formStateMission?.description.length > 20) ? 'finish' : (currentStep === 2 ? 'process' : 'wait')"
+                        :disabled="!(formStateMission.local_city && formStateMission.dateBegin)"
+                        :status="(formStateMission.objectif.length > 20 && formStateMission.description.length > 20) ? 'finish' : (currentStep === 2 ? 'process' : 'wait')"
                         title="Mission"
                       />
                       <a-step
-                        :disabled="!(formStateMission?.objectif.length>0 && formStateMission?.description.length>0)"
-                        :status="(formStateMission?.objectif.length > 20 && formStateMission?.description.length > 20 ) ? 'finish' : (currentStep === 3 ? 'process' : 'wait')"
+                        :disabled="!(formStateMission.objectif.length > 0 && formStateMission.description.length>0)"
+                        :status="(formStateMission.objectif.length > 0 && formStateMission.description.length > 0 ) ? 'finish' : (currentStep === 3 ? 'process' : 'wait')"
                         title="Aperçu"
                       />
                     </a-steps>
@@ -326,7 +340,6 @@ const onFinishFailed = (errorInfo: any) => {
                           :wrapper-col="{ span: 24 }"
                           :model="formStateMission"
                           @finish-failed="onFinishFailed"
-                          @finish="onFinish"
                         >
                           <a-form-item label="Titre de profil">
                             <a-input v-model:value="formStateMission.title_profile" />
@@ -365,7 +378,7 @@ const onFinishFailed = (errorInfo: any) => {
                               :options="skills"
                             />
                           </a-form-item>
-                          <a-form-item name="language" label="Langues maîtrisées">
+                          <a-form-item name="languages" label="Langues maîtrisées">
                             <a-select
                               v-model:value="languagesValue"
                               mode="tags"
@@ -390,7 +403,6 @@ const onFinishFailed = (errorInfo: any) => {
                           :wrapper-col="{ span: 24 }"
                           :model="formStateMission"
                           @finish-failed="onFinishFailed"
-                          @finish="onFinish"
                         >
                           <a-form-item name="supp_month" label="J'estime la durée de la mission à">
                             <a-select
@@ -491,8 +503,10 @@ const onFinishFailed = (errorInfo: any) => {
                           :wrapper-col="{ span: 24 }"
                           :model="formStateMission"
                           @finish-failed="onFinishFailed"
-                          @finish="onFinish"
                         >
+                          <a-form-item name="Name" label="Quel est le nom de votre mission">
+                            <a-input v-model:value="formStateMission.name" />
+                          </a-form-item>
                           <a-form-item name="objectif" label="Quel est l'objet de votre mission ?">
                             <a-input v-model:value="formStateMission.objectif" />
                           </a-form-item>
@@ -518,6 +532,38 @@ const onFinishFailed = (errorInfo: any) => {
                               auto-size
                             />
                           </a-form-item>
+                          <a-form-item label="Document">
+                            <a-form-item name="document" no-style>
+                              <a-upload-dragger
+                                v-model:file="formStateMission.document"
+                                :multiple="false"
+                                :before-upload="beforeUploadDocument"
+                                name="doc"
+                              >
+                                <div v-if="formStateMission?.document">
+                                  <template>
+                                    <p>{{ formStateMission?.document }}</p>
+                                  </template>
+                                </div>
+                                <div v-else class="py-3">
+                                  <p class="ant-upload-drag-icon">
+                                    <span
+                                      class="i-carbon-cloud-upload inline-block text-3xl"
+                                    />
+                                  </p>
+                                  <p
+                                    class="ant-upload-text"
+                                  >
+                                    Click or drag file to this area to upload
+                                  </p>
+                                  <p class="ant-upload-hint">
+                                    Support for a single or bulk upload.
+                                  </p>
+                                </div>
+                              </a-upload-dragger>
+                            </a-form-item>
+                          </a-form-item>
+
                           <a-form-item :wrapper-col="{ offset: 0, span: 24 }">
                             <a-button type="primary" block @click="nextStep">
                               Continuez
