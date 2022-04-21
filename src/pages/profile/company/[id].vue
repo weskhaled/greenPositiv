@@ -6,6 +6,7 @@ import SwiperCore, { Controller, Pagination } from 'swiper'
 import { Swiper, SwiperSlide } from 'swiper/vue'
 import globalApi from '~/api/modules/global'
 import companyApi from '~/api/modules/company'
+import adminApi from '~/api/modules/admin'
 import profileEntrepriseApi from '~/api/modules/profil-entreprise'
 import { currentUser } from '~/stores'
 import 'swiper/css/pagination'
@@ -19,7 +20,6 @@ const props = defineProps<{ id: string }>()
 const router = useRouter()
 const { t } = useI18n()
 const activeKey = ref('1')
-const typesAccount = ref([])
 const activeKeyProfileEtprs = ref('1')
 const currentStepProfileEtprs = ref(0)
 const formItemLayout = {
@@ -29,12 +29,15 @@ const formItemLayout = {
 const profile = ref(null)
 const profileAvatar = ref('')
 const logoProfile = ref('')
-const userDocument = ref(null)
 const profileEntreprise = ref(null)
 const activities = ref([])
 const departements = ref([])
 const sizeCompanies = ref([])
 const typeSearchable = ref([])
+const missions = ref([])
+const jobs = ref([])
+const jobsName = ref([])
+const jobsId = ref([])
 
 const visibleModalInformationEmailVerification = ref(false)
 const visibleModalInformationDocumentVal = ref(false)
@@ -46,6 +49,9 @@ const profileEntrepriseLoading = ref(false)
 
 const controlledSwiper = ref(null)
 const setControlledSwiper = (swiper) => {
+  controlledSwiper.value = swiper
+}
+const setMissionSwiper = (swiper) => {
   controlledSwiper.value = swiper
 }
 
@@ -319,65 +325,20 @@ const rulesCollab = reactive({
     },
   ],
 })
-/* bloc collaborator */
-const { resetFields, validate, validateInfos: collaboratorValidateInfos } = useForm(modelRefCollaborator, rulesCollab)
-const onSubmitCollab = async() => {
-  validate()
-    .then(async() => {
-      profileEntrepriseLoading.value = true
-      const params = toRaw(modelRefCollaborator)
-      const { data } = await companyApi.createCollaborator(params)
-      message.info(data.message)
-      visibleModalAddCollaborator.value = false
-      getFormData()
-    })
-    .catch((err) => {
-      console.log('error', err)
-    }).finally(() => profileEntrepriseLoading.value = false)
-}
-
-const deleteCollab = (id: string) => {
-  setTimeout(() => {
-    Modal.confirm({
-      content: 'Supprimer le collaborateur',
-      icon: h(ExclamationCircleOutlined),
-      onOk() {
-        return companyApi.removeCollaborator(currentUser?.value.idUser, id).then(({ data }) => {
-          message.info(data.message)
-          profile.value = null
-          getFormData()
-        }).catch(err => message.error(`Oops errors! ${err}`))
-      },
-      cancelText: 'Retour',
-      onCancel() {
-        Modal.destroyAll()
-      },
-    })
-  })
-}
-
-const deleteFavoris = (id: string) => {
-  setTimeout(() => {
-    Modal.confirm({
-      content: 'Supprimer le Retirer ce freelance de la liste des favoris ?',
-      icon: h(ExclamationCircleOutlined),
-      onOk() {
-        return companyApi.removeFavoris(id).then(({ data }) => {
-          message.info(data.message)
-          profile.value = null
-          getFormData()
-        }).catch(err => message.error(`Oops errors! ${err}`))
-      },
-      cancelText: 'Retour',
-      onCancel() {
-        Modal.destroyAll()
-      },
-    })
-  })
-}
-
-/* end bloc reference */
 const getFormData = async() => {
+  adminApi.jobs().then(({ data }) => {
+    data.value && (jobs.value = data.value.filter(j => j._id && j.name).map(j => ({
+      value: j._id,
+      label: j.name,
+    })))
+    jobsName.value = jobs.value.map(j => j.label)
+    jobsId.value = jobs.value.map(j => j.value)
+  })
+  companyApi.getMissions().then(({ data }) => {
+    console.log(data)
+    missions.value = data
+  })
+
   globalApi.activities().then(({ data }) => {
     data.value && (activities.value = data.value.filter(a => a.code && a.name).map(a => ({
       value: a.code,
@@ -433,6 +394,65 @@ const getFormData = async() => {
     }
   })
 }
+
+/* bloc collaborator */
+const { resetFields, validate, validateInfos: collaboratorValidateInfos } = useForm(modelRefCollaborator, rulesCollab)
+const onSubmitCollab = async() => {
+  validate()
+    .then(async() => {
+      profileEntrepriseLoading.value = true
+      const params = toRaw(modelRefCollaborator)
+      const { data } = await companyApi.createCollaborator(params)
+      message.info(data.message)
+      visibleModalAddCollaborator.value = false
+      getFormData()
+    })
+    .catch((err) => {
+      console.log('error', err)
+    }).finally(() => profileEntrepriseLoading.value = false)
+}
+
+const deleteCollab = (id: string) => {
+  setTimeout(() => {
+    Modal.confirm({
+      content: 'Supprimer le collaborateur',
+      icon: h(ExclamationCircleOutlined),
+      onOk() {
+        return companyApi.removeCollaborator(currentUser?.value.idUser, id).then(({ data }) => {
+          message.info(data.message)
+          profile.value = null
+          getFormData()
+        }).catch(err => message.error(`Oops errors! ${err}`))
+      },
+      cancelText: 'Retour',
+      onCancel() {
+        Modal.destroyAll()
+      },
+    })
+  })
+}
+const deleteFavoris = (id: string) => {
+  setTimeout(() => {
+    Modal.confirm({
+      content: 'Supprimer le Retirer ce freelance de la liste des favoris ?',
+      icon: h(ExclamationCircleOutlined),
+      onOk() {
+        return companyApi.removeFavoris(id).then(({ data }) => {
+          message.info(data.message)
+          profile.value = null
+          getFormData()
+        }).catch(err => message.error(`Oops errors! ${err}`))
+      },
+      cancelText: 'Retour',
+      onCancel() {
+        Modal.destroyAll()
+      },
+    })
+  })
+}
+
+/* end bloc reference */
+
 const onLoad = () => {
   profileEntrepriseLoading.value = true
 }
@@ -519,6 +539,29 @@ const onSubmitProfileEntreprise = async() => {
     }).finally(() => profileEntrepriseLoading.value = false)
 }
 /* end bloc profil Entreprise */
+
+/* bloc mission */
+const deleteMission = (id: string) => {
+  setTimeout(() => {
+    Modal.confirm({
+      content: 'Supprimer cette mission',
+      icon: h(ExclamationCircleOutlined),
+      onOk() {
+        return companyApi.deleteMission(id).then(({ data }) => {
+          message.info(data.message)
+          profile.value = null
+          getFormData()
+        }).catch(err => message.error(`Oops errors! ${err}`))
+      },
+      cancelText: 'Retour',
+      onCancel() {
+        Modal.destroyAll()
+      },
+    })
+  })
+}
+/* end bloc mission */
+
 const beforeUploadProfileAvatar = async(file: any) => {
   const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png'
   if (!isJpgOrPng)
@@ -547,6 +590,19 @@ const beforeUploadProfileLogo = async(file: any) => {
   }
   return false
 }
+const showFrequence = (value: any) => {
+  if (value === 0)
+    return '1 Jour / semaine'
+  else if (value === 1)
+    return '2 Jours / semaine'
+  else if (value === 2)
+    return '3 Jours / semaine'
+  else if (value === 3)
+    return '4 Jours / semaine'
+  else if (value === 4)
+    return '5 Jours / semaine'
+}
+
 const onFinish = async(values: any) => {
   if (values.avatar) {
     const formData = new FormData()
@@ -1007,7 +1063,7 @@ onMounted(async() => {
                   </a-card>
                 </div>
               </a-tab-pane>
-              <a-tab-pane key="7" tab="Ma micro entreprise" force-render>
+              <a-tab-pane key="4" tab="Ma micro entreprise" force-render>
                 <div class>
                   <a-card title="Profile entreprise" :bordered="false" class="rounded-sm">
                     <div>
@@ -1234,6 +1290,205 @@ onMounted(async() => {
                   </a-card>
                 </div>
               </a-tab-pane>
+              <a-tab-pane key="5" tab="Missions" force-render>
+                <div class>
+                  <a-card title="Missions" :bordered="false" class="rounded-sm">
+                    <div>
+                      <swiper
+                        :modules="[Controller]"
+                        :slides-per-view="2" class="p-3"
+                        :pagination="{
+                          clickable: true,
+                        }"
+                        :grab-cursor="true"
+                        @swiper="setMissionSwiper"
+                      >
+                        <swiper-slide
+                          v-for="(item, index) in missions"
+                          :key="index"
+                        >
+                          <a-card class="mr-2" hoverable>
+                            <template #actions>
+                              <span key="edit" class="i-ant-design-delete-twotone inline-block" @click="deleteMission(item.mission._id)" />
+                              <span v-if="isSupported" key="edit" class="i-ant-design-copy-twotone inline-block" @click="copyToClipboard(`${item._id}`)" />
+                            </template>
+                            <a-card-meta :title="`Mission : ${item.mission.name}`">
+                              <template #description>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Objectif :</b>
+                                  </span>
+                                  {{ item.mission.objectif }}
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Ville :</b>
+                                  </span>
+                                  {{ item.mission.local_city }}
+                                </div>
+                                <div v-if="item.mission.supp_month">
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Prix / jour :</b>
+                                    </span>
+                                    {{ item.mission.price_per_day }}
+                                  </div>
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Nombre de mois :</b>
+                                    </span>
+                                    {{ item.mission.period_per_month }}
+                                  </div>
+                                </div>
+                                <div v-else>
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Budget :</b>
+                                    </span>
+                                    {{ item.mission.budget }}
+                                  </div>
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Nombre de mois :</b>
+                                    </span>
+                                    1
+                                  </div>
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Nombre de jours :</b>
+                                  </span>
+                                  {{ showFrequence(item.mission.work_frequence) }}
+                                </div>
+                                <div v-if="item.mission.telework == true">
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Télétravail :</b>
+                                    </span>
+                                    <a-tag
+                                      class="text-xs ml-2 leading-5"
+                                      color="#080"
+                                    >
+                                      Oui
+                                    </a-tag>
+                                  </div>
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Fréquence télétravail :</b>
+                                    </span>
+                                    {{ showFrequence(item.mission.work_frequence) }}
+                                  </div>
+                                </div>
+                                <div v-else>
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Télétravail :</b>
+                                    </span>
+                                    <a-tag
+                                      class="text-xs ml-2 leading-5"
+                                      color="#D00"
+                                    >
+                                      Non
+                                    </a-tag>
+                                  </div>
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Fréquence télétravail :</b>
+                                    </span>
+                                    ---
+                                  </div>
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Affichage prix :</b>
+                                  </span>
+                                  <a-tag
+                                    v-if="item.mission.show_price == true "
+                                    class="text-xs ml-2 leading-5"
+                                    color="#080"
+                                  >
+                                    Oui
+                                  </a-tag>
+                                  <a-tag
+                                    v-else
+                                    class="text-xs ml-2 leading-5"
+                                    color="#D00"
+                                  >
+                                    Oui
+                                  </a-tag>
+                                </div>
+                              </template>
+                            </a-card-meta>
+                            <a-card-meta
+                              :title="`Profile recherché : ${item.profile.title_profile}`"
+                            >
+                              <template #description>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Catégorie de métier :</b>
+                                  </span>
+                                  <a-tag
+                                    class="text-xs ml-2 leading-5"
+                                    color="#FF7F00"
+                                  >
+                                    {{ jobsName?.[jobsId?.indexOf(item.profile.jobCat)] }}
+                                  </a-tag>
+                                </div>
+                                <br>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Compétences obligatoires :</b>
+                                  </span>
+                                  <a-tag
+                                    v-for="(skill,index) in item.profile.skillsNeeded" :key="index"
+                                    class="text-xs ml-2 leading-5"
+                                    color="#05f"
+                                  >
+                                    {{ skill }}
+                                  </a-tag>
+                                </div>
+                                <br>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Compétences appréciés :</b>
+                                  </span>
+                                  <a-tag
+                                    v-for="(skill,index) in item.profile.skillsAppreciated" :key="index"
+                                    class="text-xs ml-2 leading-5"
+                                    color="#05f"
+                                  >
+                                    {{ skill }}
+                                  </a-tag>
+                                </div>
+                                <br>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Langues demandées :</b>
+                                  </span>
+                                  <a-tag
+                                    v-for="(lang,index) in item.profile.languages" :key="index"
+                                    class="text-xs ml-2 leading-5"
+                                    color="#05f"
+                                  >
+                                    {{ lang }}
+                                  </a-tag>
+                                </div>
+                              </template>
+                            </a-card-meta>
+                          </a-card>
+                        </swiper-slide>
+                        <swiper-slide>
+                          <a-card class="m-auto" hoverable style="width: 150px;" body-style="height: 100%;" @click="router.push('/missions/add')">
+                            <div class="w-full h-full flex items-center justify-center">
+                              <span class="i-ant-design-plus-square-twotone ml-1 inline-block text-4xl text-green-300" />
+                            </div>
+                          </a-card>
+                        </swiper-slide>
+                      </swiper>
+                    </div>
+                  </a-card>
+                </div>
+              </a-tab-pane>
             </a-tabs>
           </div>
         </div>
@@ -1425,6 +1680,7 @@ onMounted(async() => {
 }
 .ant-card-meta-title {
     text-align: center !important;
+    font-weight: bold;
 }
 </style>
 <route lang="yaml">

@@ -6,6 +6,7 @@ import dayjs, { Dayjs } from 'dayjs'
 import adminApi from '~/api/modules/admin'
 import companyApi from '~/api/modules/company'
 import globalApi from '~/api/modules/global'
+import { currentUser } from '~/stores'
 
 const router = useRouter()
 const route = useRoute()
@@ -174,7 +175,7 @@ const addMission = async() => {
     const { data } = await companyApi.addMission(formData)
     if (data) {
       message.info(data.message)
-      router.push('/missions')
+      router.push(`/profile/company/${currentUser.value.idUser}`)
     }
     else {
       message.error(data.message)
@@ -446,7 +447,7 @@ const onFinishFailed = (errorInfo: any) => {
                             />
                           </a-form-item>
                           <a-form-item
-                            v-if="formStateMission.supp_month" name="price_per_day" label="Le tarif du freelance €/Joun"
+                            v-if="formStateMission.supp_month" name="price_per_day" label="Le tarif du freelance €/Jour"
                             :rules="[{ required: true, validator: validatePeriodPrice, trigger: 'change' }]"
                           >
                             <a-input v-model:value="formStateMission.price_per_day" />
@@ -597,7 +598,7 @@ const onFinishFailed = (errorInfo: any) => {
                           <h1 class="text-green-500">
                             <b>Condition</b>
                           </h1>
-                          <span v-if="formStateMission?.supp_month"><b>Durée :</b>    {{ freqTexts[formStateMission?.work_frequence] }} X {{ formStateMission?.period_per_month }} mois</span>
+                          <span v-if="formStateMission?.supp_month"><b>Durée :</b>    {{ freqTexts[formStateMission?.work_frequence] }} x {{ formStateMission?.period_per_month }} mois</span>
                           <span v-if="!formStateMission?.supp_month"><b>Durée :</b>  moins d'un mois</span>
                           <br>
                           <span v-if="formStateMission?.supp_month"><b>prix par jour :</b> {{ formStateMission.price_per_day }} €</span>
