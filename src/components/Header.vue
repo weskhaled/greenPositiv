@@ -188,7 +188,7 @@ onClickOutside(asideOffcanvasMenu.value, () => {
               <span>Se Connecter</span>
             </router-link>
           </li>
-          <li>
+          <li v-if="isAuthenticated">
             <a href="#">Mon espace</a>
             <ul class="sub-menu">
               <li v-if="currentUser && currentUser.role === 'Freelancer'">
@@ -211,18 +211,18 @@ onClickOutside(asideOffcanvasMenu.value, () => {
                   <span>Modifier mon profil</span>
                 </router-link>
               </li>
-              <li>
+              <li v-if="currentUser && (currentUser.role === 'Company')">
                 <router-link class="nav-link" :to="`/missions/add`">
                   <span>ajouter une mission</span>
                 </router-link>
               </li>
-              <li>
+              <li v-if="currentUser && (currentUser.role === 'Freelancer' || currentUser.role === 'Agence')">
                 <router-link class="nav-link" to="#">
                   <span>Créer un devis </span>
                 </router-link>
               </li>
               <li>
-                <router-link class="nav-link" to="#">
+                <router-link class="nav-link" to="/auth/parameter-account">
                   <span>Paramètre de compte</span>
                 </router-link>
               </li>
