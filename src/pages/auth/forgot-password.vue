@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { message } from 'ant-design-vue'
-import { currentUser, refreshToken, token } from '~/stores'
+import { token } from '~/stores'
 import authApi from '~/api/modules/auth'
 
 const router = useRouter()
@@ -8,33 +8,22 @@ const { t } = useI18n()
 const profileEntrepriseLoading = ref(false)
 
 const formState = reactive<any>({
-  username: 'khaled',
-  password: 'azerty123',
-  remember: true,
+  email: '',
 })
-const onLoad = () => {
-  profileEntrepriseLoading.value = true
-}
-const onFinish = async(values: any) => {
-  profileEntrepriseLoading.value = true
-  const { username, password } = values
-  try {
-    const { data } = await authApi.login({ username, password })
 
-    if (data) {
-      token.value = data.token
-      refreshToken.value = data.refreshToken
-      const { data: currentUserData } = await authApi.currentUser()
-      if (currentUserData) {
-        profileEntrepriseLoading.value = false
-        currentUser.value = currentUserData
-        message.success('Bienvenue')
-        router.push('/')
-      }
-      else {
-        currentUser.value = null
-        // token.value = null
-      }
+const forgotPassword = async() => {
+  profileEntrepriseLoading.value = true
+  try {
+    const response = await authApi.forgotPassword({ email: formState.email })
+    console.log('response ', response.data.value.message)
+
+    if (response.status === 200) {
+      message.success(response.data.value.message)
+      profileEntrepriseLoading.value = false
+    }
+    else {
+      message.warning(response.data.value.message)
+      profileEntrepriseLoading.value = false
     }
   }
   catch (error: any) {
@@ -59,7 +48,7 @@ onMounted(() => {
           <div class="col-12">
             <div class="page-header-content">
               <h2 class="title">
-                Connexion
+                Récupérer votre compte
               </h2>
               <nav class="breadcrumb-area">
                 <ul class="breadcrumb justify-content-center">
@@ -67,7 +56,7 @@ onMounted(() => {
                   <li class="breadcrumb-sep">
                     //
                   </li>
-                  <li>Connexion</li>
+                  <li>Récupération de mot de passe</li>
                 </ul>
               </nav>
             </div>
@@ -86,7 +75,7 @@ onMounted(() => {
               <div class="login-register-form">
                 <div class="form-title">
                   <h4 class="title">
-                    Connexion
+                    Récupérer votre mot de passe
                   </h4>
                 </div>
                 <a-form
@@ -98,41 +87,17 @@ onMounted(() => {
                   @finish="onFinish"
                 >
                   <a-form-item
-                    name="username"
-                    :rules="[{ required: true, message: 'veuillez saisir votre identifiant' }]"
+                    name="email"
+                    :rules="[{ required: true, message: 'Veuillez saisir votre adresse mail', type: 'email', trigger: 'change' }]"
                   >
-                    <a-input v-model:value="formState.username" />
+                    <a-input v-model:value="formState.email" placeholder="Email" />
                   </a-form-item>
-
-                  <a-form-item
-                    name="password"
-                    :rules="[{ required: true, message: 'veuillez saisir votre mot de passe ' }]"
-                  >
-                    <a-input-password v-model:value="formState.password" />
-                  </a-form-item>
-
-                  <a-form-item name="remember" :wrapper-col="{ offset: 0, span: 24 }">
-                    <a-checkbox v-model:checked="formState.remember">
-                      Se rappeller de mon compte
-                    </a-checkbox>
-                  </a-form-item>
-
                   <a-form-item :wrapper-col="{ offset: 0, span: 24 }">
-                    <a-button type="primary" block html-type="submit" :loading="profileEntrepriseLoading">
-                      Connexion
+                    <a-button type="primary" block html-type="submit" :loading="profileEntrepriseLoading" @click="forgotPassword">
+                      Envoyer
                     </a-button>
                   </a-form-item>
                 </a-form>
-                <div class="login-register-form-info">
-                  <p>
-                    Pas encore de compte? <a href="javascript:;" @click="router.push('/auth/registration')">Créer un
-                      compte</a>
-                  </p>
-                  <p>
-                    Mot de passe oublié? <a href="javascript:;" @click="router.push('/auth/forgot-password')">Récupérer votre
-                      compte</a>
-                  </p>
-                </div>
               </div>
             </div>
           </div>

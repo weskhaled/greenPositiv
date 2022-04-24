@@ -8,7 +8,9 @@ import companyApi from '~/api/modules/company'
 import globalApi from '~/api/modules/global'
 import { currentUser } from '~/stores'
 
+const props = defineProps<{ id: string }>()
 const router = useRouter()
+const route = useRoute()
 const useForm = Form.useForm
 const currentStep = ref(0)
 const profileEntrepriseLoading = ref(false)
@@ -21,6 +23,8 @@ const skills = ref([])
 const freqTexts = ref([])
 const showPriceArray = ref([])
 const showSuppMonthArray = ref([])
+const mission = ref(null)
+const profile = ref(null)
 
 const formStateMission = reactive<Record<string, any>>({
   title_profile: '',
@@ -251,7 +255,7 @@ const calcWorkFreq = (params: number, toSlide = true) => {
   }
 }
 
-const addMission = async() => {
+const updateMission = async() => {
   try {
     const formData = new FormData()
     formData.append('title_profile', formStateMission.title_profile)
@@ -278,7 +282,7 @@ const addMission = async() => {
     formData.append('supp_month', formStateMission.supp_month)
     formData.append('budget', formStateMission.budget)
 
-    const { data } = await companyApi.addMission(formData)
+    const { data } = await companyApi.updateMission(props.id, formData)
     if (data) {
       message.info(data.message)
       router.push(`/profile/company/${currentUser.value.idUser}`)
@@ -311,7 +315,7 @@ const nextStep = async() => {
       else if (currentStep.value === 3) {
         profileEntrepriseLoading.value = true
         try {
-          await addMission()
+          await updateMission()
         }
         catch (error: any) {
           profileEntrepriseLoading.value = false
@@ -346,6 +350,34 @@ const getFormData = async() => {
       value: l.name,
       label: l.name,
     })))
+  })
+  companyApi.findOneMission(props.id).then(({ data }) => {
+    if (data) {
+      mission.value = data.value.mission
+      profile.value = data.value.profile
+      formStateMission.title_profile = profile.value?.title_profile
+      formStateMission.jobCat = profile.value?.jobCat
+      formStateMission.level = profile.value?.level
+      formStateMission.skillsNeeded = profile.value?.skillsNeeded
+      formStateMission.skillsAppreciated = profile.value?.skillsAppreciated
+      formStateMission.languages = profile.value?.languages
+      formStateMission.name = mission.value?.name
+      formStateMission.objectif = mission.value?.objectif
+      formStateMission.description = mission.value?.description
+      formStateMission.supp_month = mission.value?.supp_month
+      formStateMission.dateBegin = mission.value?.dateBegin
+      formStateMission.budget = mission.value?.budget
+      formStateMission.price_per_day = mission.value?.price_per_day
+      formStateMission.show_price = mission.value?.show_price
+
+      formStateMission.work_frequence = calcWorkFreq(mission.value?.work_frequence)
+      formStateMission.nb_days_telework = calcWorkFreq(mission.value?.nb_days_telework)
+      formStateMission.telework = mission.value?.telework
+
+      formStateMission.period_per_month = mission.value?.period_per_month
+      formStateMission.local_city = mission.value?.local_city
+      formStateMission.document = mission.value?.document
+    }
   })
 }
 
@@ -707,208 +739,57 @@ const onFinishFailed = (errorInfo: any) => {
                         </a-form>
                       </div>
                       <div v-if="currentStep === 3" class="max-w-md mx-auto">
-                        <div class="pt-0">
-                          <div class>
-                            <a-card title="Détails de la Mission" :bordered="false" class="rounded-sm font-bold">
-                              <a-form
-                                :model="formStateMission"
-                                v-bind="formItemLayout"
-                                @finish-failed="onFinishFailed"
-                                @finish="onFinish"
-                              >
-                                <a-form-item class="font-bold" name="name" label="Nom de la mission :">
-                                  <label class="font-normal">{{ formStateMission.name }}</label>
-                                </a-form-item>
-                                <a-form-item class="font-bold" name="objectif" label="Objectif :">
-                                  <label class="font-normal">{{ formStateMission.objectif }}</label>
-                                </a-form-item>
-                                <a-form-item class="font-bold" name="description" label="Description">
-                                  <label class="font-normal">{{ formStateMission.description }}</label>
-                                </a-form-item>
-                              </a-form>
-                            </a-card>
+                        <a-card title="Résumé de la mission" :bordered="false" class="rounded-sm">
+                          <h1 class="text-green-500">
+                            <b>Freelance</b>
+                          </h1>
+                          <br>
+                          <span><b>Métier recherché :</b>  {{ formStateMission?.title_profile }}</span>
+                          <br><br>
+                          <span><b>Catégorie de métier :</b>  {{ jobsName?.[jobsId?.indexOf(formStateMission?.jobCat)] }}</span>
+                          <br><br>
+                          <span><b>Compétence(s) obligatoire(s) : </b></span>
+                          <br>
+                          <br>
+                          <div v-for="(skill,index) in formStateMission?.skillsNeeded" :key="index">
+                            <span>{{ skill }}</span><br>
                           </div>
-                          <div class>
-                            <a-card title="Profil recherché" :bordered="false" class="rounded-sm font-bold">
-                              <div v-if="formStateMission">
-                                <a-form
-                                  :model="formStateMission"
-                                  v-bind="formItemLayout"
-                                  @finish-failed="onFinishFailed"
-                                  @finish="onFinish"
-                                >
-                                  <a-form-item class="font-bold" name="name" label="profile :">
-                                    <label class="font-normal">{{ formStateMission.title_profile }}</label>
-                                  </a-form-item>
-                                  <a-form-item class="font-bold" name="jobCat" label="Catégorie de métier :">
-                                    <label class="font-normal">{{ jobsName?.[jobsId?.indexOf(formStateMission?.jobCat)] }}</label>
-                                  </a-form-item>
-                                  <a-form-item class="font-bold" name="level" label="Niveau du freelance">
-                                    <label class="font-normal">{{ formStateMission.level }}</label>
-                                  </a-form-item>
-                                  <a-form-item class="font-bold" name="skillsNeeded" label="Compétences requises :">
-                                    <a-list
-                                      size="small"
-                                      item-layout="horizontal"
-                                      :data-source="formStateMission.skillsNeeded.filter(s => s).map(s => ({ title: s }))"
-                                    >
-                                      <template #renderItem="{ item: skill }">
-                                        <a-list-item>
-                                          <div class="flex items-center">
-                                            <span
-                                              class="i-carbon-ai-status-complete inline-block text-green-400 text-lg mr-2.5"
-                                            />
-                                            <span class="text-dark-100 text-sm">{{ skill.title }}</span>
-                                          </div>
-                                        </a-list-item>
-                                      </template>
-                                    </a-list>
-                                  </a-form-item>
-                                  <a-form-item class="font-bold" name="skillsAppreciated" label="Compétences appréciées :">
-                                    <a-list
-                                      size="small"
-                                      item-layout="horizontal"
-                                      :data-source="formStateMission.skillsAppreciated.filter(s => s).map(s => ({ title: s }))"
-                                    >
-                                      <template #renderItem="{ item: skill }">
-                                        <a-list-item>
-                                          <div class="flex items-center">
-                                            <span
-                                              class="i-carbon-ai-status inline-block text-green-400 text-lg mr-2.5"
-                                            />
-                                            <span class="text-dark-100 text-sm">{{ skill.title }}</span>
-                                          </div>
-                                        </a-list-item>
-                                      </template>
-                                    </a-list>
-                                  </a-form-item>
-                                  <a-form-item class="font-bold" name="languages" label="Langues :">
-                                    <a-list
-                                      size="small"
-                                      item-layout="horizontal"
-                                      :data-source="formStateMission.languages.filter(s => s).map(s => ({ title: s }))"
-                                    >
-                                      <template #renderItem="{ item: lang }">
-                                        <a-list-item>
-                                          <div class="flex items-center">
-                                            <span
-                                              class="i-carbon-user-speaker inline-block text-green-400 text-lg mr-2.5"
-                                            />
-                                            <span class="text-dark-100 text-sm">{{ lang.title }}</span>
-                                          </div>
-                                        </a-list-item>
-                                      </template>
-                                    </a-list>
-                                  </a-form-item>
-                                </a-form>
-                              </div>
-                            </a-card>
+                          <br>
+                          <span><b>Compétence(s) appréciée(s) : </b></span>
+                          <br>
+                          <div v-for="(skill,index) in formStateMission?.skillsAppreciated" :key="index">
+                            <span>{{ skill }}</span><br>
                           </div>
-                          <div class>
-                            <a-card title="Condition" :bordered="false" class="rounded-sm font-bold">
-                              <div v-if="formStateMission">
-                                <a-form
-                                  :model="formStateMission"
-                                  v-bind="formItemLayout"
-                                  @finish-failed="onFinishFailed"
-                                  @finish="onFinish"
-                                >
-                                  <div v-if="formStateMission.supp_month">
-                                    <a-form-item class="font-bold" name="supp_month" label="Durée de la mission :">
-                                      <label class="font-normal">plus d'un mois</label>
-                                    </a-form-item>
-                                    <a-form-item class="font-bold" name="period_per_month" label="Nombre de mois estimé :">
-                                      <label class="font-normal">{{ formStateMission.period_per_month }}</label>
-                                    </a-form-item>
-                                    <a-form-item class="font-bold" name="pricer_per_day" label="Le tarif du freelance €/Jour :">
-                                      <label class="font-normal">{{ formStateMission.price_per_day }}</label>
-                                    </a-form-item>
-                                    <label>Fréquence / semaine</label>
-                                    <a-form-item name="work_frequence" class="font-bold">
-                                      <a-slider
-                                        v-model:value="formStateMission.work_frequence"
-                                        :step="null"
-                                        disabled="true"
-                                        :tip-formatter="null"
-                                        :marks="{
-                                          0: '1 jour',
-                                          25: '2 jours',
-                                          50: '3 jours',
-                                          75: '4 jours',
-                                          100: '5 jours'
-                                        }"
-                                      />
-                                    </a-form-item>
-                                  </div>
-                                  <div v-else>
-                                    <a-form-item class="font-bold" name="supp_month" label="Durée de la mission :">
-                                      <label class="font-normal">moins d'un mois</label>
-                                    </a-form-item>
-                                    <a-form-item class="font-bold" name="budget" label="Budget :">
-                                      <label class="font-normal">{{ formStateMission.budget }}</label>
-                                    </a-form-item>
-                                  </div>
-                                  <a-form-item class="font-bold" name="dateBegin" label="Date de début :">
-                                    <label class="font-normal">
-                                      <span
-                                        class="i-carbon-time inline-block text-gray-700 text-xs mr-0.5"
-                                      />
-                                      <span>
-                                        {{
-                                          dayjs(formStateMission.dateBegin).format("DD-MM-YYYY")
-                                        }}
-                                      </span>
-                                    </label>
-                                  </a-form-item>
-                                  <div v-if="formStateMission.telework">
-                                    <a-form-item class="font-bold" name="telework" label="Télétravail :">
-                                      <label class="font-normal"><a-tag
-                                        class="text-xs ml-2 leading-5"
-                                        color="#080"
-                                      >
-                                        Oui
-                                      </a-tag></label>
-                                    </a-form-item>
-                                    <label>Fréquence télétravail / semaine</label>
-                                    <a-form-item name="nb_days_telework" class="font-bold">
-                                      <a-slider
-                                        v-model:value="formStateMission.nb_days_telework"
-                                        :step="null"
-                                        disabled="true"
-                                        :tip-formatter="null"
-                                        :marks="{
-                                          0: '1 jour',
-                                          25: '2 jours',
-                                          50: '3 jours',
-                                          75: '4 jours',
-                                          100: '5 jours'
-                                        }"
-                                      />
-                                    </a-form-item>
-                                  </div>
-                                  <div v-else>
-                                    <a-form-item class="font-bold" name="telework" label="Télétravail :">
-                                      <label class="font-normal"><a-tag
-                                        class="text-xs ml-2 leading-5"
-                                        color="#D00"
-                                      >
-                                        Non
-                                      </a-tag></label>
-                                    </a-form-item>
-                                  </div>
-                                  <a-form-item class="font-bold" name="local_city" label="Emplacement de la mission :">
-                                    <label class="font-normal">{{ formStateMission.local_city }}</label>
-                                  </a-form-item>
-                                  <a-form-item :wrapper-col="{ offset: 0, span: 24 }">
-                                    <a-button type="primary" block :loading="profileEntrepriseLoading" @click="nextStep">
-                                      Ajouter
-                                    </a-button>
-                                  </a-form-item>
-                                </a-form>
-                              </div>
-                            </a-card>
-                          </div>
-                        </div>
+                          <br>
+                          <h1 class="text-green-500">
+                            <b>Condition</b>
+                          </h1>
+                          <span v-if="formStateMission?.supp_month"><b>Durée :</b>    {{ freqTexts[formStateMission?.work_frequence] }} x {{ formStateMission?.period_per_month }} mois</span>
+                          <span v-if="!formStateMission?.supp_month"><b>Durée :</b>  moins d'un mois</span>
+                          <br>
+                          <span v-if="formStateMission?.supp_month"><b>prix par jour :</b> {{ formStateMission.price_per_day }} €</span>
+                          <span v-if="!formStateMission?.supp_month"><b>Budget :</b> {{ formStateMission.budget }} €</span>
+                          <h1 v-if="formStateMission?.telework" class="text-green-500">
+                            <b>Télétravail</b>
+                            <br>
+                          </h1>
+                          <span v-if="formStateMission?.telework" class="py-5"><b>Fréquence :</b> {{ freqTexts[formStateMission?.nb_days_telework] }} <br></span>
+
+                          <h1 class="pt-10 text-green-500 ">
+                            <b>Informations</b>
+                          </h1>
+                          <span class="text-justify"><b>Objet :</b>  {{ formStateMission?.objectif }}</span>
+                          <br>
+                          <span class="text-justify"><b>Mission :</b>  {{ formStateMission?.description }}</span>
+                          <br>
+                          <span class="text-justify"><b>Commentaires :</b>  {{ formStateMission?.comments }}</span>
+                          <br>
+                        </a-card>
+                        <a-form-item :wrapper-col="{ offset: 0, span: 24 }">
+                          <a-button type="primary" block :loading="profileEntrepriseLoading" @click="nextStep">
+                            Continuez
+                          </a-button>
+                        </a-form-item>
                       </div>
                     </div>
                   </div>

@@ -1548,7 +1548,7 @@ onMounted(async() => {
                           <a-form-item
                             name="price_per_day"
                             label="Définissez votre tarif"
-                            :rules="[{ required: true, message: 'Please select your price_per_day!' }]"
+                            :rules="[{ required: true, message: 'Veuillez saisir votre tarif' }]"
                           >
                             <a-input-number
                               v-model:value="formStateProfile.price_per_day"

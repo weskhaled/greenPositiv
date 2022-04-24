@@ -13,7 +13,6 @@ import 'swiper/css/pagination'
 
 SwiperCore.use([Controller, Pagination])
 const { isSupported, copy } = useClipboard()
-const permissionWrite = usePermission('clipboard-write')
 
 const useForm = Form.useForm
 const props = defineProps<{ id: string }>()
@@ -335,7 +334,6 @@ const getFormData = async() => {
     jobsId.value = jobs.value.map(j => j.value)
   })
   companyApi.getMissions().then(({ data }) => {
-    console.log(data)
     missions.value = data
   })
 
@@ -541,6 +539,12 @@ const onSubmitProfileEntreprise = async() => {
 /* end bloc profil Entreprise */
 
 /* bloc mission */
+const updateMission = (id: string) => {
+  router.push(`/missions/update/${id}`)
+}
+const searchProfiles = (id: string) => {
+  router.push(`/missions/search/${id}`)
+}
 const deleteMission = (id: string) => {
   setTimeout(() => {
     Modal.confirm({
@@ -622,6 +626,13 @@ const copyToClipboard = (idCollab) => {
   urlLocation.pop()
   urlLocation = urlLocation.join('/')
   copy(`${urlLocation}/validateCollab?id=${currentUser.value.idUser}&idCollab=${idCollab}`)
+}
+const copyToClipboardMission = (idMission) => {
+  const urlLocation: any = `${window.location.href}`.split('/')
+  console.log('urlLocation 1', typeof urlLocation)
+
+  const sliced = Object.values(urlLocation).slice(0, 3).join('/')
+  copy(`${sliced}/missions/${idMission}`)
 }
 onMounted(async() => {
   console.log('props id ', props.id)
@@ -1309,8 +1320,10 @@ onMounted(async() => {
                         >
                           <a-card class="mr-2" hoverable>
                             <template #actions>
-                              <span key="edit" class="i-ant-design-delete-twotone inline-block" @click="deleteMission(item.mission._id)" />
-                              <span v-if="isSupported" key="edit" class="i-ant-design-copy-twotone inline-block" @click="copyToClipboard(`${item._id}`)" />
+                              <span v-if="isSupported" key="edit" class="i-carbon-search inline-block" @click="searchProfiles(item.mission._id)" />
+                              <span v-if="isSupported" key="edit" class="i-carbon-edit inline-block" @click="updateMission(item.mission._id)" />
+                              <span key="delete" class="i-ant-design-delete-twotone inline-block" @click="deleteMission(item.mission._id)" />
+                              <span v-if="isSupported" key="edit" class="i-ant-design-copy-twotone inline-block" @click="copyToClipboardMission(`${item.mission._id}`)" />
                             </template>
                             <a-card-meta :title="`Mission : ${item.mission.name}`">
                               <template #description>

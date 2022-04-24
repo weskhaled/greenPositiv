@@ -27,6 +27,10 @@ const freelancerApi = {
   uploadKabisDocuments: async(file: FormData) => service.upload(`${BASE_PREFIX}/freelancer/kabis-documents`, file),
   uploadVigilanceDocuments: async(file: FormData) => service.upload(`${BASE_PREFIX}/freelancer/vigilance-documents`, file),
   uploadSasuDocuments: async(file: FormData) => service.upload(`${BASE_PREFIX}/freelancer/sasu-documents`, file),
+
+  // required profiles
+  requiredProfiles: async(params: object) => useFetch(`${BASE_PREFIX}/freelancer/required-profile`).post(params).json(),
+
 }
 
 export default freelancerApi

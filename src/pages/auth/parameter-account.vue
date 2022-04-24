@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { message } from 'ant-design-vue'
-import { currentUser, refreshToken, token } from '~/stores'
 import authApi from '~/api/modules/auth'
 
 const router = useRouter()
@@ -8,33 +7,23 @@ const { t } = useI18n()
 const profileEntrepriseLoading = ref(false)
 
 const formState = reactive<any>({
-  username: 'khaled',
-  password: 'azerty123',
-  remember: true,
+  password: '',
+  repeatPassword: '',
 })
-const onLoad = () => {
-  profileEntrepriseLoading.value = true
-}
-const onFinish = async(values: any) => {
-  profileEntrepriseLoading.value = true
-  const { username, password } = values
-  try {
-    const { data } = await authApi.login({ username, password })
 
-    if (data) {
-      token.value = data.token
-      refreshToken.value = data.refreshToken
-      const { data: currentUserData } = await authApi.currentUser()
-      if (currentUserData) {
-        profileEntrepriseLoading.value = false
-        currentUser.value = currentUserData
-        message.success('Bienvenue')
-        router.push('/')
-      }
-      else {
-        currentUser.value = null
-        // token.value = null
-      }
+const updatePassword = async() => {
+  profileEntrepriseLoading.value = true
+  try {
+    const response = await authApi.updatePassword(formState)
+
+    if (response.status === 200) {
+      message.success(response.data.message)
+      profileEntrepriseLoading.value = false
+      router.push('/')
+    }
+    else {
+      message.warning(response.data.message)
+      profileEntrepriseLoading.value = false
     }
   }
   catch (error: any) {
@@ -44,10 +33,27 @@ const onFinish = async(values: any) => {
   }
 }
 
-onMounted(() => {
-  if (token.value)
-    router.push('/')
-})
+const validatePassword = async(_rule: RuleObject, value: string) => {
+  if (value === '')
+    return Promise.reject(new Error('veuillez saisir votre mot de passe'))
+
+  else if (value.length < 8)
+    return Promise.reject(new Error('la longeur minimale est égale à 8'))
+
+  else
+    return Promise.resolve()
+}
+
+const validateRepeatPassword = async(_rule: RuleObject, value: string) => {
+  if (value === '')
+    return Promise.reject(new Error('veuillez resaisir votre mot de passe'))
+
+  else if (value !== formState.password)
+    return Promise.reject(new Error('les mots de passes ne sont pas les mêmes'))
+
+  else
+    return Promise.resolve()
+}
 </script>
 
 <template>
@@ -59,7 +65,7 @@ onMounted(() => {
           <div class="col-12">
             <div class="page-header-content">
               <h2 class="title">
-                Connexion
+                Paramétre de compte
               </h2>
               <nav class="breadcrumb-area">
                 <ul class="breadcrumb justify-content-center">
@@ -67,7 +73,7 @@ onMounted(() => {
                   <li class="breadcrumb-sep">
                     //
                   </li>
-                  <li>Connexion</li>
+                  <li>Modification de mot de passe</li>
                 </ul>
               </nav>
             </div>
@@ -86,7 +92,7 @@ onMounted(() => {
               <div class="login-register-form">
                 <div class="form-title">
                   <h4 class="title">
-                    Connexion
+                    Changer votre mot de passe
                   </h4>
                 </div>
                 <a-form
@@ -98,41 +104,24 @@ onMounted(() => {
                   @finish="onFinish"
                 >
                   <a-form-item
-                    name="username"
-                    :rules="[{ required: true, message: 'veuillez saisir votre identifiant' }]"
+                    name="password"
+                    :rules="[{ required: true, validator: validatePassword, trigger: 'change' }]"
                   >
-                    <a-input v-model:value="formState.username" />
+                    <a-input-password v-model:value="formState.password" placeholder="mot de passe" />
                   </a-form-item>
 
                   <a-form-item
-                    name="password"
-                    :rules="[{ required: true, message: 'veuillez saisir votre mot de passe ' }]"
+                    name="repeatPassword"
+                    :rules="[{ required: true, validator: validateRepeatPassword, trigger: 'change' }]"
                   >
-                    <a-input-password v-model:value="formState.password" />
+                    <a-input-password v-model:value="formState.repeatPassword" autocomplete="off" placeholder="répéter votre mot de passe" />
                   </a-form-item>
-
-                  <a-form-item name="remember" :wrapper-col="{ offset: 0, span: 24 }">
-                    <a-checkbox v-model:checked="formState.remember">
-                      Se rappeller de mon compte
-                    </a-checkbox>
-                  </a-form-item>
-
                   <a-form-item :wrapper-col="{ offset: 0, span: 24 }">
-                    <a-button type="primary" block html-type="submit" :loading="profileEntrepriseLoading">
-                      Connexion
+                    <a-button type="primary" block html-type="submit" :loading="profileEntrepriseLoading" @click="updatePassword">
+                      Envoyer
                     </a-button>
                   </a-form-item>
                 </a-form>
-                <div class="login-register-form-info">
-                  <p>
-                    Pas encore de compte? <a href="javascript:;" @click="router.push('/auth/registration')">Créer un
-                      compte</a>
-                  </p>
-                  <p>
-                    Mot de passe oublié? <a href="javascript:;" @click="router.push('/auth/forgot-password')">Récupérer votre
-                      compte</a>
-                  </p>
-                </div>
               </div>
             </div>
           </div>
