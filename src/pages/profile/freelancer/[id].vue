@@ -7,6 +7,7 @@ import adminApi from '~/api/modules/admin'
 import globalApi from '~/api/modules/global'
 import freelancerApi from '~/api/modules/freelancer'
 import profileEntrepriseApi from '~/api/modules/profil-entreprise'
+import missionApi from '~/api/modules/mission'
 import { currentUser } from '~/stores'
 const useForm = Form.useForm
 const props = defineProps<{ id: string }>()
@@ -59,6 +60,7 @@ const types = ref([])
 const typesAccount = ref([])
 const typesIban = ref([])
 const activities = ref([])
+const devis = ref([])
 const visibleModalAddExperience = ref(false)
 const visibleModalAddFormation = ref(false)
 const visibleModalAddCertification = ref(false)
@@ -68,12 +70,100 @@ const visibleModalInformationSignatureCharte = ref(false)
 const visibleModalGreenQuestion = ref(false)
 const visibleModalInformationValidated = ref(false)
 const profileEntrepriseLoading = ref(false)
+const visibleModalUpdateDevis = ref(false)
 
-// const formState = reactive<Record<string, any>>({
-//   'input-number': 3,
-//   'checkbox-group': ['A', 'B'],
-//   'rate': 3.5,
-// })
+/* module devis */
+const modelRefDevis = reactive({
+  _id: null,
+  id_freelance: undefined,
+  id_company: undefined,
+  id_mission: undefined,
+  dateBegin: null,
+  dateEnd: null,
+  price_per_day: 50,
+  confirmed: undefined,
+})
+const rulesDevis = reactive({
+  dateBegin: [
+    {
+      required: true,
+      message: 'Choisissez la date de début',
+    },
+  ],
+  dateEnd: [
+    {
+      validator: async(_rule: RuleObject, value: string) => {
+        if (!value)
+          return Promise.reject('Choisissez la date de fin')
+        else if (modelRefDevis.dateBegin != null && value < modelRefDevis.dateBegin)
+          return Promise.reject('La date de fin doit être supérieur à la date de début')
+        else
+          return Promise.resolve()
+      },
+      trigger: 'blur',
+    },
+  ],
+  price_per_day: [
+    {
+      validator: async(_rule: RuleObject, value: string) => {
+        if (!value && modelRefDevis.budget === undefined)
+          return Promise.reject('Choisissez le tarif')
+        else if (value > 9999)
+          return Promise.reject('Choisissez un tarif acceptable')
+        else
+          return Promise.resolve()
+      },
+      trigger: 'blur',
+    },
+  ],
+  budget: [
+    {
+      validator: async(_rule: RuleObject, value: string) => {
+        if (!value && value !== undefined)
+          return Promise.reject('Choisissez le budget')
+        else if (value > 9999)
+          return Promise.reject('Choisissez un budget acceptable')
+        else
+          return Promise.resolve()
+      },
+      trigger: 'blur',
+    },
+  ],
+})
+const useFormDevis = useForm(modelRefDevis, rulesDevis)
+const resetFieldsDevis = useFormDevis.resetFields
+const validateDevis = useFormDevis.validate
+const devisValidateInfos = useFormDevis.validateInfos
+
+const sendDevis = async() => {
+  profileEntrepriseLoading.value = true
+  validateDevis()
+    .then(async() => {
+      if (currentUser.value.role === 'Freelancer') {
+        const { data } = await missionApi.sendDevisFreelance(modelRefDevis)
+        if (data) {
+          visibleModalUpdateDevis.value = false
+          message.info(data.message)
+          profileEntrepriseLoading.value = false
+        }
+        else { message.error(data.message) }
+      }
+      else if (currentUser.value.role === 'Agence') {
+        const { data } = await missionApi.sendDevisAgence(modelRefDevis)
+        if (data) {
+          visibleModalUpdateDevis.value = false
+          message.info(data.message)
+          profileEntrepriseLoading.value = false
+        }
+        else { message.error(data.message) }
+      }
+      else { console.log('problem in send Devis') }
+    })
+    .catch((err) => {
+    }).finally(() => profileEntrepriseLoading.value = false)
+}
+
+/* end module devis */
 const formStateProfile = reactive<Record<string, any>>({
   avatar: null,
   passion: '',
@@ -769,6 +859,7 @@ const calcDisponibilityFreq = (params: number, toSlide = true) => {
       return 5
   }
 }
+
 const getFormData = async() => {
   globalApi.languages().then(({ data }) => {
     data.value && (languages.value = data.value.map(l => ({
@@ -817,6 +908,10 @@ const getFormData = async() => {
       value: a.name,
       label: a.name,
     })))
+  })
+  missionApi.getDevisFreelance().then(({ data }) => {
+    if (data)
+      devis.value = data
   })
   profile.value = null
   await freelancerApi.profile(props.id).then(({ data }) => {
@@ -1029,7 +1124,6 @@ const onSubmitIbanModule = async() => {
       getFormData()
     })
     .catch((err) => {
-      console.log('error', err)
     }).finally(() => profileEntrepriseLoading.value = false)
 }
 /* bloc end iban modules */
@@ -1220,6 +1314,21 @@ const updateFormation = (item) => {
   modelRefFormation.description = item.description
   visibleModalAddFormation.value = true
 }
+const updateDevis = (item, idCompany) => {
+  if (item.state === 'terminé' && item.confirmed === false) {
+    modelRefDevis._id = item._id
+    modelRefDevis.id_freelance = item.id_freelance
+    modelRefDevis.id_mission = item.id_mission
+    modelRefDevis.id_company = idCompany
+    modelRefDevis.dateBegin = item.dateBegin
+    modelRefDevis.dateEnd = item.dateEnd
+    modelRefDevis.state = item.state
+    modelRefDevis.price_per_day = item.price_per_day
+    modelRefDevis.budget = item.budget
+    visibleModalUpdateDevis.value = true
+  }
+  else { message.warning('vous ne pouvez pas modifier ce devis') }
+}
 const deleteFormation = (id: string) => {
   setTimeout(() => {
     Modal.confirm({
@@ -1348,7 +1457,6 @@ const addLanguage = async(lang: any) => {
   }
 }
 onMounted(async() => {
-  console.log('props id ', props.id)
   getFormData()
 })
 </script>
@@ -2780,6 +2888,112 @@ onMounted(async() => {
                   </a-card>
                 </div>
               </a-tab-pane>
+              <a-tab-pane key="8" tab="Devis" force-render>
+                <div class>
+                  <a-card title="Devis" :bordered="false" class="rounded-sm">
+                    <div v-if="devis && devis?.missions?.length > 0">
+                      <a-timeline mode="alternate">
+                        <a-timeline-item>
+                          <div class="leading-10">
+                            <span class="invisible">Ajouter</span>
+                          </div>
+                        </a-timeline-item>
+                        <a-timeline-item v-for="(item,index) in devis?.devises" :key="item._id">
+                          <template #dot>
+                            <a-dropdown :trigger="['click', 'hover']">
+                              <a class="ant-dropdown-link" @click.prevent>
+                                <a href="javascript:;">
+                                  <span
+                                    class="i-carbon-recording-filled-alt inline-block text-green-300"
+                                  />
+                                </a>
+                              </a>
+                              <template #overlay>
+                                <a-menu>
+                                  <a-menu-item key="0" @click="updateDevis(item,devis?.missions[index].id_company)">
+                                    <span class="flex items-center">
+                                      <span class="i-carbon-edit inline-block text-md mr-2" /> Modifier
+                                    </span>
+                                  </a-menu-item>
+                                  <a-menu-divider />
+                                </a-menu>
+                              </template>
+                            </a-dropdown>
+                          </template>
+                          <div class="text-left">
+                            <h3 class="text-gray-900 text-2xl flex items-center mb-0.5">
+                              <span
+                                class="i-carbon-notebook inline-block text-gray-600 text-4xl mr-1 mb-1"
+                              />
+                              <span class="font-mono uppercase" />
+                              {{ devis?.missions[index].name }}
+                              <a-tag
+                                v-if="item.state === 'en cours'"
+                                class="text-xs ml-2 leading-5"
+                                color="#05f"
+                              >
+                                {{ item.state }}
+                              </a-tag>
+                              <a-tag
+                                v-else-if="item.state === 'terminé'"
+                                class="text-xs ml-2 leading-5"
+                                color="#080"
+                              >
+                                {{ item.state }}
+                              </a-tag>
+                              <a-tag
+                                v-else
+                                class="text-xs ml-2 leading-5"
+                                color="#080"
+                              >
+                                {{ item.state }}
+                              </a-tag>
+                              <a-tag
+                                v-if="item.confirmed === true"
+                                class="text-xs ml-2 leading-5"
+                                color="#080"
+                              >
+                                Accepté
+                              </a-tag>
+                              <a-tag
+                                v-else
+                                class="text-xs ml-2 leading-5"
+                                color="#D00"
+                              >
+                                Refusé
+                              </a-tag>
+                            </h3>
+                            <span>
+                              <b>Période : </b>{{
+                                dayjs(item.dateBegin).format("DD-MM-YYYY")
+                              }}{{ item.dateEnd && ` - ${dayjs(item.dateEnd).format("DD-MM-YYYY")}` }}
+                            </span>
+                            <br>
+                            <span v-if="item.price_per_day">
+                              <b>Tarif / Jour proposé :</b> {{ item.price_per_day }} €
+                            </span>
+                            <span v-else>
+                              <b>Budget :</b> {{ item.budget }} €
+                            </span>
+                          </div>
+                        </a-timeline-item>
+                      </a-timeline>
+                    </div>
+                    <a-result
+                      v-else
+                      status="404"
+                      title="Formations non trouvées"
+                      sub-title="veuillez ajouter vos formations"
+                    >
+                      <template #extra>
+                        <a-button type="primary" @click="visibleModalAddFormation = true">
+                          Ajouter
+                        </a-button>
+                      </template>
+                    </a-result>
+                  </a-card>
+                </div>
+              </a-tab-pane>
             </a-tabs>
           </div>
         </div>
@@ -3146,6 +3360,83 @@ onMounted(async() => {
     <template #footer>
       <a-button type="primary" @click="visibleModalInformationValidated = false">
         Retour
+      </a-button>
+    </template>
+  </a-modal>
+  <a-modal
+    v-model:visible="visibleModalUpdateDevis"
+    width="40%"
+    :title="modelRefDevis._id ? 'Modifier le devis' : 'Ajouter un devis'"
+    @ok="() => { }"
+  >
+    <div>
+      <a-form layout="vertical" :wrapper-col="{ span: 24 }">
+        <a-form-item
+          v-if="modelRefDevis.budget !== undefined"
+          name="budget"
+          label="Définissez le budget"
+          v-bind="devisValidateInfos.budget"
+        >
+          <a-input-number
+            v-model:value="modelRefDevis.budget"
+            :min="50"
+            :max="9999"
+          />
+        </a-form-item>
+        <a-form-item
+          v-else
+          name="price_per_day"
+          label="Définissez votre tarif"
+          v-bind="devisValidateInfos.price_per_day"
+        >
+          <a-input-number
+            v-model:value="modelRefDevis.price_per_day"
+            :min="50"
+            :max="9999"
+          />
+        </a-form-item>
+        <a-form-item
+          name="month-picker"
+          label="Date Début"
+          :wrapper-col="{ span: 24, offset: 0 }"
+          :label-col="{
+            sm: { span: 24 }
+          }"
+          v-bind="devisValidateInfos.dateBegin"
+        >
+          <a-date-picker
+            v-model:value="modelRefDevis.dateBegin"
+            style="width: 100%"
+            value-format="YYYY-MM-DD"
+            :disabled-date="(current: Dayjs) => current && current <= dayjs().endOf('day')"
+            @blur="validate('dateBegin', { trigger: 'blur' }).catch(() => { })"
+          />
+        </a-form-item>
+        <a-form-item
+          :label-col="{
+            sm: { span: 24 }
+          }"
+          :wrapper-col="{ span: 24, offset: 0 }"
+          name="month-picker"
+          label="Date de fin"
+          v-bind="devisValidateInfos.dateEnd"
+        >
+          <a-date-picker
+            v-model:value="modelRefDevis.dateEnd"
+            style="width: 100%"
+            value-format="YYYY-MM-DD"
+            :disabled-date="(current: Dayjs) => current && current <= dayjs().endOf('day') || current < dayjs(modelRefDevis.dateBegin)"
+            @blur="validate('dateEnd', { trigger: 'blur' }).catch(() => { })"
+          />
+        </a-form-item>
+      </a-form>
+    </div>
+    <template #footer>
+      <a-button type="primary" :loading="profileEntrepriseLoading" @click="sendDevis">
+        Créer
+      </a-button>
+      <a-button style="margin-left: 10px" @click="resetFieldsDevis">
+        Réinitialiser
       </a-button>
     </template>
   </a-modal>

@@ -7,7 +7,8 @@ const BASE_PREFIX = `${import.meta.env.VITE_API_MISSION}`
 const missionApi = {
 
   getMissions: async() => service.get(`${BASE_PREFIX}/missions/all`),
-  getDevis: async() => service.post(`${BASE_PREFIX}/missions/devis`),
+  getDevisById: async(id: string) => service.get(`${BASE_PREFIX}/missions/devis/${id}`),
+  getDevis: async() => service.get(`${BASE_PREFIX}/missions/devis`),
   addMission: async(params: FormData) => service.post(`${BASE_PREFIX}/missions/`, params),
   updateMission: async(id: string, params: object) => service.patch(`${BASE_PREFIX}/missions/${id}`, params),
   deleteMission: async(id: string) => service.delete(`${BASE_PREFIX}/missions/${id}`),

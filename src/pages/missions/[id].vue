@@ -5,7 +5,6 @@ import { Form, Modal, message } from 'ant-design-vue'
 import type { RuleObject } from 'ant-design-vue/es/form'
 import SwiperCore, { Controller, Pagination } from 'swiper'
 import { Swiper, SwiperSlide } from 'swiper/vue'
-import { conditionalExpression } from '@babel/types'
 import adminApi from '~/api/modules/admin'
 import missionApi from '~/api/modules/mission'
 
@@ -40,6 +39,8 @@ const profile = ref(null)
 const visibleModalSendDevis = ref(false)
 const profileEntrepriseLoading = ref(false)
 const devis = ref([])
+const users = ref([])
+const spinningValue = ref(true)
 
 const modelRefDevis = reactive({
   id: null,
@@ -48,6 +49,7 @@ const modelRefDevis = reactive({
   dateBegin: null,
   dateEnd: null,
   price_per_day: 50,
+  budget: 50,
 })
 const rulesDevis = reactive({
   dateBegin: [
@@ -76,6 +78,19 @@ const rulesDevis = reactive({
           return Promise.reject('Choisissez le tarif')
         else if (value > 9999)
           return Promise.reject('Choisissez un tarif acceptable')
+        else
+          return Promise.resolve()
+      },
+      trigger: 'blur',
+    },
+  ],
+  budget: [
+    {
+      validator: async(_rule: RuleObject, value: string) => {
+        if (!value && !formStateMission.supp_month)
+          return Promise.reject('Choisissez le budget')
+        else if (value > 9999)
+          return Promise.reject('Choisissez un budget acceptable')
         else
           return Promise.resolve()
       },
@@ -166,11 +181,15 @@ const calcWorkFreq = (params: number, toSlide = true) => {
 const onFinish = async(values: any) => {
   console.log('finished')
 }
-const getDevis = async() => {
-  await missionApi.getDevis().then(({ data }) => {
-    if (data)
-      devis.value = data
-  })
+const getDevis = async(id: string) => {
+  if (currentUser.value.role === 'Company' || currentUser.value.role === 'Collab') {
+    await missionApi.getDevisById(id).then(({ data }) => {
+      if (data) {
+        devis.value = data.devises
+        users.value = data.users
+      }
+    })
+  }
 }
 
 const sendDevis = async() => {
@@ -179,6 +198,8 @@ const sendDevis = async() => {
     .then(async() => {
       modelRefDevis.id_company = mission.value.id_company
       modelRefDevis.id_mission = mission.value._id
+      if (formStateMission.supp_month == false)
+        modelRefDevis.price_per_day = undefined
 
       if (currentUser.value.role === 'Freelancer') {
         const { data } = await missionApi.sendDevisFreelance(modelRefDevis)
@@ -206,26 +227,53 @@ const sendDevis = async() => {
     }).finally(() => profileEntrepriseLoading.value = false)
 }
 const acceptDevis = async(item: any) => {
-  if (item.state == 'terminé') { message.info('vous avez déja accepté ce devis') }
-  else {
+  if (item.state == 'terminé') { message.warning('vous avez déja répondu à ce devis') }
+  else if (item.id_freelance) {
     await missionApi.acceptFreelance(item._id, { id_freelance: item.id_freelance }).then(({ data }) => {
       if (data) {
         message.info(data.message)
-        getDevis()
+        getDevis(item.id_mission)
       }
-    }).catch((err) => { message.error(err.message) })
+    }).catch((err) => {
+      message.error(err.message)
+    })
   }
+  else if (item.id_agence) {
+    await missionApi.acceptAgence(item._id, { id_agence: item.id_agence }).then(({ data }) => {
+      if (data) {
+        message.info(data.message)
+        getDevis(item.id_mission)
+      }
+    }).catch((err) => {
+      message.error(err.message)
+    })
+  }
+  else { message.error('un probléme est survenu de l\'acceptation du devis') }
 }
+
 const refuseDevis = async(item: any) => {
-  if (item.state == 'terminé') { message.info('vous avez déja refusé ce devis') }
-  else {
+  if (item.state == 'terminé') { message.warning('vous avez déja répondu à ce devis') }
+  else if (item.id_freelance) {
     await missionApi.refuseFreelance(item._id, { id_freelance: item.id_freelance }).then(({ data }) => {
       if (data) {
         message.info(data.message)
-        getDevis()
+        getDevis(item.id_mission)
       }
-    }).catch((err) => { message.error(err.message) })
+    }).catch((err) => {
+      message.error(err.message)
+    })
   }
+  else if (item.id_agence) {
+    await missionApi.refuseAgence(item._id, { id_agence: item.id_agence }).then(({ data }) => {
+      if (data) {
+        message.info(data.message)
+        getDevis(item.id_mission)
+      }
+    }).catch((err) => {
+      message.error(err.message)
+    })
+  }
+  else { message.error('un probléme est survenu de l\'acceptation du devis') }
 }
 
 const getFormData = async() => {
@@ -275,13 +323,14 @@ const getFormData = async() => {
       formStateMission.period_per_month = mission.value?.period_per_month
       formStateMission.local_city = mission.value?.local_city
       formStateMission.document = mission.value?.document
+      spinningValue.value = false
     }
   })
 }
 
 onMounted(async() => {
-  await getDevis()
   await getFormData()
+  await getDevis(props.yid)
 })
 
 const onFinishFailed = (errorInfo: any) => {
@@ -326,49 +375,64 @@ const onFinishFailed = (errorInfo: any) => {
         <a-skeleton v-if="!formStateMission" avatar active :paragraph="{ rows: 15 }" />
         <div v-else class>
           <div class="pt-0">
-            <div class>
+            <div v-if="currentUser?.role === 'Company' || currentUser?.role === 'Collab'" class>
               <a-card title="Devis" :bordered="false" class="rounded-sm font-bold">
-                <a-card title="Devis" :bordered="false" class="rounded-sm font-bold">
-                  <div>
-                    <swiper
-                      :modules="[Controller]"
-                      :slides-per-view="4" class="p-3"
-                      :pagination="{
-                        clickable: true,
-                      }"
-                      :grab-cursor="true"
-                      @swiper="setDevisSwiper"
+                <a-spin v-if="spinningValue" class="mx-auto" />
+                <div v-else>
+                  <swiper
+                    :modules="[Controller]"
+                    :slides-per-view="4" class="p-3"
+                    :pagination="{
+                      clickable: true,
+                    }"
+                    :grab-cursor="true"
+                    @swiper="setDevisSwiper"
+                  >
+                    <swiper-slide
+                      v-for="(item, index) in devis"
+                      :key="index"
                     >
-                      <swiper-slide
-                        v-for="(item, index) in devis"
-                        :key="index"
-                      >
-                        <a-badge-ribbon v-if="item.confirmed" class="mr-2" color="green" text="accepté">
+                      <div v-if="item.id_freelance">
+                        <a-badge-ribbon v-if="item.confirmed == true" class="mr-2" color="green" text="accepté">
                           <a-card class="mr-2" hoverable>
                             <template #actions>
                               <span key="accept" class="i-carbon-checkmark-outline inline-block" @click="acceptDevis(item)" />
 
                               <span key="refuse" class="i-carbon-misuse-outline inline-block" @click="refuseDevis(item)" />
                             </template>
-                            <a-card-meta :title="`Freelance : ${item.id_freelance}`">
+                            <a-card-meta :title="`Freelance : ${users[index].firstName} ${users[index].lastName}`">
                               <template #description>
+                                <div class="flex items-center justify-center">
+                                  <a-avatar
+                                    :src="users[index].image"
+                                    shape="square"
+                                    :size="{ xs: 24, sm: 32, md: 40, lg: 64, xl: 120, xxl: 160 }"
+                                  />
+                                </div>
+                                <br>
                                 <div class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
                                     <b>Date de début :</b>
                                   </span>
-                                  {{ item.dateBegin }}
+                                  {{ dayjs(item.dateBegin).format("DD-MM-YYYY") }}
                                 </div>
                                 <div class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
                                     <b>Date de fin :</b>
                                   </span>
-                                  {{ item.dateEnd }}
+                                  {{ dayjs(item.dateEnd).format("DD-MM-YYYY") }}
                                 </div>
-                                <div class="flex items-center">
+                                <div v-if="formStateMission.supp_month" class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
                                     <b>Tarif / jour :</b>
                                   </span>
-                                  {{ item.price_per_day }}
+                                  {{ item.price_per_day }} €
+                                </div>
+                                <div v-else class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Budget :</b>
+                                  </span>
+                                  {{ item.budget }} €
                                 </div>
                                 <div v-if="item.state == 'terminé'">
                                   <div class="flex items-center">
@@ -379,7 +443,7 @@ const onFinishFailed = (errorInfo: any) => {
                                       class="text-xs ml-2 leading-5"
                                       color="#080"
                                     >
-                                      Accepté
+                                      Répondu
                                     </a-tag>
                                   </div>
                                 </div>
@@ -405,7 +469,7 @@ const onFinishFailed = (errorInfo: any) => {
                                       class="text-xs ml-2 leading-5"
                                       color="#D00"
                                     >
-                                      Refusé
+                                      Répondu
                                     </a-tag>
                                   </div>
                                 </div>
@@ -413,15 +477,23 @@ const onFinishFailed = (errorInfo: any) => {
                             </a-card-meta>
                           </a-card>
                         </a-badge-ribbon>
-                        <a-badge-ribbon v-else-if="!item.confirmed" class="mr-2" color="red" text="refusé">
+                        <a-badge-ribbon v-else-if="!item.confirmed == false" class="mr-2" color="red" text="refusé">
                           <a-card class="mr-2" hoverable>
                             <template #actions>
                               <span key="accept" class="i-carbon-checkmark-outline inline-block" @click="acceptDevis(item)" />
 
                               <span key="refuse" class="i-carbon-misuse-outline inline-block" @click="refuseDevis(item)" />
                             </template>
-                            <a-card-meta :title="`Freelance : ${item.id_freelance}`">
+                            <a-card-meta :title="`Freelance : ${users[index].firstName} ${users[index].lastName}`">
                               <template #description>
+                                <div class="flex items-center justify-center">
+                                  <a-avatar
+                                    :src="users[index].image"
+                                    shape="square"
+                                    :size="{ xs: 24, sm: 32, md: 40, lg: 64, xl: 120, xxl: 160 }"
+                                  />
+                                </div>
+                                <br>
                                 <div class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
                                     <b>Date de début :</b>
@@ -434,11 +506,17 @@ const onFinishFailed = (errorInfo: any) => {
                                   </span>
                                   {{ item.dateEnd }}
                                 </div>
-                                <div class="flex items-center">
+                                <div v-if="formStateMission.supp_month" class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
                                     <b>Tarif / jour :</b>
                                   </span>
-                                  {{ item.price_per_day }}
+                                  {{ item.price_per_day }} €
+                                </div>
+                                <div v-else class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Budget :</b>
+                                  </span>
+                                  {{ item.budget }} €
                                 </div>
                                 <div v-if="item.state == 'terminé'">
                                   <div class="flex items-center">
@@ -489,8 +567,16 @@ const onFinishFailed = (errorInfo: any) => {
 
                             <span key="refuse" class="i-carbon-misuse-outline inline-block" @click="refuseDevis(item)" />
                           </template>
-                          <a-card-meta :title="`Freelance : ${item.id_freelance}`">
+                          <a-card-meta :title="`Freelance : ${users[index].firstName} ${users[index].lastName}`">
                             <template #description>
+                              <div class="flex items-center justify-center">
+                                <a-avatar
+                                  :src="users[index].image"
+                                  shape="square"
+                                  :size="{ xs: 24, sm: 32, md: 40, lg: 64, xl: 120, xxl: 160 }"
+                                />
+                              </div>
+                              <br>
                               <div class="flex items-center">
                                 <span class="text-dark-300 mr-1.5">
                                   <b>Date de début :</b>
@@ -503,11 +589,17 @@ const onFinishFailed = (errorInfo: any) => {
                                 </span>
                                 {{ item.dateEnd }}
                               </div>
-                              <div class="flex items-center">
+                              <div v-if="formStateMission.supp_month" class="flex items-center">
                                 <span class="text-dark-300 mr-1.5">
                                   <b>Tarif / jour :</b>
                                 </span>
-                                {{ item.price_per_day }}
+                                {{ item.price_per_day }} €
+                              </div>
+                              <div v-else class="flex items-center">
+                                <span class="text-dark-300 mr-1.5">
+                                  <b>Budget :</b>
+                                </span>
+                                {{ item.budget }} €
                               </div>
                               <div v-if="item.state == 'terminé'">
                                 <div class="flex items-center">
@@ -551,16 +643,270 @@ const onFinishFailed = (errorInfo: any) => {
                             </template>
                           </a-card-meta>
                         </a-card>
-                      </swiper-slide>
-                    </swiper>
-                  </div>
-                </a-card>
+                      </div>
+                      <div v-else>
+                        <a-badge-ribbon v-if="item.confirmed == true " class="mr-2" color="green" text="accepté">
+                          <a-card class="mr-2" hoverable>
+                            <template #actions>
+                              <span key="accept" class="i-carbon-checkmark-outline inline-block" @click="acceptDevis(item)" />
+
+                              <span key="refuse" class="i-carbon-misuse-outline inline-block" @click="refuseDevis(item)" />
+                            </template>
+                            <a-card-meta :title="`Agence : ${users[index].nameAgence}`">
+                              <template #description>
+                                <div class="flex items-center justify-center">
+                                  <a-avatar
+                                    :src="users[index].image"
+                                    shape="square"
+                                    :size="{ xs: 24, sm: 32, md: 40, lg: 64, xl: 120, xxl: 160 }"
+                                  />
+                                </div>
+                                <br>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Date de début :</b>
+                                  </span>
+                                  {{ dayjs(item.dateBegin).format("DD-MM-YYYY") }}
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Date de fin :</b>
+                                  </span>
+                                  {{ dayjs(item.dateEnd).format("DD-MM-YYYY") }}
+                                </div>
+                                <div v-if="formStateMission.supp_month" class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Tarif / jour :</b>
+                                  </span>
+                                  {{ item.price_per_day }} €
+                                </div>
+                                <div v-else class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Budget :</b>
+                                  </span>
+                                  {{ item.budget }} €
+                                </div>
+                                <div v-if="item.state == 'terminé'">
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Etat :</b>
+                                    </span>
+                                    <a-tag
+                                      class="text-xs ml-2 leading-5"
+                                      color="#080"
+                                    >
+                                      Répondu
+                                    </a-tag>
+                                  </div>
+                                </div>
+                                <div v-else-if="item.state == 'en cours'">
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Etat :</b>
+                                    </span>
+                                    <a-tag
+                                      class="text-xs ml-2 leading-5"
+                                      color="#05f"
+                                    >
+                                      En cours
+                                    </a-tag>
+                                  </div>
+                                </div>
+                                <div v-else>
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Etat :</b>
+                                    </span>
+                                    <a-tag
+                                      class="text-xs ml-2 leading-5"
+                                      color="#D00"
+                                    >
+                                      Répondu
+                                    </a-tag>
+                                  </div>
+                                </div>
+                              </template>
+                            </a-card-meta>
+                          </a-card>
+                        </a-badge-ribbon>
+                        <a-badge-ribbon v-else-if="item.confirmed == false" class="mr-2" color="red" text="refusé">
+                          <a-card class="mr-2" hoverable>
+                            <template #actions>
+                              <span key="accept" class="i-carbon-checkmark-outline inline-block" @click="acceptDevis(item)" />
+
+                              <span key="refuse" class="i-carbon-misuse-outline inline-block" @click="refuseDevis(item)" />
+                            </template>
+                            <a-card-meta :title="`Agence : ${users[index].nameAgence}`">
+                              <template #description>
+                                <div class="flex items-center justify-center">
+                                  <a-avatar
+                                    :src="users[index].image"
+                                    shape="square"
+                                    :size="{ xs: 24, sm: 32, md: 40, lg: 64, xl: 120, xxl: 160 }"
+                                  />
+                                </div>
+                                <br>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Date de début :</b>
+                                  </span>
+                                  {{ item.dateBegin }}
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Date de fin :</b>
+                                  </span>
+                                  {{ item.dateEnd }}
+                                </div>
+                                <div v-if="formStateMission.supp_month" class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Tarif / jour :</b>
+                                  </span>
+                                  {{ item.price_per_day }} €
+                                </div>
+                                <div v-else class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Budget :</b>
+                                  </span>
+                                  {{ item.budget }} €
+                                </div>
+                                <div v-if="item.state == 'terminé'">
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Etat : </b>
+                                    </span>
+                                    <a-tag
+                                      class="text-xs ml-2 leading-5"
+                                      color="#080"
+                                    >
+                                      Répondu
+                                    </a-tag>
+                                  </div>
+                                </div>
+                                <div v-else-if="item.state == 'en cours'">
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Etat :</b>
+                                    </span>
+                                    <a-tag
+                                      class="text-xs ml-2 leading-5"
+                                      color="#05f"
+                                    >
+                                      En cours
+                                    </a-tag>
+                                  </div>
+                                </div>
+                                <div v-else>
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Etat</b>
+                                    </span>
+                                    <a-tag
+                                      class="text-xs ml-2 leading-5"
+                                      color="#D00"
+                                    >
+                                      Répondu
+                                    </a-tag>
+                                  </div>
+                                </div>
+                              </template>
+                            </a-card-meta>
+                          </a-card>
+                        </a-badge-ribbon>
+                        <a-card v-else class="mr-2" hoverable>
+                          <template #actions>
+                            <span key="accept" class="i-carbon-checkmark-outline inline-block" @click="acceptDevis(item)" />
+
+                            <span key="refuse" class="i-carbon-misuse-outline inline-block" @click="refuseDevis(item)" />
+                          </template>
+                          <a-card-meta :title="`Agence : ${users[index].nameAgence}`">
+                            <template #description>
+                              <div class="flex items-center justify-center">
+                                <a-avatar
+                                  :src="users[index].image"
+                                  shape="square"
+                                  :size="{ xs: 24, sm: 32, md: 40, lg: 64, xl: 120, xxl: 160 }"
+                                />
+                              </div>
+                              <br>
+                              <div class="flex items-center">
+                                <span class="text-dark-300 mr-1.5">
+                                  <b>Date de début :</b>
+                                </span>
+                                {{ item.dateBegin }}
+                              </div>
+                              <div class="flex items-center">
+                                <span class="text-dark-300 mr-1.5">
+                                  <b>Date de fin :</b>
+                                </span>
+                                {{ item.dateEnd }}
+                              </div>
+                              <div v-if="formStateMission.supp_month" class="flex items-center">
+                                <span class="text-dark-300 mr-1.5">
+                                  <b>Tarif / jour :</b>
+                                </span>
+                                {{ item.price_per_day }} €
+                              </div>
+                              <div v-else class="flex items-center">
+                                <span class="text-dark-300 mr-1.5">
+                                  <b>Budget :</b>
+                                </span>
+                                {{ item.budget }} €
+                              </div>
+                              <div v-if="item.state == 'terminé'">
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Etat :</b>
+                                  </span>
+                                  <a-tag
+                                    class="text-xs ml-2 leading-5"
+                                    color="#080"
+                                  >
+                                    Répondu
+                                  </a-tag>
+                                </div>
+                              </div>
+                              <div v-else-if="item.state == 'en cours'">
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Etat :</b>
+                                  </span>
+                                  <a-tag
+                                    class="text-xs ml-2 leading-5"
+                                    color="#05f"
+                                  >
+                                    En cours
+                                  </a-tag>
+                                </div>
+                              </div>
+                              <div v-else>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Etat :</b>
+                                  </span>
+                                  <a-tag
+                                    class="text-xs ml-2 leading-5"
+                                    color="#D00"
+                                  >
+                                    Répondu
+                                  </a-tag>
+                                </div>
+                              </div>
+                            </template>
+                          </a-card-meta>
+                        </a-card>
+                      </div>
+                    </swiper-slide>
+                  </swiper>
+                </div>
               </a-card>
             </div>
             <div class="pt-0">
               <div class>
                 <a-card title="Détails de la Mission" :bordered="false" class="rounded-sm font-bold">
+                  <a-spin v-if="spinningValue" class="mx-auto" />
                   <a-form
+                    v-else
                     :model="formStateMission"
                     v-bind="formItemLayout"
                     @finish-failed="onFinishFailed"
@@ -580,186 +926,192 @@ const onFinishFailed = (errorInfo: any) => {
               </div>
               <div class>
                 <a-card title="Profil recherché" :bordered="false" class="rounded-sm font-bold">
-                  <div v-if="formStateMission">
-                    <a-form
-                      :model="formStateMission"
-                      v-bind="formItemLayout"
-                      @finish-failed="onFinishFailed"
-                      @finish="onFinish"
-                    >
-                      <a-form-item class="font-bold" name="name" label="profile :">
-                        <label class="font-normal">{{ formStateMission.title_profile }}</label>
-                      </a-form-item>
-                      <a-form-item class="font-bold" name="jobCat" label="Catégorie de métier :">
-                        <label class="font-normal">{{ jobsName?.[jobsId?.indexOf(formStateMission?.jobCat)] }}</label>
-                      </a-form-item>
-                      <a-form-item class="font-bold" name="level" label="Niveau du freelance">
-                        <label class="font-normal">{{ formStateMission.level }}</label>
-                      </a-form-item>
-                      <a-form-item class="font-bold" name="skillsNeeded" label="Compétences requises :">
-                        <a-list
-                          size="small"
-                          item-layout="horizontal"
-                          :data-source="formStateMission.skillsNeeded.filter(s => s).map(s => ({ title: s }))"
-                        >
-                          <template #renderItem="{ item: skill }">
-                            <a-list-item>
-                              <div class="flex items-center">
-                                <span
-                                  class="i-carbon-ai-status-complete inline-block text-green-400 text-lg mr-2.5"
-                                />
-                                <span class="text-dark-100 text-sm">{{ skill.title }}</span>
-                              </div>
-                            </a-list-item>
-                          </template>
-                        </a-list>
-                      </a-form-item>
-                      <a-form-item class="font-bold" name="skillsAppreciated" label="Compétences appréciées :">
-                        <a-list
-                          size="small"
-                          item-layout="horizontal"
-                          :data-source="formStateMission.skillsAppreciated.filter(s => s).map(s => ({ title: s }))"
-                        >
-                          <template #renderItem="{ item: skill }">
-                            <a-list-item>
-                              <div class="flex items-center">
-                                <span
-                                  class="i-carbon-ai-status inline-block text-green-400 text-lg mr-2.5"
-                                />
-                                <span class="text-dark-100 text-sm">{{ skill.title }}</span>
-                              </div>
-                            </a-list-item>
-                          </template>
-                        </a-list>
-                      </a-form-item>
-                      <a-form-item class="font-bold" name="languages" label="Langues :">
-                        <a-list
-                          size="small"
-                          item-layout="horizontal"
-                          :data-source="formStateMission.languages.filter(s => s).map(s => ({ title: s }))"
-                        >
-                          <template #renderItem="{ item: lang }">
-                            <a-list-item>
-                              <div class="flex items-center">
-                                <span
-                                  class="i-carbon-user-speaker inline-block text-green-400 text-lg mr-2.5"
-                                />
-                                <span class="text-dark-100 text-sm">{{ lang.title }}</span>
-                              </div>
-                            </a-list-item>
-                          </template>
-                        </a-list>
-                      </a-form-item>
-                    </a-form>
+                  <a-spin v-if="spinningValue" class="mx-auto" />
+                  <div v-else>
+                    <div v-if="formStateMission">
+                      <a-form
+                        :model="formStateMission"
+                        v-bind="formItemLayout"
+                        @finish-failed="onFinishFailed"
+                        @finish="onFinish"
+                      >
+                        <a-form-item class="font-bold" name="name" label="profile :">
+                          <label class="font-normal">{{ formStateMission.title_profile }}</label>
+                        </a-form-item>
+                        <a-form-item class="font-bold" name="jobCat" label="Catégorie de métier :">
+                          <label class="font-normal">{{ jobsName?.[jobsId?.indexOf(formStateMission?.jobCat)] }}</label>
+                        </a-form-item>
+                        <a-form-item class="font-bold" name="level" label="Niveau du freelance">
+                          <label class="font-normal">{{ formStateMission.level }}</label>
+                        </a-form-item>
+                        <a-form-item class="font-bold" name="skillsNeeded" label="Compétences requises :">
+                          <a-list
+                            size="small"
+                            item-layout="horizontal"
+                            :data-source="formStateMission.skillsNeeded.filter(s => s).map(s => ({ title: s }))"
+                          >
+                            <template #renderItem="{ item: skill }">
+                              <a-list-item>
+                                <div class="flex items-center">
+                                  <span
+                                    class="i-carbon-ai-status-complete inline-block text-green-400 text-lg mr-2.5"
+                                  />
+                                  <span class="text-dark-100 text-sm">{{ skill.title }}</span>
+                                </div>
+                              </a-list-item>
+                            </template>
+                          </a-list>
+                        </a-form-item>
+                        <a-form-item class="font-bold" name="skillsAppreciated" label="Compétences appréciées :">
+                          <a-list
+                            size="small"
+                            item-layout="horizontal"
+                            :data-source="formStateMission.skillsAppreciated.filter(s => s).map(s => ({ title: s }))"
+                          >
+                            <template #renderItem="{ item: skill }">
+                              <a-list-item>
+                                <div class="flex items-center">
+                                  <span
+                                    class="i-carbon-ai-status inline-block text-green-400 text-lg mr-2.5"
+                                  />
+                                  <span class="text-dark-100 text-sm">{{ skill.title }}</span>
+                                </div>
+                              </a-list-item>
+                            </template>
+                          </a-list>
+                        </a-form-item>
+                        <a-form-item class="font-bold" name="languages" label="Langues :">
+                          <a-list
+                            size="small"
+                            item-layout="horizontal"
+                            :data-source="formStateMission.languages.filter(s => s).map(s => ({ title: s }))"
+                          >
+                            <template #renderItem="{ item: lang }">
+                              <a-list-item>
+                                <div class="flex items-center">
+                                  <span
+                                    class="i-carbon-user-speaker inline-block text-green-400 text-lg mr-2.5"
+                                  />
+                                  <span class="text-dark-100 text-sm">{{ lang.title }}</span>
+                                </div>
+                              </a-list-item>
+                            </template>
+                          </a-list>
+                        </a-form-item>
+                      </a-form>
+                    </div>
                   </div>
                 </a-card>
               </div>
               <div class>
                 <a-card title="Condition" :bordered="false" class="rounded-sm font-bold">
-                  <div v-if="formStateMission">
-                    <a-form
-                      :model="formStateMission"
-                      v-bind="formItemLayout"
-                      @finish-failed="onFinishFailed"
-                      @finish="onFinish"
-                    >
-                      <div v-if="formStateMission.supp_month">
-                        <a-form-item class="font-bold" name="supp_month" label="Durée de la mission :">
-                          <label class="font-normal">plus d'un mois</label>
-                        </a-form-item>
-                        <a-form-item class="font-bold" name="period_per_month" label="Nombre de mois estimé :">
-                          <label class="font-normal">{{ formStateMission.period_per_month }}</label>
-                        </a-form-item>
-                        <a-form-item class="font-bold" name="pricer_per_day" label="Le tarif du freelance €/Jour :">
-                          <label class="font-normal">{{ formStateMission.price_per_day }}</label>
-                        </a-form-item>
-                        <a-form-item name="work_frequence" class="font-bold" label="Fréquence / semaine">
-                          <a-slider
-                            v-model:value="formStateMission.work_frequence"
-                            :step="null"
-                            disabled="true"
-                            :tip-formatter="null"
-                            :marks="{
-                              0: '1 jour',
-                              25: '2 jours',
-                              50: '3 jours',
-                              75: '4 jours',
-                              100: '5 jours'
-                            }"
-                          />
-                        </a-form-item>
-                      </div>
-                      <div v-else>
-                        <a-form-item class="font-bold" name="supp_month" label="Durée de la mission :">
-                          <label class="font-normal">moins d'un mois</label>
-                        </a-form-item>
-                        <a-form-item class="font-bold" name="budget" label="Budget :">
-                          <label class="font-normal">{{ formStateMission.budget }}</label>
-                        </a-form-item>
-                      </div>
-                      <a-form-item class="font-bold" name="dateBegin" label="Date de début :">
-                        <label class="font-normal">
-                          <span
-                            class="i-carbon-time inline-block text-gray-700 text-xs mr-0.5"
-                          />
-                          <span>
-                            {{
-                              dayjs(formStateMission.dateBegin).format("DD-MM-YYYY")
-                            }}
-                          </span>
-                        </label>
-                      </a-form-item>
-                      <div v-if="formStateMission.telework">
-                        <a-form-item class="font-bold" name="telework" label="Télétravail :">
-                          <label class="font-normal"><a-tag
-                            class="text-xs ml-2 leading-5"
-                            color="#080"
-                          >
-                            Oui
-                          </a-tag></label>
-                        </a-form-item>
-                        <a-form-item name="nb_days_telework" class="font-bold" label="Fréquence télétravail / semaine">
-                          <a-slider
-                            v-model:value="formStateMission.nb_days_telework"
-                            :step="null"
-                            disabled="true"
-                            :tip-formatter="null"
-                            :marks="{
-                              0: '1 jour',
-                              25: '2 jours',
-                              50: '3 jours',
-                              75: '4 jours',
-                              100: '5 jours'
-                            }"
-                          />
-                        </a-form-item>
-                      </div>
-                      <div v-else>
-                        <a-form-item class="font-bold" name="telework" label="Télétravail :">
-                          <label class="font-normal"><a-tag
-                            class="text-xs ml-2 leading-5"
-                            color="#D00"
-                          >
-                            Non
-                          </a-tag></label>
-                        </a-form-item>
-                      </div>
-                      <a-form-item class="font-bold" name="local_city" label="Emplacement de la mission :">
-                        <label class="font-normal">{{ formStateMission.local_city }}</label>
-                      </a-form-item>
-
-                      <div class="row">
-                        <div class="col text-center">
-                          <a-button
-                            v-if="currentUser?.role === 'Freelancer' || currentUser?.role === 'Agence'"
-                            class="btn-theme m-2"
-                            @click="() => { resetFields(); modelRefDevis.id = undefined; visibleModalSendDevis = true }"
-                          >
-                            Envoyer un Devis
-                          </a-button>
+                  <a-spin v-if="spinningValue" class="mx-auto" />
+                  <div v-else>
+                    <div v-if="formStateMission">
+                      <a-form
+                        :model="formStateMission"
+                        v-bind="formItemLayout"
+                        @finish-failed="onFinishFailed"
+                        @finish="onFinish"
+                      >
+                        <div v-if="formStateMission.supp_month">
+                          <a-form-item class="font-bold" name="supp_month" label="Durée de la mission :">
+                            <label class="font-normal">plus d'un mois</label>
+                          </a-form-item>
+                          <a-form-item class="font-bold" name="period_per_month" label="Nombre de mois estimé :">
+                            <label class="font-normal">{{ formStateMission.period_per_month }}</label>
+                          </a-form-item>
+                          <a-form-item class="font-bold" name="pricer_per_day" label="Le tarif du freelance €/Jour :">
+                            <label class="font-normal">{{ formStateMission.price_per_day }}</label>
+                          </a-form-item>
+                          <a-form-item name="work_frequence" class="font-bold" label="Fréquence / semaine">
+                            <a-slider
+                              v-model:value="formStateMission.work_frequence"
+                              :step="null"
+                              disabled="true"
+                              :tip-formatter="null"
+                              :marks="{
+                                0: '1 jour',
+                                25: '2 jours',
+                                50: '3 jours',
+                                75: '4 jours',
+                                100: '5 jours'
+                              }"
+                            />
+                          </a-form-item>
                         </div>
-                      </div>
-                    </a-form>
+                        <div v-else>
+                          <a-form-item class="font-bold" name="supp_month" label="Durée de la mission :">
+                            <label class="font-normal">moins d'un mois</label>
+                          </a-form-item>
+                          <a-form-item class="font-bold" name="budget" label="Budget :">
+                            <label class="font-normal">{{ formStateMission.budget }}</label>
+                          </a-form-item>
+                        </div>
+                        <a-form-item class="font-bold" name="dateBegin" label="Date de début :">
+                          <label class="font-normal">
+                            <span
+                              class="i-carbon-time inline-block text-gray-700 text-xs mr-0.5"
+                            />
+                            <span>
+                              {{
+                                dayjs(formStateMission.dateBegin).format("DD-MM-YYYY")
+                              }}
+                            </span>
+                          </label>
+                        </a-form-item>
+                        <div v-if="formStateMission.telework">
+                          <a-form-item class="font-bold" name="telework" label="Télétravail :">
+                            <label class="font-normal"><a-tag
+                              class="text-xs ml-2 leading-5"
+                              color="#080"
+                            >
+                              Oui
+                            </a-tag></label>
+                          </a-form-item>
+                          <a-form-item name="nb_days_telework" class="font-bold" label="Fréquence télétravail / semaine">
+                            <a-slider
+                              v-model:value="formStateMission.nb_days_telework"
+                              :step="null"
+                              disabled="true"
+                              :tip-formatter="null"
+                              :marks="{
+                                0: '1 jour',
+                                25: '2 jours',
+                                50: '3 jours',
+                                75: '4 jours',
+                                100: '5 jours'
+                              }"
+                            />
+                          </a-form-item>
+                        </div>
+                        <div v-else>
+                          <a-form-item class="font-bold" name="telework" label="Télétravail :">
+                            <label class="font-normal"><a-tag
+                              class="text-xs ml-2 leading-5"
+                              color="#D00"
+                            >
+                              Non
+                            </a-tag></label>
+                          </a-form-item>
+                        </div>
+                        <a-form-item class="font-bold" name="local_city" label="Emplacement de la mission :">
+                          <label class="font-normal">{{ formStateMission.local_city }}</label>
+                        </a-form-item>
+
+                        <div class="row">
+                          <div class="col text-center">
+                            <a-button
+                              v-if="currentUser?.role === 'Freelancer' || currentUser?.role === 'Agence'"
+                              class="btn-theme m-2"
+                              @click="() => { resetFields(); modelRefDevis.id = undefined; visibleModalSendDevis = true }"
+                            >
+                              Envoyer un Devis
+                            </a-button>
+                          </div>
+                        </div>
+                      </a-form>
+                    </div>
                   </div>
                 </a-card>
               </div>
@@ -779,6 +1131,19 @@ const onFinishFailed = (errorInfo: any) => {
     <div>
       <a-form layout="vertical" :wrapper-col="{ span: 24 }">
         <a-form-item
+          v-if="formStateMission.supp_month == false"
+          name="budget"
+          label="Définissez le budget"
+          v-bind="devisValidateInfos.budget"
+        >
+          <a-input-number
+            v-model:value="modelRefDevis.budget"
+            :min="50"
+            :max="9999"
+          />
+        </a-form-item>
+        <a-form-item
+          v-else
           name="price_per_day"
           label="Définissez votre tarif"
           v-bind="devisValidateInfos.price_per_day"

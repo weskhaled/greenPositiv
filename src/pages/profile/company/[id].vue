@@ -630,13 +630,10 @@ const copyToClipboard = (idCollab) => {
 }
 const copyToClipboardMission = (idMission) => {
   const urlLocation: any = `${window.location.href}`.split('/')
-  console.log('urlLocation 1', typeof urlLocation)
-
   const sliced = Object.values(urlLocation).slice(0, 3).join('/')
   copy(`${sliced}/missions/${idMission}`)
 }
 onMounted(async() => {
-  console.log('props id ', props.id)
   getFormData()
 })
 </script>
@@ -1319,7 +1316,7 @@ onMounted(async() => {
                           v-for="(item, index) in missions"
                           :key="index"
                         >
-                          <a-badge-ribbon class="mr-2" color="blue" text="5 devis en cours">
+                          <a-badge-ribbon class="mr-2" color="blue" :text="`${item.nbDevis} devis non traité`">
                             <a-card class="mr-2" hoverable @click="router.push(`/missions/${item.mission._id}`)">
                               <template #actions>
                                 <span v-if="isSupported" key="edit" class="i-carbon-search inline-block" @click="searchProfiles(item.mission._id)" />
