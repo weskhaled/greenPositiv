@@ -20,23 +20,6 @@ const companyApi = {
   removeCollaborator: async(id: string, idCollab: string) => service.patch(`${BASE_PREFIX}/company/remove-collab/${id}/${idCollab}`),
   getCollabFavoriteList: async() => service.get(`${BASE_PREFIX}/company/favorite-collab`),
 
-  getMissions: async() => service.get(`${BASE_PREFIX}/company/missions`),
-  addMission: async(params: FormData) => service.post(`${BASE_PREFIX}/missions/`, params),
-  updateMission: async(id: string, params: object) => service.patch(`${BASE_PREFIX}/missions/${id}`, params),
-  deleteMission: async(id: string) => service.delete(`${BASE_PREFIX}/missions/${id}`),
-  findOneMission: async(id: string) => useFetch(`${BASE_PREFIX}/missions/get/${id}`).get().json(),
-  getProfiles: async(id: string) => service.get(`${BASE_PREFIX}/missions/profiles/${id}`),
-  getDevisFromMission: async(params: object) => service.post(`${BASE_PREFIX}/missions/devis`, params),
-  verifDevis: async(params: object) => service.post(`${BASE_PREFIX}/missions/verif-devis`, params),
-
-  acceptFreelance: async(id: string) => service.patch(`${BASE_PREFIX}/missions/freelance/accept/${id}`),
-  refuseFreelance: async(id: string) => service.patch(`${BASE_PREFIX}/missions/freelance/refuse/${id}`),
-  removeFreelance: async(id: string) => service.post(`${BASE_PREFIX}/missions/freelance/remove/${id}`),
-
-  acceptAgence: async(id: string) => service.patch(`${BASE_PREFIX}/missions/agence/accept/${id}`),
-  refuseAgence: async(id: string) => service.patch(`${BASE_PREFIX}/missions/agence/refuse/${id}`),
-  removeAgence: async(id: string) => service.post(`${BASE_PREFIX}/missions/agence/remove/${id}`),
-
 }
 
 export default companyApi

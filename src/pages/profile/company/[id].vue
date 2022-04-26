@@ -6,6 +6,7 @@ import SwiperCore, { Controller, Pagination } from 'swiper'
 import { Swiper, SwiperSlide } from 'swiper/vue'
 import globalApi from '~/api/modules/global'
 import companyApi from '~/api/modules/company'
+import missionApi from '~/api/modules/mission'
 import adminApi from '~/api/modules/admin'
 import profileEntrepriseApi from '~/api/modules/profil-entreprise'
 import { currentUser } from '~/stores'
@@ -333,7 +334,7 @@ const getFormData = async() => {
     jobsName.value = jobs.value.map(j => j.label)
     jobsId.value = jobs.value.map(j => j.value)
   })
-  companyApi.getMissions().then(({ data }) => {
+  missionApi.getMissions().then(({ data }) => {
     missions.value = data
   })
 
@@ -551,7 +552,7 @@ const deleteMission = (id: string) => {
       content: 'Supprimer cette mission',
       icon: h(ExclamationCircleOutlined),
       onOk() {
-        return companyApi.deleteMission(id).then(({ data }) => {
+        return missionApi.deleteMission(id).then(({ data }) => {
           message.info(data.message)
           profile.value = null
           getFormData()
@@ -1318,177 +1319,179 @@ onMounted(async() => {
                           v-for="(item, index) in missions"
                           :key="index"
                         >
-                          <a-card class="mr-2" hoverable>
-                            <template #actions>
-                              <span v-if="isSupported" key="edit" class="i-carbon-search inline-block" @click="searchProfiles(item.mission._id)" />
-                              <span v-if="isSupported" key="edit" class="i-carbon-edit inline-block" @click="updateMission(item.mission._id)" />
-                              <span key="delete" class="i-ant-design-delete-twotone inline-block" @click="deleteMission(item.mission._id)" />
-                              <span v-if="isSupported" key="edit" class="i-ant-design-copy-twotone inline-block" @click="copyToClipboardMission(`${item.mission._id}`)" />
-                            </template>
-                            <a-card-meta :title="`Mission : ${item.mission.name}`">
-                              <template #description>
-                                <div class="flex items-center">
-                                  <span class="text-dark-300 mr-1.5">
-                                    <b>Objectif :</b>
-                                  </span>
-                                  {{ item.mission.objectif }}
-                                </div>
-                                <div class="flex items-center">
-                                  <span class="text-dark-300 mr-1.5">
-                                    <b>Ville :</b>
-                                  </span>
-                                  {{ item.mission.local_city }}
-                                </div>
-                                <div v-if="item.mission.supp_month">
+                          <a-badge-ribbon class="mr-2" color="blue" text="5 devis en cours">
+                            <a-card class="mr-2" hoverable @click="router.push(`/missions/${item.mission._id}`)">
+                              <template #actions>
+                                <span v-if="isSupported" key="edit" class="i-carbon-search inline-block" @click="searchProfiles(item.mission._id)" />
+                                <span v-if="isSupported" key="edit" class="i-carbon-edit inline-block" @click="updateMission(item.mission._id)" />
+                                <span key="delete" class="i-ant-design-delete-twotone inline-block" @click="deleteMission(item.mission._id)" />
+                                <span v-if="isSupported" key="edit" class="i-ant-design-copy-twotone inline-block" @click="copyToClipboardMission(`${item.mission._id}`)" />
+                              </template>
+                              <a-card-meta :title="`Mission : ${item.mission.name}`">
+                                <template #description>
                                   <div class="flex items-center">
                                     <span class="text-dark-300 mr-1.5">
-                                      <b>Prix / jour :</b>
+                                      <b>Objectif :</b>
                                     </span>
-                                    {{ item.mission.price_per_day }}
+                                    {{ item.mission.objectif }}
                                   </div>
                                   <div class="flex items-center">
                                     <span class="text-dark-300 mr-1.5">
-                                      <b>Nombre de mois :</b>
+                                      <b>Ville :</b>
                                     </span>
-                                    {{ item.mission.period_per_month }}
+                                    {{ item.mission.local_city }}
                                   </div>
-                                </div>
-                                <div v-else>
+                                  <div v-if="item.mission.supp_month">
+                                    <div class="flex items-center">
+                                      <span class="text-dark-300 mr-1.5">
+                                        <b>Prix / jour :</b>
+                                      </span>
+                                      {{ item.mission.price_per_day }}
+                                    </div>
+                                    <div class="flex items-center">
+                                      <span class="text-dark-300 mr-1.5">
+                                        <b>Nombre de mois :</b>
+                                      </span>
+                                      {{ item.mission.period_per_month }}
+                                    </div>
+                                  </div>
+                                  <div v-else>
+                                    <div class="flex items-center">
+                                      <span class="text-dark-300 mr-1.5">
+                                        <b>Budget :</b>
+                                      </span>
+                                      {{ item.mission.budget }}
+                                    </div>
+                                    <div class="flex items-center">
+                                      <span class="text-dark-300 mr-1.5">
+                                        <b>Nombre de mois :</b>
+                                      </span>
+                                      1
+                                    </div>
+                                  </div>
                                   <div class="flex items-center">
                                     <span class="text-dark-300 mr-1.5">
-                                      <b>Budget :</b>
+                                      <b>Nombre de jours :</b>
                                     </span>
-                                    {{ item.mission.budget }}
+                                    {{ showFrequence(item.mission.work_frequence) }}
+                                  </div>
+                                  <div v-if="item.mission.telework == true">
+                                    <div class="flex items-center">
+                                      <span class="text-dark-300 mr-1.5">
+                                        <b>Télétravail :</b>
+                                      </span>
+                                      <a-tag
+                                        class="text-xs ml-2 leading-5"
+                                        color="#080"
+                                      >
+                                        Oui
+                                      </a-tag>
+                                    </div>
+                                    <div class="flex items-center">
+                                      <span class="text-dark-300 mr-1.5">
+                                        <b>Fréquence télétravail :</b>
+                                      </span>
+                                      {{ showFrequence(item.mission.work_frequence) }}
+                                    </div>
+                                  </div>
+                                  <div v-else>
+                                    <div class="flex items-center">
+                                      <span class="text-dark-300 mr-1.5">
+                                        <b>Télétravail :</b>
+                                      </span>
+                                      <a-tag
+                                        class="text-xs ml-2 leading-5"
+                                        color="#D00"
+                                      >
+                                        Non
+                                      </a-tag>
+                                    </div>
+                                    <div class="flex items-center">
+                                      <span class="text-dark-300 mr-1.5">
+                                        <b>Fréquence télétravail :</b>
+                                      </span>
+                                      ---
+                                    </div>
                                   </div>
                                   <div class="flex items-center">
                                     <span class="text-dark-300 mr-1.5">
-                                      <b>Nombre de mois :</b>
-                                    </span>
-                                    1
-                                  </div>
-                                </div>
-                                <div class="flex items-center">
-                                  <span class="text-dark-300 mr-1.5">
-                                    <b>Nombre de jours :</b>
-                                  </span>
-                                  {{ showFrequence(item.mission.work_frequence) }}
-                                </div>
-                                <div v-if="item.mission.telework == true">
-                                  <div class="flex items-center">
-                                    <span class="text-dark-300 mr-1.5">
-                                      <b>Télétravail :</b>
+                                      <b>Affichage prix :</b>
                                     </span>
                                     <a-tag
+                                      v-if="item.mission.show_price == true "
                                       class="text-xs ml-2 leading-5"
                                       color="#080"
                                     >
                                       Oui
                                     </a-tag>
-                                  </div>
-                                  <div class="flex items-center">
-                                    <span class="text-dark-300 mr-1.5">
-                                      <b>Fréquence télétravail :</b>
-                                    </span>
-                                    {{ showFrequence(item.mission.work_frequence) }}
-                                  </div>
-                                </div>
-                                <div v-else>
-                                  <div class="flex items-center">
-                                    <span class="text-dark-300 mr-1.5">
-                                      <b>Télétravail :</b>
-                                    </span>
                                     <a-tag
+                                      v-else
                                       class="text-xs ml-2 leading-5"
                                       color="#D00"
                                     >
-                                      Non
+                                      Oui
                                     </a-tag>
                                   </div>
+                                </template>
+                              </a-card-meta>
+                              <a-card-meta
+                                :title="`Profile recherché : ${item.profile.title_profile}`"
+                              >
+                                <template #description>
                                   <div class="flex items-center">
                                     <span class="text-dark-300 mr-1.5">
-                                      <b>Fréquence télétravail :</b>
+                                      <b>Catégorie de métier :</b>
                                     </span>
-                                    ---
+                                    <a-tag
+                                      class="text-xs ml-2 leading-5"
+                                      color="#FF7F00"
+                                    >
+                                      {{ jobsName?.[jobsId?.indexOf(item.profile.jobCat)] }}
+                                    </a-tag>
                                   </div>
-                                </div>
-                                <div class="flex items-center">
-                                  <span class="text-dark-300 mr-1.5">
-                                    <b>Affichage prix :</b>
-                                  </span>
-                                  <a-tag
-                                    v-if="item.mission.show_price == true "
-                                    class="text-xs ml-2 leading-5"
-                                    color="#080"
-                                  >
-                                    Oui
-                                  </a-tag>
-                                  <a-tag
-                                    v-else
-                                    class="text-xs ml-2 leading-5"
-                                    color="#D00"
-                                  >
-                                    Oui
-                                  </a-tag>
-                                </div>
-                              </template>
-                            </a-card-meta>
-                            <a-card-meta
-                              :title="`Profile recherché : ${item.profile.title_profile}`"
-                            >
-                              <template #description>
-                                <div class="flex items-center">
-                                  <span class="text-dark-300 mr-1.5">
-                                    <b>Catégorie de métier :</b>
-                                  </span>
-                                  <a-tag
-                                    class="text-xs ml-2 leading-5"
-                                    color="#FF7F00"
-                                  >
-                                    {{ jobsName?.[jobsId?.indexOf(item.profile.jobCat)] }}
-                                  </a-tag>
-                                </div>
-                                <br>
-                                <div class="flex items-center">
-                                  <span class="text-dark-300 mr-1.5">
-                                    <b>Compétences obligatoires :</b>
-                                  </span>
-                                  <a-tag
-                                    v-for="(skill,index) in item.profile.skillsNeeded" :key="index"
-                                    class="text-xs ml-2 leading-5"
-                                    color="#05f"
-                                  >
-                                    {{ skill }}
-                                  </a-tag>
-                                </div>
-                                <br>
-                                <div class="flex items-center">
-                                  <span class="text-dark-300 mr-1.5">
-                                    <b>Compétences appréciés :</b>
-                                  </span>
-                                  <a-tag
-                                    v-for="(skill,index) in item.profile.skillsAppreciated" :key="index"
-                                    class="text-xs ml-2 leading-5"
-                                    color="#05f"
-                                  >
-                                    {{ skill }}
-                                  </a-tag>
-                                </div>
-                                <br>
-                                <div class="flex items-center">
-                                  <span class="text-dark-300 mr-1.5">
-                                    <b>Langues demandées :</b>
-                                  </span>
-                                  <a-tag
-                                    v-for="(lang,index) in item.profile.languages" :key="index"
-                                    class="text-xs ml-2 leading-5"
-                                    color="#05f"
-                                  >
-                                    {{ lang }}
-                                  </a-tag>
-                                </div>
-                              </template>
-                            </a-card-meta>
-                          </a-card>
+                                  <br>
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Compétences obligatoires :</b>
+                                    </span>
+                                    <a-tag
+                                      v-for="(skill,index) in item.profile.skillsNeeded" :key="index"
+                                      class="text-xs ml-2 leading-5"
+                                      color="#05f"
+                                    >
+                                      {{ skill }}
+                                    </a-tag>
+                                  </div>
+                                  <br>
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Compétences appréciés :</b>
+                                    </span>
+                                    <a-tag
+                                      v-for="(skill,index) in item.profile.skillsAppreciated" :key="index"
+                                      class="text-xs ml-2 leading-5"
+                                      color="#05f"
+                                    >
+                                      {{ skill }}
+                                    </a-tag>
+                                  </div>
+                                  <br>
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Langues demandées :</b>
+                                    </span>
+                                    <a-tag
+                                      v-for="(lang,index) in item.profile.languages" :key="index"
+                                      class="text-xs ml-2 leading-5"
+                                      color="#05f"
+                                    >
+                                      {{ lang }}
+                                    </a-tag>
+                                  </div>
+                                </template>
+                              </a-card-meta>
+                            </a-card>
+                          </a-badge-ribbon>
                         </swiper-slide>
                         <swiper-slide>
                           <a-card class="m-auto" hoverable style="width: 150px;" body-style="height: 100%;" @click="router.push('/missions/add')">

@@ -4,7 +4,7 @@ import type { RuleObject } from 'ant-design-vue/es/form'
 import dayjs, { Dayjs } from 'dayjs'
 
 import adminApi from '~/api/modules/admin'
-import companyApi from '~/api/modules/company'
+import missionApi from '~/api/modules/mission'
 import globalApi from '~/api/modules/global'
 import { currentUser } from '~/stores'
 
@@ -282,7 +282,7 @@ const updateMission = async() => {
     formData.append('supp_month', formStateMission.supp_month)
     formData.append('budget', formStateMission.budget)
 
-    const { data } = await companyApi.updateMission(props.id, formData)
+    const { data } = await missionApi.updateMission(props.id, formData)
     if (data) {
       message.info(data.message)
       router.push(`/profile/company/${currentUser.value.idUser}`)
@@ -351,7 +351,7 @@ const getFormData = async() => {
       label: l.name,
     })))
   })
-  companyApi.findOneMission(props.id).then(({ data }) => {
+  missionApi.findOneMission(props.id).then(({ data }) => {
     if (data) {
       mission.value = data.value.mission
       profile.value = data.value.profile

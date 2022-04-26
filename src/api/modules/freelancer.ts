@@ -30,7 +30,6 @@ const freelancerApi = {
 
   // required profiles
   requiredProfiles: async(params: object) => useFetch(`${BASE_PREFIX}/freelancer/required-profile`).post(params).json(),
-
 }
 
 export default freelancerApi

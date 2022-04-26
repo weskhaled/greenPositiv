@@ -7,7 +7,7 @@ import globalApi from '~/api/modules/global'
 import adminApi from '~/api/modules/admin'
 import freelancerApi from '~/api/modules/freelancer'
 import 'swiper/css/pagination'
-import companyApi from '~/api/modules/company'
+import missionApi from '~/api/modules/mission'
 
 const props = defineProps<{ id: string }>()
 
@@ -156,7 +156,7 @@ const getFormData = async() => {
     })))
   })
   if (props.id) {
-    await companyApi.getProfiles(props.id).then(({ data }) => {
+    await missionApi.getProfiles(props.id).then(({ data }) => {
       freelancers.value = data.freelancers
       freelancersNeeded.value = data.freelancersNeeded
       freelancersAppreciated.value = data.freelancersAppreciated
