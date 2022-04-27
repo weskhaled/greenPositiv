@@ -1319,7 +1319,7 @@ onMounted(async () => {
                           :key="index"
                         >
                           <a-badge-ribbon class="mr-2" color="blue" :text="`${item.nbDevis} devis non traité`">
-                            <a-card class="mr-2" hoverable @click="router.push(`/missions/${item.mission._id}`)">
+                            <a-card class="mr-2" hoverable>
                               <template #actions>
                                 <span v-if="isSupported" key="edit" class="i-carbon-search inline-block" @click="searchProfiles(item.mission._id)" />
                                 <span v-if="isSupported" key="edit" class="i-carbon-edit inline-block" @click="updateMission(item.mission._id)" />
