@@ -45,12 +45,12 @@ const addSubscription = () => {
           </div>
           <div class="col-lg-5">
             <div class="footer-newsletter-form">
-              <a-form>
-                <a-input v-model:value="email" type="email" placeholder="Saisir votre email" />
+              <form>
+                <input v-model="email" type="email" placeholder="Saisir votre email">
                 <button type="submit" @click.prevent="addSubscription()">
                   Abonnez vous
                 </button>
-              </a-form>
+              </form>
             </div>
           </div>
         </div>

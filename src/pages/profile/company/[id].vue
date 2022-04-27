@@ -197,7 +197,7 @@ const rulesProfileEntreprise = reactive({
       required: true,
     },
     {
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (!value)
           return Promise.reject(new Error('Veuillez saisir la taille de votre entreprise'))
         if (!Number.isInteger(+value)) {
@@ -235,7 +235,7 @@ const rulesFacturation = reactive({
       message: 'Saisir le numéro SIRET',
     },
     {
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (value.length !== 14 || !/^\d+$/.test(value))
           return Promise.reject(new Error('Veuillez saisir que des chiffres'))
         else
@@ -246,9 +246,10 @@ const rulesFacturation = reactive({
   tva_intracom: [
     {
       required: true,
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         const tva_numbers = value.slice(2, value.length)
-        if (!value) return Promise.reject(new Error('Saisir la tva intracom'))
+        if (!value)
+          return Promise.reject(new Error('Saisir la tva intracom'))
         if (!value[0].match('F') || !value[1].match('R') || !/^\d+$/.test(tva_numbers))
           return Promise.reject(new Error('Veuillez saisir ce champ correctement (FR***********)'))
         else
@@ -309,8 +310,9 @@ const rulesCollab = reactive({
   password: [
     {
       required: true,
-      validator: async(_rule: RuleObject, value: string) => {
-        if (!value) return Promise.reject(new Error('Saisir un mot de passe '))
+      validator: async (_rule: RuleObject, value: string) => {
+        if (!value)
+          return Promise.reject(new Error('Saisir un mot de passe '))
         if (value.length < 8)
           return Promise.reject(new Error('la longueur minimal du mot de passe est 8 caractéres'))
         else
@@ -325,7 +327,7 @@ const rulesCollab = reactive({
     },
   ],
 })
-const getFormData = async() => {
+const getFormData = async () => {
   adminApi.jobs().then(({ data }) => {
     data.value && (jobs.value = data.value.filter(j => j._id && j.name).map(j => ({
       value: j._id,
@@ -369,7 +371,7 @@ const getFormData = async() => {
   })
   /**/
   profileEntreprise.value = null
-  await profileEntrepriseApi.profileEntrepriseCompany(props.id).then(async({ data }) => {
+  await profileEntrepriseApi.profileEntrepriseCompany(props.id).then(async ({ data }) => {
     if (data) {
       profileEntreprise.value = data
       formStateProfileEntreprise.name = profileEntreprise.value?.profile?.name
@@ -396,9 +398,9 @@ const getFormData = async() => {
 
 /* bloc collaborator */
 const { resetFields, validate, validateInfos: collaboratorValidateInfos } = useForm(modelRefCollaborator, rulesCollab)
-const onSubmitCollab = async() => {
+const onSubmitCollab = async () => {
   validate()
-    .then(async() => {
+    .then(async () => {
       profileEntrepriseLoading.value = true
       const params = toRaw(modelRefCollaborator)
       const { data } = await companyApi.createCollaborator(params)
@@ -467,7 +469,7 @@ const getScore = () => {
   return value
 }
 
-const updateProfile = async(profileData: any) => {
+const updateProfile = async (profileData: any) => {
   const { data } = await companyApi.updateProfile(profileData)
   data && message.info(data.message)
   getFormData()
@@ -478,9 +480,9 @@ const updateProfile = async(profileData: any) => {
 const useFormContact = useForm(formStateContact, rulesContact)
 const validateContact = useFormContact.validate
 const validateInfosContact = useFormContact.validateInfos
-const onSubmitContact = async() => {
+const onSubmitContact = async () => {
   validateContact()
-    .then(async() => {
+    .then(async () => {
       profileEntrepriseLoading.value = true
       const params = toRaw(formStateContact)
       params.id_company = props.id
@@ -498,9 +500,9 @@ const onSubmitContact = async() => {
 const useFormFacturation = useForm(formStateFacturation, rulesFacturation)
 const validateFacturation = useFormFacturation.validate
 const validateInfosFacturation = useFormFacturation.validateInfos
-const onSubmitFacturation = async() => {
+const onSubmitFacturation = async () => {
   validateFacturation()
-    .then(async() => {
+    .then(async () => {
       profileEntrepriseLoading.value = true
       const params = toRaw(formStateFacturation)
       params.id_company = props.id
@@ -518,9 +520,9 @@ const onSubmitFacturation = async() => {
 const useFormProfileEntreprise = useForm(formStateProfileEntreprise, rulesProfileEntreprise)
 const validateProfileEntreprise = useFormProfileEntreprise.validate
 const validateInfosProfileEntreprise = useFormProfileEntreprise.validateInfos
-const onSubmitProfileEntreprise = async() => {
+const onSubmitProfileEntreprise = async () => {
   validateProfileEntreprise()
-    .then(async() => {
+    .then(async () => {
       profileEntrepriseLoading.value = true
       const formData = new FormData()
       formData.append('name', formStateProfileEntreprise.name)
@@ -567,7 +569,7 @@ const deleteMission = (id: string) => {
 }
 /* end bloc mission */
 
-const beforeUploadProfileAvatar = async(file: any) => {
+const beforeUploadProfileAvatar = async (file: any) => {
   const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png'
   if (!isJpgOrPng)
     message.error('You can only upload JPG file!')
@@ -581,7 +583,7 @@ const beforeUploadProfileAvatar = async(file: any) => {
   }
   return false
 }
-const beforeUploadProfileLogo = async(file: any) => {
+const beforeUploadProfileLogo = async (file: any) => {
   const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png'
   if (!isJpgOrPng)
     message.error('You can only upload JPG file!')
@@ -608,7 +610,7 @@ const showFrequence = (value: any) => {
     return '5 Jours / semaine'
 }
 
-const onFinish = async(values: any) => {
+const onFinish = async (values: any) => {
   if (values.avatar) {
     const formData = new FormData()
     formData.append('image', values.avatar[0].originFileObj)
@@ -633,7 +635,7 @@ const copyToClipboardMission = (idMission) => {
   const sliced = Object.values(urlLocation).slice(0, 3).join('/')
   copy(`${sliced}/missions/${idMission}`)
 }
-onMounted(async() => {
+onMounted(async () => {
   getFormData()
 })
 </script>
@@ -725,7 +727,7 @@ onMounted(async() => {
                   <!--end::Info-->
                 </div>
                 <div class="flex">
-                  <a-card :bordered="false" class="bg-white" body-style="padding: 5px">
+                  <a-card :bordered="false" class="bg-white" :body-style="{padding: '5px'}">
                     <a-progress
                       type="circle" :stroke-color="{
                         '0%': '#108ee9',
@@ -980,7 +982,7 @@ onMounted(async() => {
                           </a-card>
                         </swiper-slide>
                         <swiper-slide>
-                          <a-card class="m-auto" hoverable style="width: 150px;" body-style="height: 100%;" @click="visibleModalAddCollaborator = true">
+                          <a-card class="m-auto" hoverable style="width: 150px;" :body-style="{padding: '5px'}" @click="visibleModalAddCollaborator = true">
                             <div class="w-full h-full flex items-center justify-center">
                               <span class="i-ant-design-plus-square-twotone ml-1 inline-block text-4xl text-green-300" />
                             </div>
@@ -1491,7 +1493,7 @@ onMounted(async() => {
                           </a-badge-ribbon>
                         </swiper-slide>
                         <swiper-slide>
-                          <a-card class="m-auto" hoverable style="width: 150px;" body-style="height: 100%;" @click="router.push('/missions/add')">
+                          <a-card class="m-auto" hoverable style="width: 150px;" :body-style="{padding: '5px'}" @click="router.push('/missions/add')">
                             <div class="w-full h-full flex items-center justify-center">
                               <span class="i-ant-design-plus-square-twotone ml-1 inline-block text-4xl text-green-300" />
                             </div>

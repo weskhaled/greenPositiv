@@ -3,6 +3,7 @@ import dayjs, { Dayjs } from 'dayjs'
 import { useUserStore } from '~/stores/user'
 import adminApi from '~/api/modules/admin'
 import globalApi from '~/api/modules/global'
+import mask1 from '~/assets/svg/mask-1.svg'
 
 const user = useUserStore()
 const name = ref(user.savedName)
@@ -18,13 +19,13 @@ const go = () => {
 
 const { t } = useI18n()
 
-const getPosts = async() => {
+const getPosts = async () => {
   const { data } = await adminApi.posts()
   posts[0] = (data.value[data.value.length - 1])
   posts[1] = (data.value[data.value.length - 2])
 }
 
-const getFormData = async() => {
+const getFormData = async () => {
   await getPosts()
   const { data } = await adminApi.jobs()
 
@@ -41,7 +42,7 @@ const getFormData = async() => {
   })
 }
 
-onMounted(async() => {
+onMounted(async () => {
   getFormData()
 })
 </script>
@@ -136,7 +137,7 @@ onMounted(async() => {
     <!--== End Hero Area Wrapper ==-->
 
     <!--== Start Job Category Area Wrapper ==-->
-    <section class="job-category-area">
+    <section class="job-category-area bg-light-800 -mt-9 shadow-inner">
       <div class="container" data-aos="fade-down">
         <div class="row">
           <div class="col-12">
@@ -166,7 +167,7 @@ onMounted(async() => {
     <!--== End Job Category Area Wrapper ==-->
 
     <!--== Start Work Process Freelance Area Wrapper ==-->
-    <section class="work-process-area">
+    <section class="work-process-area relative before-content-none before:(absolute bottom-0 w-1/2 h-2px bg-green-500/70 right-25%)">
       <div class="container" data-aos="fade-down">
         <div class="row">
           <div class="col-12">
@@ -275,7 +276,10 @@ onMounted(async() => {
     <!--== End Work Process Freelance Area Wrapper ==-->
 
     <!--== Start Work Process Enterprise Area Wrapper ==-->
-    <section class="work-process-area">
+    <section class="work-process-area relative pb-122px">
+      <span class="absolute bottom-0">
+        <img class="w-120vw h-auto bg-cover mx-auto bg-top" :src="mask1">
+      </span>
       <div class="container" data-aos="fade-down">
         <div class="row">
           <div class="col-12">
@@ -383,12 +387,12 @@ onMounted(async() => {
     </section>
     <!--== End Work Process Enterprise Area Wrapper ==-->
     <!--== Start Advantages Green Area Wrapper ==-->
-    <section class="work-process-area">
+    <section class="work-process-area bg-[#04a74e] text-light-50">
       <div class="container" data-aos="fade-down">
         <div class="row">
           <div class="col-12">
             <div class="section-title text-center">
-              <h3 class="title">
+              <h3 class="title text-light-100">
                 Quels sont les avantages de passer par Green Positiv ?
               </h3>
             </div>
