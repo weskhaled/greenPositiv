@@ -9,8 +9,10 @@ import adminApi from '~/api/modules/admin'
 import globalApi from '~/api/modules/global'
 import agenceApi from '~/api/modules/agence'
 import profileEntrepriseApi from '~/api/modules/profil-entreprise'
-import { currentUser } from '~/stores'
+import { currentUser, token } from '~/stores'
 import 'swiper/css/pagination'
+
+const BASE_PREFIX = `${import.meta.env.VITE_API_AGENCE}`
 
 SwiperCore.use([Controller, Pagination])
 
@@ -154,6 +156,7 @@ const modelRefReference = reactive({
   title: '',
   client: '',
   place: '',
+  image: undefined,
   domain: undefined,
   dateBegin: undefined,
   dateEnd: undefined,
@@ -184,7 +187,7 @@ const rulesIban = reactive({
   cb_iban_postal: [
     {
       required: true,
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (!value)
           return Promise.reject(new Error('Veuillez saisir un code postal'))
         if (!Number.isInteger(+value)) {
@@ -216,15 +219,16 @@ const rulesIban = reactive({
   cb_iban_iban: [
     {
       required: true,
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         const tva_numbers = value.slice(2, value.length)
-        if (!value) return Promise.reject(new Error('Saisir la tva intracom'))
+        if (!value)
+          return Promise.reject(new Error('Saisir la tva intracom'))
         if (!value[0].match('F') || !value[1].match('R') || !/^\d+$/.test(tva_numbers))
           return Promise.reject(new Error('Veuillez saisir ce champ correctement (FR***********)'))
         else
           return Promise.resolve()
       },
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (formStateIbanModule.type_iban === 'iban') {
           const numbers = value.slice(2, value.length)
           if (!value) { return Promise.reject(new Error('Veuillez saisir votre iban')) }
@@ -233,7 +237,7 @@ const rulesIban = reactive({
           }
           else {
             if (value.length < 27)
-            // eslint-disable-next-line prefer-promise-reject-errors
+              // eslint-disable-next-line prefer-promise-reject-errors
               return Promise.reject(`${'l\iban doit contenir au minimu 27 caractéres'}`)
             else
               return Promise.resolve()
@@ -247,7 +251,7 @@ const rulesIban = reactive({
   cb_iban_region: [
     {
       required: true,
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (formStateTypeIban.type_iban === 'iban-us' || formStateTypeIban.type_iban === 'iban-ca' || formStateTypeIban.type_iban === 'others') {
           if (!value)
             return Promise.reject(new Error('Veuillez saisir la région'))
@@ -262,7 +266,7 @@ const rulesIban = reactive({
   cb_iban_account_number: [
     {
       required: true,
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (formStateTypeIban.type_iban === 'iban-us' || formStateTypeIban.type_iban === 'iban-ca' || formStateTypeIban.type_iban === 'others') {
           if (!value)
             return Promise.reject(new Error('Veuillez saisir votre numéro de compte'))
@@ -271,7 +275,7 @@ const rulesIban = reactive({
           }
           else {
             if (value.length !== 8)
-            // eslint-disable-next-line prefer-promise-reject-errors
+              // eslint-disable-next-line prefer-promise-reject-errors
               return Promise.reject(`${'l\iban doit contenir 8 chiffres'}`)
             else
               return Promise.resolve()
@@ -287,7 +291,7 @@ const rulesIban = reactive({
   cb_iban_aba_transit_number: [
     {
       required: true,
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (formStateTypeIban.type_iban === 'iban-us') {
           if (!value)
             return Promise.reject(new Error('Veuillez saisir votre ABA Transit number'))
@@ -296,7 +300,7 @@ const rulesIban = reactive({
           }
           else {
             if (value.length !== 9)
-            // eslint-disable-next-line prefer-promise-reject-errors
+              // eslint-disable-next-line prefer-promise-reject-errors
               return Promise.reject(`${'l\iban doit contenir 9 chiffres'}`)
             else
               return Promise.resolve()
@@ -312,7 +316,7 @@ const rulesIban = reactive({
   cb_iban_account_type: [
     {
       required: true,
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (formStateTypeIban.type_iban === 'iban-us') {
           if (!value)
             return Promise.reject(new Error('Choisir le type de compte'))
@@ -326,7 +330,7 @@ const rulesIban = reactive({
   cb_iban_branch_code: [
     {
       required: true,
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (formStateTypeIban.type_iban === 'iban-ca') {
           if (!value)
             return Promise.reject(new Error('Veuillez saisir votre numéro de compte'))
@@ -335,7 +339,7 @@ const rulesIban = reactive({
           }
           else {
             if (value.length !== 5)
-            // eslint-disable-next-line prefer-promise-reject-errors
+              // eslint-disable-next-line prefer-promise-reject-errors
               return Promise.reject(`${'iban doit contenir 5 chiffres'}`)
             else
               return Promise.resolve()
@@ -351,7 +355,7 @@ const rulesIban = reactive({
   cb_iban_number_institution: [
     {
       required: true,
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (formStateTypeIban.type_iban === 'iban-ca') {
           if (!value)
             return Promise.reject(new Error('Veuillez saisir le numéro de votre institution '))
@@ -360,7 +364,7 @@ const rulesIban = reactive({
           }
           else {
             if (value.length !== 3)
-            // eslint-disable-next-line prefer-promise-reject-errors
+              // eslint-disable-next-line prefer-promise-reject-errors
               return Promise.reject(`${'le numéro d\institution doit contenir 3 chiffres'}`)
             else
               return Promise.resolve()
@@ -376,7 +380,7 @@ const rulesIban = reactive({
   cb_iban_bank_name: [
     {
       required: true,
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (formStateTypeIban.type_iban === 'iban-ca') {
           if (!value)
             return Promise.reject(new Error('Veuillez saisir le nom de votre banque '))
@@ -394,7 +398,7 @@ const rulesIban = reactive({
   cb_iban_bic_swift: [
     {
       required: true,
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (formStateTypeIban.type_iban === 'others') {
           if (!value)
             return Promise.reject(new Error('Veuillez saisir le BIC/SWIFT'))
@@ -403,7 +407,7 @@ const rulesIban = reactive({
           }
           else {
             if (value.length !== 8)
-            // eslint-disable-next-line prefer-promise-reject-errors
+              // eslint-disable-next-line prefer-promise-reject-errors
               return Promise.reject(`${'le BIC/SWIFT doit contenir 8 chiffres'}`)
             else
               return Promise.resolve()
@@ -419,7 +423,7 @@ const rulesIban = reactive({
   cb_iban_account_country: [
     {
       required: true,
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (formStateTypeIban.type_iban === 'others') {
           if (!value)
             return Promise.reject(new Error('Veuillez saisir le pays du compte'))
@@ -465,6 +469,12 @@ const rulesRef = reactive({
     {
       required: true,
       message: 'Choisissez un domaine',
+    },
+  ],
+  image: [
+    {
+      required: true,
+      message: 'Choisissez un image',
     },
   ],
   dateBegin: [
@@ -568,7 +578,7 @@ const rulesLegaleRepresentative = reactive({
       message: 'Saisir un code postal',
     },
     {
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (!value)
           return Promise.reject(new Error('Veuillez saisir un code postal'))
         if (!Number.isInteger(+value)) {
@@ -593,7 +603,7 @@ const rulesTaxe = reactive({
       message: 'Saisir un nombre entre 0 et 100',
     },
     {
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (!value)
           return Promise.reject(new Error('Veuillez saisir un numéro de taxe'))
         if (!Number.isInteger(+value)) {
@@ -617,7 +627,7 @@ const rulesLegaleMention = reactive({
       message: 'Saisir votre capitale',
     },
     {
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (!/^\d+$/.test(value) || Number(value) < 0)
           return Promise.reject(new Error('Veuillez saisir que des chiffres'))
         else
@@ -631,7 +641,7 @@ const rulesLegaleMention = reactive({
       message: 'Saisir le numéro SIRET',
     },
     {
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (value.length !== 14 || !/^\d+$/.test(value))
           return Promise.reject(new Error('Veuillez saisir que des chiffres'))
         else
@@ -645,7 +655,7 @@ const rulesLegaleMention = reactive({
       message: 'Saisir le champ RCS',
     },
     {
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (!/^[a-zA-Z]+$/.test(value))
           return Promise.reject(new Error('Veuillez saisir que des lettres'))
         else
@@ -659,7 +669,7 @@ const rulesLegaleMention = reactive({
       message: 'Saisir le champ NAF',
     },
     {
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         const nafNumbers = value.slice(0, value.length - 1)
         if (value.length !== 5 || !value.match('^[A-Z0-9]+$') || !/^\d+$/.test(nafNumbers) || !value[value.length - 1].match('^[A-Z]+$'))
           return Promise.reject(new Error('Veuillez saisir ce champ correctement (1234A)'))
@@ -671,9 +681,10 @@ const rulesLegaleMention = reactive({
   tva_intracom: [
     {
       required: true,
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         const tva_numbers = value.slice(2, value.length)
-        if (!value) return Promise.reject(new Error('Saisir la tva intracom'))
+        if (!value)
+          return Promise.reject(new Error('Saisir la tva intracom'))
         if (!value[0].match('F') || !value[1].match('R') || !/^\d+$/.test(tva_numbers))
           return Promise.reject(new Error('Veuillez saisir ce champ correctement (FR***********)'))
         else
@@ -687,7 +698,7 @@ const rulesLegaleMention = reactive({
       message: 'Saisir le nombre de jours (max 60)',
     },
     {
-      validator: async(_rule: RuleObject, value: number) => {
+      validator: async (_rule: RuleObject, value: number) => {
         if (value < 0 || value > 60)
           return Promise.reject(new Error('Saisir le nombre de jours (max 60)'))
         else
@@ -697,7 +708,7 @@ const rulesLegaleMention = reactive({
   ],
 })
 
-const getFormData = async() => {
+const getFormData = async () => {
   globalApi.countries().then(({ data }) => {
     data.value && (countries.value = data.value.map(l => ({
       value: l,
@@ -768,7 +779,7 @@ const getFormData = async() => {
   })
   /**/
   profileEntreprise.value = null
-  await profileEntrepriseApi.profileEntrepriseAgence(props.id).then(async({ data }) => {
+  await profileEntrepriseApi.profileEntrepriseAgence(props.id).then(async ({ data }) => {
     if (data) {
       profileEntreprise.value = data
       const contactDetails = profileEntreprise.value?.contactDetails
@@ -900,7 +911,7 @@ const resetModuleIban = () => {
   formStateIbanModule.cb_iban_bic_swift = ''
   formStateIbanModule.cb_iban_account_country = ''
 }
-const updateProfile = async(profileData: any) => {
+const updateProfile = async (profileData: any) => {
   const { data } = await agenceApi.updateProfile(profileData)
   data && message.info(data.message)
   getFormData()
@@ -913,9 +924,9 @@ const onLoad = () => {
 const useFormIbanModule = useForm(formStateIbanModule, rulesIban)
 const validateIbanModule = useFormIbanModule.validate
 const validateInfosIbanModule = useFormIbanModule.validateInfos
-const onSubmitIbanModule = async() => {
+const onSubmitIbanModule = async () => {
   validateIbanModule()
-    .then(async() => {
+    .then(async () => {
       const params = toRaw(formStateIbanModule)
       params.id_agence = props.id
       params.type_iban = formStateTypeIban.type_iban
@@ -933,9 +944,9 @@ const onSubmitIbanModule = async() => {
 const useFormContactDetails = useForm(formStateContactDetails, rulesContactDetails)
 const validateContactDetails = useFormContactDetails.validate
 const validateInfosContactDetails = useFormContactDetails.validateInfos
-const onSubmitContactDetails = async() => {
+const onSubmitContactDetails = async () => {
   validateContactDetails()
-    .then(async() => {
+    .then(async () => {
       profileEntrepriseLoading.value = true
       const params = toRaw(formStateContactDetails)
       params.id_agence = props.id
@@ -956,7 +967,7 @@ const onSubmitContactDetails = async() => {
 const useFormLegalRepresentative = useForm(formStateLegalRepresentative, rulesLegaleRepresentative)
 const validateLegalRepresentative = useFormLegalRepresentative.validate
 const validateInfosLegalRepresentative = useFormLegalRepresentative.validateInfos
-const onSubmitLegalRepresentative = async() => {
+const onSubmitLegalRepresentative = async () => {
   if (userDocument.value) {
     const formData = new FormData()
     formData.append('documents', userDocument.value)
@@ -964,7 +975,7 @@ const onSubmitLegalRepresentative = async() => {
     agenceApi.uploadDocuments(formData).catch(err => message.error(`${err}`))
   }
   validateLegalRepresentative()
-    .then(async() => {
+    .then(async () => {
       profileEntrepriseLoading.value = true
       const params = toRaw(formStateLegalRepresentative)
       params.id_agence = props.id
@@ -985,9 +996,9 @@ const onSubmitLegalRepresentative = async() => {
 const useFormTaxe = useForm(formStateTaxe, rulesTaxe)
 const validateTaxe = useFormTaxe.validate
 const validateInfosTaxe = useFormTaxe.validateInfos
-const onSubmitTaxe = async() => {
+const onSubmitTaxe = async () => {
   validateTaxe()
-    .then(async() => {
+    .then(async () => {
       profileEntrepriseLoading.value = true
       const params = toRaw(formStateTaxe)
       params.id_agence = props.id
@@ -1009,9 +1020,9 @@ const onSubmitTaxe = async() => {
 const useFormLegalMention = useForm(formStateLegalMention, rulesLegaleMention)
 const validateLegalMention = useFormLegalMention.validate
 const validateInfosLegalMention = useFormLegalMention.validateInfos
-const onSubmitLegalMentions = async() => {
+const onSubmitLegalMentions = async () => {
   validateLegalMention()
-    .then(async() => {
+    .then(async () => {
       profileEntrepriseLoading.value = true
       const params = toRaw(formStateLegalMention)
       params.id_agence = props.id
@@ -1031,19 +1042,27 @@ const onSubmitLegalMentions = async() => {
 /* end bloc legal mention */
 /* bloc reference */
 const { resetFields, validate, validateInfos: referenceValidateInfos } = useForm(modelRefReference, rulesRef)
-const onSubmit = async() => {
+const onSubmit = async () => {
   validate()
-    .then(async() => {
-      const params = toRaw(modelRefReference)
-      console.log('reference ', params)
+    .then(async () => {
+      const params: any = toRaw(modelRefReference)
+
       if (params.id) {
         const id = params.id
         delete params.id
-        const { data } = await agenceApi.updateReference(id, params)
+        params.image && (params.old_image = 'test')
+        const form_data = new FormData()
+
+        for (const key in params)
+          form_data.append(key, params[key])
+
+        console.log(form_data)
+        const { data } = await agenceApi.updateReference(id, form_data)
         message.info(data.message)
         visibleModalAddReference.value = false
         modelRefReference.id = undefined
         modelRefReference.title = ''
+        modelRefReference.image = undefined
         modelRefReference.client = ''
         modelRefReference.place = ''
         modelRefReference.domain = undefined
@@ -1053,7 +1072,14 @@ const onSubmit = async() => {
         resetFields()
       }
       else {
-        const { data } = await agenceApi.addReference(params)
+        delete params.id
+        console.log(params.image)
+        params.old_image = 'test'
+        const form_data = new FormData()
+
+        for (const key in params)
+          form_data.append(key, params[key])
+        const { data } = await agenceApi.addReference(form_data)
         message.info(data.message)
         visibleModalAddReference.value = false
       }
@@ -1100,9 +1126,9 @@ const useFormOffer = useForm(modelRefOffer, rulesOffer)
 const resetFieldsOffer = useFormOffer.resetFields
 const validateOffer = useFormOffer.validate
 const validateInfosOffer = useFormOffer.validateInfos
-const onSubmitOffer = async() => {
+const onSubmitOffer = async () => {
   validateOffer()
-    .then(async() => {
+    .then(async () => {
       const params = toRaw(modelRefOffer)
 
       if (params.id) {
@@ -1156,7 +1182,7 @@ const deleteOffer = (id: string) => {
     },
   })
 }
-const handleChangeUpload = async(event, offer) => {
+const handleChangeUpload = async (event, offer) => {
   if (event.file.type === 'application/pdf') {
     const formData = new FormData()
     formData.append('documents', event.file)
@@ -1171,7 +1197,7 @@ const handleChangeUpload = async(event, offer) => {
   }
 }
 /* end bloc offer */
-const beforeUploadProfileAvatar = async(file: any) => {
+const beforeUploadProfileAvatar = async (file: any) => {
   const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png'
   if (!isJpgOrPng)
     message.error('You can only upload JPG file!')
@@ -1185,7 +1211,7 @@ const beforeUploadProfileAvatar = async(file: any) => {
   }
   return false
 }
-const onFinish = async(values: any) => {
+const onFinish = async (values: any) => {
   if (values.avatar) {
     const formData = new FormData()
     formData.append('image', values.avatar[0].originFileObj)
@@ -1198,7 +1224,7 @@ const onFinish = async(values: any) => {
 const onFinishFailed = (errorInfo: any) => {
   console.log('Failed:', errorInfo)
 }
-onMounted(async() => {
+onMounted(async () => {
   console.log('props id ', props.id)
   getFormData()
 })
@@ -1207,10 +1233,7 @@ onMounted(async() => {
 <template>
   <main class="main-content">
     <!--== Start Page Header Area Wrapper ==-->
-    <div
-      class="page-header-area sec-overlay sec-overlay-black"
-      data-bg-img="../assets/img/photos/bg2.jpg"
-    >
+    <div class="page-header-area sec-overlay sec-overlay-black" data-bg-img="../assets/img/photos/bg2.jpg">
       <div class="container pt-0 pb-0">
         <div class="row">
           <div class="col-12">
@@ -1244,8 +1267,7 @@ onMounted(async() => {
           <div class="p-2 flex bg-white rounded-sm">
             <div class="mr-5 flex-none">
               <a-avatar
-                :src="profile?.agence?.image"
-                shape="square"
+                :src="profile?.agence?.image" shape="square"
                 :size="{ xs: 24, sm: 32, md: 40, lg: 64, xl: 220, xxl: 260 }"
               />
             </div>
@@ -1254,15 +1276,11 @@ onMounted(async() => {
                 <div class="flex flex-col">
                   <!--begin::Name-->
                   <div class="flex items-center mb-2">
-                    <a
-                      href="#"
-                      class="text-gray-900 text-hover-primary fs-4"
-                    >{{ `${profile?.agence?.lastName} ${profile?.agence?.firstName}` }}</a>
+                    <a href="#" class="text-gray-900 text-hover-primary fs-4">{{ `${profile?.agence?.lastName}
+                                          ${profile?.agence?.firstName}`
+                    }}</a>
                     <a href="#" class="flex items-center mr-3 ml-1">
-                      <span
-                        v-if="profile?.agence?.validated"
-                        class="i-carbon-checkmark-filled text-xl inline-block"
-                      />
+                      <span v-if="profile?.agence?.validated" class="i-carbon-checkmark-filled text-xl inline-block" />
                       <span v-else class="i-carbon-close-filled text-red-600 text-xl inline-block" />
                     </a>
                     <a-rate class="h-[42px]" :value="0" allow-half />
@@ -1270,17 +1288,11 @@ onMounted(async() => {
                   <!--end::Name-->
                   <!--begin::Info-->
                   <div class="flex flex-wrap fw-bold fs-6 mb-4 pe-2">
-                    <a
-                      href="#"
-                      class="d-flex align-items-center text-gray-400 text-hover-primary me-5 mb-2"
-                    >
+                    <a href="#" class="d-flex align-items-center text-gray-400 text-hover-primary me-5 mb-2">
                       <span class="i-carbon-user-avatar-filled-alt text-xl inline-block mr-1" />
                       {{ profile?.agence?.nameAgence }}
                     </a>
-                    <a
-                      href="#"
-                      class="flex items-center text-gray-400 text-hover-primary me-5 mb-2"
-                    >
+                    <a href="#" class="flex items-center text-gray-400 text-hover-primary me-5 mb-2">
                       <span class="i-carbon-location-filled text-xl inline-block mr-1" />
                       {{ profile?.agence?.localisation }}
                     </a>
@@ -1292,7 +1304,7 @@ onMounted(async() => {
                   <!--end::Info-->
                 </div>
                 <div class="flex">
-                  <a-card :bordered="false" class="bg-white" body-style="padding: 5px">
+                  <a-card :bordered="false" class="bg-white" :body-style="{padding: '5px'}">
                     <a-progress
                       type="circle" :stroke-color="{
                         '0%': '#108ee9',
@@ -1315,35 +1327,29 @@ onMounted(async() => {
                     <div class="flex w-full">
                       <div class="w-[60%]">
                         <a-form
-                          :model="formStateProfile"
-                          v-bind="formItemLayout"
-                          @finish-failed="onFinishFailed"
+                          :model="formStateProfile" v-bind="formItemLayout" @finish-failed="onFinishFailed"
                           @finish="onFinish"
                         >
-                          <h4>Qu'est ce qui fait de votre outils une solution "Green" et comment cela se traduit-il ?</h4>
+                          <h4>
+                            Qu'est ce qui fait de votre outils une solution "Green" et comment cela se traduit-il ?
+                          </h4>
                           <a-form-item name="greenQuestion" label="Question GREEN">
                             <a-input v-model:value="formStateProfile.greenQuestion" />
                           </a-form-item>
                           <a-form-item label="Avatar">
                             <a-form-item name="avatar" no-style>
                               <a-upload-dragger
-                                v-model:fileList="formStateProfile.avatar"
-                                :multiple="false"
-                                :before-upload="beforeUploadProfileAvatar"
-                                name="avtar"
+                                v-model:fileList="formStateProfile.avatar" :multiple="false"
+                                :before-upload="beforeUploadProfileAvatar" name="avtar"
                               >
                                 <div v-if="profileAvatar.length">
                                   <img ref="image" class="w-30 mx-auto" :src="profileAvatar">
                                 </div>
                                 <div v-else class="py-3">
                                   <p class="ant-upload-drag-icon">
-                                    <span
-                                      class="i-ant-design-inbox-outlined inline-block text-3xl"
-                                    />
+                                    <span class="i-ant-design-inbox-outlined inline-block text-3xl" />
                                   </p>
-                                  <p
-                                    class="ant-upload-text"
-                                  >
+                                  <p class="ant-upload-text">
                                     Click or drag file to this area to upload
                                   </p>
                                   <p class="ant-upload-hint">
@@ -1377,8 +1383,7 @@ onMounted(async() => {
                           <a-form-item name="jobCat" label="Choisir une catégorie de métier">
                             <a-select
                               v-model:value="formStateProfile.jobCat"
-                              placeholder="Choisir une catégorie de métier"
-                              :options="jobs"
+                              placeholder="Choisir une catégorie de métier" :options="jobs"
                             />
                           </a-form-item>
                           <a-form-item name="url_fb" label="lien facebook">
@@ -1394,7 +1399,10 @@ onMounted(async() => {
                             <a-input v-model:value="formStateProfile.url_linkedin" />
                           </a-form-item>
                           <a-form-item class="mb-0" :wrapper-col="{ span: 2, offset: 20 }">
-                            <a-button size="large" type="primary" html-type="submit" :loading="profileEntrepriseLoading" @click="onLoad()">
+                            <a-button
+                              size="large" type="primary" html-type="submit" :loading="profileEntrepriseLoading"
+                              @click="onLoad()"
+                            >
                               Enregistrer
                             </a-button>
                           </a-form-item>
@@ -1412,7 +1420,9 @@ onMounted(async() => {
                             <div class="w-[40%]">
                               <span
                                 :class="`px-3 py-1 bg-${profile?.agence?.visibility ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ profile?.agence?.visibility ? 'Visible' : 'Invisible' }}</span>
+                              >{{
+                                profile?.agence?.visibility ? 'Visible' : 'Invisible'
+                              }}</span>
                             </div>
                           </div>
                           <div class="flex mb-4">
@@ -1422,7 +1432,9 @@ onMounted(async() => {
                             <div class="w-[40%]">
                               <span
                                 :class="`px-3 py-1 bg-${profile?.agence?.greenQuestion.length ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ profile?.agence?.greenQuestion ? 'Oui' : 'Non' }}</span>
+                              >{{
+                                profile?.agence?.greenQuestion ? 'Oui' : 'Non'
+                              }}</span>
                               <span
                                 class="i-carbon-help-filled inline-block text-green-600 leading-2 text-sm ml-2 mr-0.5"
                                 @click="visibleModalGreenQuestion = true"
@@ -1436,7 +1448,9 @@ onMounted(async() => {
                             <div class="w-[40%]">
                               <span
                                 :class="`px-3 py-1 bg-${profile?.agence?.description?.length ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ profile?.agence?.description?.length ? 'Oui' : 'Non' }}</span>
+                              >{{
+                                profile?.agence?.description?.length ? 'Oui' : 'Non'
+                              }}</span>
                             </div>
                           </div>
                           <div class="flex mb-4">
@@ -1446,7 +1460,9 @@ onMounted(async() => {
                             <div class="w-[40%]">
                               <span
                                 :class="`px-3 py-1 bg-${profile?.agence?.references.length ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ profile?.agence?.references.length ? 'Oui' : 'Non' }}</span>
+                              >{{
+                                profile?.agence?.references.length ? 'Oui' : 'Non'
+                              }}</span>
                             </div>
                           </div>
                           <div class="flex mb-4">
@@ -1456,7 +1472,9 @@ onMounted(async() => {
                             <div class="w-[40%]">
                               <span
                                 :class="`px-3 py-1 bg-${profile?.agence?.offers.length ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ profile?.agence?.offers.length ? 'Oui' : 'Non' }}</span>
+                              >{{
+                                profile?.agence?.offers.length ? 'Oui' : 'Non'
+                              }}</span>
                             </div>
                           </div>
                           <div class="flex mb-4">
@@ -1466,7 +1484,9 @@ onMounted(async() => {
                             <div class="w-[40%]">
                               <span
                                 :class="`px-3 py-1 bg-${profile?.agence?.email_verification ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ profile?.agence?.email_verification ? 'Oui' : 'Non' }}</span>
+                              >{{
+                                profile?.agence?.email_verification ? 'Oui' : 'Non'
+                              }}</span>
                               <span
                                 class="i-carbon-help-filled inline-block text-green-600 leading-2 text-sm ml-2 mr-0.5"
                                 @click="visibleModalInformationEmailVerification = true"
@@ -1480,7 +1500,9 @@ onMounted(async() => {
                             <div class="w-[40%]">
                               <span
                                 :class="`px-3 py-1 bg-${profile?.agence?.confidentiality ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ profile?.agence?.confidentiality ? 'Oui' : 'Non' }}</span>
+                              >{{
+                                profile?.agence?.confidentiality ? 'Oui' : 'Non'
+                              }}</span>
                             </div>
                           </div>
                           <div class="flex mb-4">
@@ -1490,7 +1512,9 @@ onMounted(async() => {
                             <div class="w-[40%]">
                               <span
                                 :class="`px-3 py-1 bg-${profile?.agence?.documents_val ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ profile?.agence?.documents_val ? 'Oui' : 'Non' }}</span>
+                              >{{
+                                profile?.agence?.documents_val ? 'Oui' : 'Non'
+                              }}</span>
                               <span
                                 class="i-carbon-help-filled inline-block text-green-600 leading-2 text-sm ml-2 mr-0.5"
                                 @click="visibleModalInformationDocumentVal = true"
@@ -1504,7 +1528,9 @@ onMounted(async() => {
                             <div class="w-[40%]">
                               <span
                                 :class="`px-3 py-1 bg-${profile?.agence?.signed_client ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ profile?.agence?.signed_client ? 'Oui' : 'Non' }}</span>
+                              >{{
+                                profile?.agence?.signed_client ? 'Oui' : 'Non'
+                              }}</span>
                               <span
                                 class="i-carbon-help-filled inline-block text-green-600 leading-2 text-sm ml-2 mr-0.5"
                                 @click="visibleModalInformationSignatureCharte = true"
@@ -1518,7 +1544,9 @@ onMounted(async() => {
                             <div class="w-[40%]">
                               <span
                                 :class="`px-3 py-1 bg-${profile?.agence?.validated ? 'green' : 'red'}-600 rounded-lg text-light-50`"
-                              >{{ profile?.agence?.validated ? 'Oui' : 'Non' }}</span>
+                              >{{
+                                profile?.agence?.validated ? 'Oui' : 'Non'
+                              }}</span>
                               <span
                                 class="i-carbon-help-filled inline-block text-green-600 leading-2 text-sm ml-2 mr-0.5"
                                 @click="visibleModalInformationValidated = true"
@@ -1537,22 +1565,21 @@ onMounted(async() => {
                   <a-card title="Référence" :bordered="false" class="rounded-sm">
                     <div v-if="profile && references.length" class="">
                       <swiper
-                        :modules="[Controller]"
-                        :slides-per-view="4" class="p-3"
-                        :pagination="{
+                        :modules="[Controller]" :slides-per-view="4" class="p-3" :pagination="{
                           clickable: true,
-                        }"
-                        :grab-cursor="true"
-                        @swiper="setControlledSwiper"
+                        }" :grab-cursor="true" @swiper="setControlledSwiper"
                       >
-                        <swiper-slide
-                          v-for="(item, index) in references"
-                          :key="index"
-                        >
+                        <swiper-slide v-for="(item, index) in references" :key="index">
                           <a-card class="mr-2" hoverable>
                             <template #actions>
-                              <span key="setting" class="i-ant-design-edit-outlined inline-block" @click="updateReference(item)" />
-                              <span key="edit" class="i-ant-design-delete-twotone inline-block" @click="deleteReference(item._id)" />
+                              <span
+                                key="setting" class="i-ant-design-edit-outlined inline-block"
+                                @click="updateReference(item)"
+                              />
+                              <span
+                                key="edit" class="i-ant-design-delete-twotone inline-block"
+                                @click="deleteReference(item._id)"
+                              />
                             </template>
                             <a-card-meta :title="item.title">
                               <template #description>
@@ -1560,7 +1587,10 @@ onMounted(async() => {
                                   <span class="text-dark-300 mr-1.5">
                                     Client:
                                   </span>
-                                  {{ item.client }} <span v-if="item.confidential" class="i-ant-design-check-circle-twotone ml-1 inline-block text-sm text-green-300" />
+                                  {{ item.client }} <span
+                                    v-if="item.confidential"
+                                    class="i-ant-design-check-circle-twotone ml-1 inline-block text-sm text-green-300"
+                                  />
                                 </div>
                                 <div class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
@@ -1582,25 +1612,30 @@ onMounted(async() => {
                                   <span class="text-dark-300 mr-1.5">
                                     Date:
                                   </span>
-                                  {{ dayjs(item.dateBegin).format("DD-MM-YYYY") }} / {{ dayjs(item.dateEnd).format("DD-MM-YYYY") }}
+                                  {{ dayjs(item.dateBegin).format("DD-MM-YYYY") }} / {{
+                                    dayjs(item.dateEnd).format("DD-MM-YYYY")
+                                  }}
                                 </div>
                               </template>
                             </a-card-meta>
                           </a-card>
                         </swiper-slide>
                         <swiper-slide>
-                          <a-card class="m-auto" hoverable style="width: 150px;" body-style="height: 100%;" @click="visibleModalAddReference = true">
+                          <a-card
+                            class="m-auto" hoverable style="width: 150px;" :body-style="{height: '100%'}"
+                            @click="visibleModalAddReference = true"
+                          >
                             <div class="w-full h-full flex items-center justify-center">
-                              <span class="i-ant-design-plus-square-twotone ml-1 inline-block text-4xl text-green-300" />
+                              <span
+                                class="i-ant-design-plus-square-twotone ml-1 inline-block text-4xl text-green-300"
+                              />
                             </div>
                           </a-card>
                         </swiper-slide>
                       </swiper>
                     </div>
                     <a-result
-                      v-else
-                      status="404"
-                      title="aucune référence trouvée"
+                      v-else status="404" title="aucune référence trouvée"
                       sub-title="veuillez ajouter vos références"
                     >
                       <template #extra>
@@ -1617,34 +1652,30 @@ onMounted(async() => {
                   <a-card title="Offres" :bordered="false" class="rounded-sm">
                     <div v-if="profile && offers?.length">
                       <swiper
-                        :modules="[Controller]"
-                        :slides-per-view="4" class="p-3"
-                        :pagination="{
+                        :modules="[Controller]" :slides-per-view="4" class="p-3" :pagination="{
                           clickable: true,
-                        }"
-                        :grab-cursor="true"
-                        @swiper="setControlledSwiper"
+                        }" :grab-cursor="true" @swiper="setControlledSwiper"
                       >
-                        <swiper-slide
-                          v-for="(item, index) in offers"
-                          :key="index"
-                        >
+                        <swiper-slide v-for="(item, index) in offers" :key="index">
                           <a-card class="mr-2" hoverable>
                             <template #actions>
-                              <span key="setting" class="i-ant-design-edit-outlined inline-block" @click="updateOffer(item)" />
-                              <span key="edit" class="i-ant-design-delete-twotone inline-block" @click="deleteOffer(item._id)" />
+                              <span
+                                key="setting" class="i-ant-design-edit-outlined inline-block"
+                                @click="updateOffer(item)"
+                              />
+                              <span
+                                key="edit" class="i-ant-design-delete-twotone inline-block"
+                                @click="deleteOffer(item._id)"
+                              />
                               <span key="uploadDoc">
                                 <a-upload
-                                  name="avatar"
-                                  :show-upload-list="false"
-                                  :before-upload="(file: any) => {
+                                  name="avatar" :show-upload-list="false" :before-upload="(file: any) => {
                                     if (file.type !== 'application/pdf') {
                                       message.error('type should be pdf')
                                     }
 
                                     return false;
-                                  }"
-                                  @change="handleChangeUpload($event, item)"
+                                  }" @change="handleChangeUpload($event, item)"
                                 >
                                   <div>
                                     <span v-if="loadingDocuments" class="i-ant-design-loading-outlined" />
@@ -1674,7 +1705,10 @@ onMounted(async() => {
                                   <span>
                                     {{ item.price }}
                                   </span>
-                                  <span class="inline-block text-xs rounded-sm p-1 text-light-50 ml-1" :class="item.show_price ? 'bg-green-400' : 'bg-red-400'">
+                                  <span
+                                    class="inline-block text-xs rounded-sm p-1 text-light-50 ml-1"
+                                    :class="item.show_price ? 'bg-green-400' : 'bg-red-400'"
+                                  >
                                     {{ item.show_price ? 'Affiché' : 'caché' }}
                                   </span>
                                 </div>
@@ -1682,7 +1716,10 @@ onMounted(async() => {
                                   <span class="text-dark-300 mr-1.5">
                                     Documents:
                                   </span>
-                                  <span class="inline-block text-xs rounded-sm p-1 text-light-50 ml-1" :class="item.show_price ? 'bg-green-400' : 'bg-red-400'">
+                                  <span
+                                    class="inline-block text-xs rounded-sm p-1 text-light-50 ml-1"
+                                    :class="item.show_price ? 'bg-green-400' : 'bg-red-400'"
+                                  >
                                     {{ item.documents ? 'téléchargé' : 'non téléchargé' }}
                                   </span>
                                 </div>
@@ -1691,18 +1728,21 @@ onMounted(async() => {
                           </a-card>
                         </swiper-slide>
                         <swiper-slide>
-                          <a-card class="m-auto" hoverable style="width: 150px;" body-style="height: 100%;" @click="visibleModalAddOffer = true">
+                          <a-card
+                            class="m-auto" hoverable style="width: 150px;" :body-style="{height: '100%'}"
+                            @click="visibleModalAddOffer = true"
+                          >
                             <div class="w-full h-full flex items-center justify-center">
-                              <span class="i-ant-design-plus-square-twotone ml-1 inline-block text-4xl text-green-300" />
+                              <span
+                                class="i-ant-design-plus-square-twotone ml-1 inline-block text-4xl text-green-300"
+                              />
                             </div>
                           </a-card>
                         </swiper-slide>
                       </swiper>
                     </div>
                     <a-result
-                      v-else
-                      status="404"
-                      title="aucune offre n'a été trouvée"
+                      v-else status="404" title="aucune offre n'a été trouvée"
                       sub-title="veuillez ajouter vos offres"
                     >
                       <template #extra>
@@ -1722,10 +1762,7 @@ onMounted(async() => {
                         <a-tab-pane key="1" tab="Mon Entreprise">
                           <div>
                             <a-steps
-                              v-model:current="currentStepProfileEtprs"
-                              type="navigation"
-                              size="small"
-                              :style="{
+                              v-model:current="currentStepProfileEtprs" type="navigation" size="small" :style="{
                                 marginBottom: '60px',
                                 boxShadow: '0px -1px 0 0 #e8e8e8 inset',
                               }"
@@ -1754,13 +1791,9 @@ onMounted(async() => {
                             <div class="p-4">
                               <div class="max-w-md mx-auto">
                                 <a-form
-                                  v-if="currentStepProfileEtprs === 0"
-                                  layout="vertical"
-                                  :label-col="{ span: 24 }"
-                                  :wrapper-col="{ span: 24 }"
-                                  :model="formStateContactDetails"
-                                  @finish-failed="onFinishFailed"
-                                  @finish="onFinish"
+                                  v-if="currentStepProfileEtprs === 0" layout="vertical" :label-col="{ span: 24 }"
+                                  :wrapper-col="{ span: 24 }" :model="formStateContactDetails"
+                                  @finish-failed="onFinishFailed" @finish="onFinish"
                                 >
                                   <a-form-item
                                     label="Nom de votre entreprise (raison sociale)"
@@ -1771,10 +1804,7 @@ onMounted(async() => {
                                       @blur="validate('name', { trigger: 'blur' }).catch(() => { })"
                                     />
                                   </a-form-item>
-                                  <a-form-item
-                                    label="Adresse"
-                                    v-bind="validateInfosContactDetails.address"
-                                  >
+                                  <a-form-item label="Adresse" v-bind="validateInfosContactDetails.address">
                                     <a-input
                                       v-model:value="formStateContactDetails.address"
                                       @blur="validate('address', { trigger: 'blur' }).catch(() => { })"
@@ -1792,16 +1822,13 @@ onMounted(async() => {
                                   <a-form-item label="Forme juridique">
                                     <a-select
                                       v-bind="validateInfosContactDetails.legal_form"
-                                      v-model:value="formStateContactDetails.legal_form"
-                                      placeholder="Forme juridique"
+                                      v-model:value="formStateContactDetails.legal_form" placeholder="Forme juridique"
                                       :options="legalForms"
                                     />
                                   </a-form-item>
                                   <a-form-item :wrapper-col="{ span: 24, offset: 0 }">
                                     <a-button
-                                      :loading="profileEntrepriseLoading"
-                                      block
-                                      type="primary"
+                                      :loading="profileEntrepriseLoading" block type="primary"
                                       @click.prevent="onSubmitContactDetails"
                                     >
                                       Enregistrer
@@ -1819,26 +1846,17 @@ onMounted(async() => {
                                     cupiditate..
                                   </p>
                                   <a-form
-                                    layout="vertical"
-                                    :label-col="{ span: 24 }"
-                                    :wrapper-col="{ span: 24 }"
-                                    :model="formStateLegalRepresentative"
-                                    @finish-failed="onFinishFailed"
+                                    layout="vertical" :label-col="{ span: 24 }" :wrapper-col="{ span: 24 }"
+                                    :model="formStateLegalRepresentative" @finish-failed="onFinishFailed"
                                     @finish="onFinish"
                                   >
-                                    <a-form-item
-                                      label="Nom"
-                                      v-bind="validateInfosLegalRepresentative.lastname"
-                                    >
+                                    <a-form-item label="Nom" v-bind="validateInfosLegalRepresentative.lastname">
                                       <a-input
                                         v-model:value="formStateLegalRepresentative.lastname"
                                         @blur="validate('lastname', { trigger: 'blur' }).catch(() => { })"
                                       />
                                     </a-form-item>
-                                    <a-form-item
-                                      label="Prénom"
-                                      v-bind="validateInfosLegalRepresentative.firstname"
-                                    >
+                                    <a-form-item label="Prénom" v-bind="validateInfosLegalRepresentative.firstname">
                                       <a-input
                                         v-model:value="formStateLegalRepresentative.firstname"
                                         @blur="validate('firstname', { trigger: 'blur' }).catch(() => { })"
@@ -1846,16 +1864,13 @@ onMounted(async() => {
                                     </a-form-item>
                                     <a-form-item name="date-picker" label="Date de naissance">
                                       <a-form-item
-                                        name="date-picker"
-                                        label="Date de naissance"
-                                        :wrapper-col="{ span: 24, offset: 0 }"
-                                        :label-col="{ sm: { span: 24 } }"
+                                        name="date-picker" label="Date de naissance"
+                                        :wrapper-col="{ span: 24, offset: 0 }" :label-col="{ sm: { span: 24 } }"
                                         v-bind="validateInfosLegalRepresentative.birthday"
                                       >
                                         <a-date-picker
                                           v-model:value="formStateLegalRepresentative.birthday"
-                                          style="width: 100%"
-                                          value-format="YYYY-MM-DD"
+                                          style="width: 100%" value-format="YYYY-MM-DD"
                                           :disabled-date="(current: Dayjs) => current && current > dayjs().endOf('day')"
                                           @blur="validate('dateBegin', { trigger: 'blur' }).catch(() => { })"
                                         />
@@ -1864,8 +1879,7 @@ onMounted(async() => {
                                     <div class="grid grid-cols-2 gap-3 w-full">
                                       <div>
                                         <a-form-item
-                                          name="switch"
-                                          label="Ville de naissance"
+                                          name="switch" label="Ville de naissance"
                                           v-bind="validateInfosLegalRepresentative.city_of_birth"
                                         >
                                           <a-input
@@ -1876,8 +1890,7 @@ onMounted(async() => {
                                       </div>
                                       <div>
                                         <a-form-item
-                                          name="postal"
-                                          label="Code postal"
+                                          name="postal" label="Code postal"
                                           v-bind="validateInfosLegalRepresentative.postal"
                                         >
                                           <a-input
@@ -1893,8 +1906,7 @@ onMounted(async() => {
                                     >
                                       <a-select
                                         v-model:value="formStateLegalRepresentative.country_of_birth"
-                                        placeholder="Pays de naissance"
-                                        :options="countries"
+                                        placeholder="Pays de naissance" :options="countries"
                                       />
                                     </a-form-item>
                                     <a-form-item
@@ -1903,8 +1915,7 @@ onMounted(async() => {
                                     >
                                       <a-select
                                         v-model:value="formStateLegalRepresentative.nationality"
-                                        placeholder="Nationalité"
-                                        :options="countries"
+                                        placeholder="Nationalité" :options="countries"
                                       />
                                     </a-form-item>
                                     <p>
@@ -1921,14 +1932,12 @@ onMounted(async() => {
                                     <a-form-item label="Pièce d'identité (recto/verso)">
                                       <a-form-item name="dragger" no-style>
                                         <a-upload-dragger
-                                          name="files"
-                                          :file-list="profile?.agence?.documents.map(f => ({
+                                          name="files" :file-list="profile?.agence?.documents.map(f => ({
                                             uid: f.uid || f,
                                             name: f.name || f,
                                             status: f.status || 'done',
                                             url: f,
-                                          })) || []"
-                                          :before-upload="(file: any) => {
+                                          })) || []" :before-upload="(file: any) => {
                                             if (file.type === 'application/pdf') {
                                               userDocument = file;
                                             }
@@ -1940,18 +1949,12 @@ onMounted(async() => {
                                         >
                                           <template v-if="!userDocument">
                                             <p class="ant-upload-drag-icon">
-                                              <span
-                                                class="i-carbon-cloud-upload inline-block text-xl"
-                                              />
+                                              <span class="i-carbon-cloud-upload inline-block text-xl" />
                                             </p>
-                                            <p
-                                              class="ant-upload-text"
-                                            >
+                                            <p class="ant-upload-text">
                                               Click or drag file to this area to upload
                                             </p>
-                                            <p
-                                              class="ant-upload-hint"
-                                            >
+                                            <p class="ant-upload-hint">
                                               Support for a single or bulk upload.
                                             </p>
                                           </template>
@@ -1963,9 +1966,7 @@ onMounted(async() => {
                                     </a-form-item>
                                     <a-form-item :wrapper-col="{ span: 24, offset: 0 }">
                                       <a-button
-                                        :loading="profileEntrepriseLoading"
-                                        block
-                                        type="primary"
+                                        :loading="profileEntrepriseLoading" block type="primary"
                                         @click.prevent="onSubmitLegalRepresentative"
                                       >
                                         Enregistrer
@@ -1974,16 +1975,9 @@ onMounted(async() => {
                                   </a-form>
                                 </div>
                                 <div v-else-if="currentStepProfileEtprs === 2">
-                                  <a-form
-                                    layout="vertical"
-                                    :label-col="{ span: 24 }"
-                                    :wrapper-col="{ span: 24 }"
-                                  >
+                                  <a-form layout="vertical" :label-col="{ span: 24 }" :wrapper-col="{ span: 24 }">
                                     <a-form-item label="Taxe" v-bind="validateInfosTaxe.taxe">
-                                      <a-input
-                                        v-model:value="formStateTaxe.taxe"
-                                        placeholder="Taxe"
-                                      >
+                                      <a-input v-model:value="formStateTaxe.taxe" placeholder="Taxe">
                                         <template #suffix>
                                           <a-tooltip title="Extra information">
                                             <span
@@ -1996,9 +1990,7 @@ onMounted(async() => {
                                     </a-form-item>
                                     <a-form-item :wrapper-col="{ span: 24, offset: 0 }">
                                       <a-button
-                                        :loading="profileEntrepriseLoading"
-                                        block
-                                        type="primary"
+                                        :loading="profileEntrepriseLoading" block type="primary"
                                         @click.prevent="onSubmitTaxe"
                                       >
                                         Enregistrer
@@ -2008,12 +2000,8 @@ onMounted(async() => {
                                 </div>
                                 <div v-else-if="currentStepProfileEtprs === 3">
                                   <a-form
-                                    layout="vertical"
-                                    :label-col="{ span: 24 }"
-                                    :wrapper-col="{ span: 24 }"
-                                    :model="formStateLegalMention"
-                                    @finish-failed="onFinishFailed"
-                                    @finish="onFinish"
+                                    layout="vertical" :label-col="{ span: 24 }" :wrapper-col="{ span: 24 }"
+                                    :model="formStateLegalMention" @finish-failed="onFinishFailed" @finish="onFinish"
                                   >
                                     <a-form-item label="Capitale" v-bind="validateInfosLegalMention.sas">
                                       <a-input
@@ -2021,10 +2009,7 @@ onMounted(async() => {
                                         @blur="validate('sas', { trigger: 'blur' }).catch(() => { })"
                                       />
                                     </a-form-item>
-                                    <a-form-item
-                                      label="SIRET"
-                                      v-bind="validateInfosLegalMention.siret"
-                                    >
+                                    <a-form-item label="SIRET" v-bind="validateInfosLegalMention.siret">
                                       <a-input
                                         v-model:value="formStateLegalMention.siret"
                                         @blur="validate('siret', { trigger: 'blur' }).catch(() => { })"
@@ -2042,32 +2027,27 @@ onMounted(async() => {
                                         @blur="validate('naf', { trigger: 'blur' }).catch(() => { })"
                                       />
                                     </a-form-item>
-                                    <a-form-item
-                                      label="TVA"
-                                      v-bind="validateInfosLegalMention.tva_intracom"
-                                    >
+                                    <a-form-item label="TVA" v-bind="validateInfosLegalMention.tva_intracom">
                                       <a-input
                                         v-model:value="formStateLegalMention.tva_intracom"
                                         @blur="validate('tva_intracom', { trigger: 'blur' }).catch(() => { })"
                                       />
                                     </a-form-item>
                                     <a-alert
-                                      class="mb-8 text-justify"
-                                      message="Attention !"
-                                      description="Tout règlement effectué après expiration du délai donnera lieu, à titre de pénalité de retard, à
+                                      class="mb-8 text-justify" message="Attention !" description="Tout règlement effectué après expiration du délai donnera lieu, à titre de pénalité de retard, à
                                       l'application d'un intérêt égal à celui appliqué par la Banque Centrale Européenne à son opération de
                                       refinancement la plus récente, majoré de 10 points de pourcentage, ainsi qu'à une indemnité forfaitaire
                                       pour frais de recouvrement d'un montant de 40 Euros.
                                       Les pénalités de retard sont exigibles sans qu'un rappel soit nécessaire."
-                                      type="warning"
-                                      show-icon
+                                      type="warning" show-icon
                                     />
                                     <a-form-item
                                       v-bind="validateInfosLegalMention.days"
                                       :rules="[{ required: true, message: 'Définissez le nombre de jours' }]"
                                     >
                                       <p>
-                                        La facture est payable sur <a-input-number
+                                        La facture est payable sur
+                                        <a-input-number
                                           v-bind="validateInfosLegalMention.days"
                                           v-model:value="formStateLegalMention.days"
                                         /> jours.
@@ -2076,9 +2056,7 @@ onMounted(async() => {
 
                                     <a-form-item :wrapper-col="{ span: 24, offset: 0 }">
                                       <a-button
-                                        :loading="profileEntrepriseLoading"
-                                        block
-                                        type="primary"
+                                        :loading="profileEntrepriseLoading" block type="primary"
                                         @click.prevent="onSubmitLegalMentions"
                                       >
                                         Enregistrer
@@ -2096,12 +2074,8 @@ onMounted(async() => {
                               <h3>Saisissez les champs selon le type de votre compte IBAN</h3>
                               <div class="max-w-md mx-auto">
                                 <a-form
-                                  layout="vertical"
-                                  :label-col="{ span: 24 }"
-                                  :wrapper-col="{ span: 24 }"
-                                  :model="formStateIbanModule"
-                                  @finish-failed="onFinishFailed"
-                                  @finish="onFinish"
+                                  layout="vertical" :label-col="{ span: 24 }" :wrapper-col="{ span: 24 }"
+                                  :model="formStateIbanModule" @finish-failed="onFinishFailed" @finish="onFinish"
                                 >
                                   <a-form-item
                                     label="Nom et prénom"
@@ -2121,48 +2095,33 @@ onMounted(async() => {
                                       @blur="validate('cb_iban_address_holder', { trigger: 'blur' }).catch(() => { })"
                                     />
                                   </a-form-item>
-                                  <a-form-item
-                                    label="Code postal"
-                                    v-bind="validateInfosIbanModule.cb_iban_postal"
-                                  >
+                                  <a-form-item label="Code postal" v-bind="validateInfosIbanModule.cb_iban_postal">
                                     <a-input
                                       v-model:value="formStateIbanModule.cb_iban_postal"
                                       @blur="validate('cb_iban_postal', { trigger: 'blur' }).catch(() => { })"
                                     />
                                   </a-form-item>
-                                  <a-form-item
-                                    label="Ville"
-                                    v-bind="validateInfosIbanModule.cb_iban_city"
-                                  >
+                                  <a-form-item label="Ville" v-bind="validateInfosIbanModule.cb_iban_city">
                                     <a-input
                                       v-model:value="formStateIbanModule.cb_iban_city"
                                       @blur="validate('cb_iban_city', { trigger: 'blur' }).catch(() => { })"
                                     />
                                   </a-form-item>
-                                  <a-form-item
-                                    label="Type de compte"
-                                  >
+                                  <a-form-item label="Type de compte">
                                     <a-select
-                                      v-model:value="formStateTypeIban.type_iban"
-                                      :options="typesIban" @change="resetModuleIban()"
+                                      v-model:value="formStateTypeIban.type_iban" :options="typesIban"
+                                      @change="resetModuleIban()"
                                     />
                                   </a-form-item>
                                   <!-- form items iban -->
                                   <div v-if="formStateTypeIban.type_iban === 'iban'">
-                                    <a-form-item
-                                      label="Pays"
-                                      v-bind="validateInfosIbanModule.cb_iban_country"
-                                    >
+                                    <a-form-item label="Pays" v-bind="validateInfosIbanModule.cb_iban_country">
                                       <a-select
-                                        v-model:value="formStateIbanModule.cb_iban_country"
-                                        placeholder="Pays"
+                                        v-model:value="formStateIbanModule.cb_iban_country" placeholder="Pays"
                                         :options="countriesIban"
                                       />
                                     </a-form-item>
-                                    <a-form-item
-                                      label="IBAN"
-                                      v-bind="validateInfosIbanModule.cb_iban_iban"
-                                    >
+                                    <a-form-item label="IBAN" v-bind="validateInfosIbanModule.cb_iban_iban">
                                       <a-input
                                         v-model:value="formStateIbanModule.cb_iban_iban"
                                         @blur="validate('cb_iban_iban', { trigger: 'blur' }).catch(() => { })"
@@ -2172,20 +2131,13 @@ onMounted(async() => {
                                   <!-- end form items iban -->
                                   <!-- form items iban US -->
                                   <div v-if="formStateTypeIban.type_iban === 'iban-us'">
-                                    <a-form-item
-                                      label="Pays"
-                                      v-bind="validateInfosIbanModule.cb_iban_country"
-                                    >
+                                    <a-form-item label="Pays" v-bind="validateInfosIbanModule.cb_iban_country">
                                       <a-select
-                                        v-model:value="formStateIbanModule.cb_iban_country"
-                                        placeholder="Pays"
+                                        v-model:value="formStateIbanModule.cb_iban_country" placeholder="Pays"
                                         :options="countriesIbanOthers"
                                       />
                                     </a-form-item>
-                                    <a-form-item
-                                      label="Région"
-                                      v-bind="validateInfosIbanModule.cb_iban_region"
-                                    >
+                                    <a-form-item label="Région" v-bind="validateInfosIbanModule.cb_iban_region">
                                       <a-input
                                         v-model:value="formStateIbanModule.cb_iban_region"
                                         @blur="validate('cb_iban_region', { trigger: 'blur' }).catch(() => { })"
@@ -2222,20 +2174,13 @@ onMounted(async() => {
                                   <!-- end form items iban us-->
                                   <!-- form items iban ca  -->
                                   <div v-if="formStateTypeIban.type_iban === 'iban-ca'">
-                                    <a-form-item
-                                      label="Pays"
-                                      v-bind="validateInfosIbanModule.cb_iban_country"
-                                    >
+                                    <a-form-item label="Pays" v-bind="validateInfosIbanModule.cb_iban_country">
                                       <a-select
-                                        v-model:value="formStateIbanModule.cb_iban_country"
-                                        placeholder="Pays"
+                                        v-model:value="formStateIbanModule.cb_iban_country" placeholder="Pays"
                                         :options="countriesIbanOthers"
                                       />
                                     </a-form-item>
-                                    <a-form-item
-                                      label="Région"
-                                      v-bind="validateInfosIbanModule.cb_iban_region"
-                                    >
+                                    <a-form-item label="Région" v-bind="validateInfosIbanModule.cb_iban_region">
                                       <a-input
                                         v-model:value="formStateIbanModule.cb_iban_region"
                                         @blur="validate('cb_iban_region', { trigger: 'blur' }).catch(() => { })"
@@ -2281,19 +2226,13 @@ onMounted(async() => {
                                   <!-- end form items iban ca -->
                                   <!-- form items iban BIC SWIFT -->
                                   <div v-if="formStateTypeIban.type_iban === 'others'">
-                                    <a-form-item
-                                      label="Pays"
-                                      v-bind="validateInfosIbanModule.cb_iban_country"
-                                    >
+                                    <a-form-item label="Pays" v-bind="validateInfosIbanModule.cb_iban_country">
                                       <a-select
                                         v-model:value="formStateIbanModule.cb_iban_country"
                                         :options="countriesIbanOthers"
                                       />
                                     </a-form-item>
-                                    <a-form-item
-                                      label="Région"
-                                      v-bind="validateInfosIbanModule.cb_iban_region"
-                                    >
+                                    <a-form-item label="Région" v-bind="validateInfosIbanModule.cb_iban_region">
                                       <a-input
                                         v-model:value="formStateIbanModule.cb_iban_region"
                                         @blur="validate('cb_iban_region', { trigger: 'blur' }).catch(() => { })"
@@ -2331,9 +2270,7 @@ onMounted(async() => {
                                   <div v-if="formStateTypeIban.type_iban != 'empty'">
                                     <a-form-item :wrapper-col="{ span: 24, offset: 0 }">
                                       <a-button
-                                        v-if="formStateTypeIban.type_iban !== 'empty'"
-                                        block
-                                        type="primary"
+                                        v-if="formStateTypeIban.type_iban !== 'empty'" block type="primary"
                                         @click.prevent="onSubmitIbanModule"
                                       >
                                         Enregistrer
@@ -2342,12 +2279,7 @@ onMounted(async() => {
                                   </div>
                                   <div v-else>
                                     <a-form-item :wrapper-col="{ span: 24, offset: 0 }">
-                                      <a-button
-                                        block
-                                        type="primary"
-                                        disabled
-                                        @click.prevent="onSubmitIbanModule"
-                                      >
+                                      <a-button block type="primary" disabled @click.prevent="onSubmitIbanModule">
                                         Choisir un type de compte
                                       </a-button>
                                     </a-form-item>
@@ -2373,10 +2305,8 @@ onMounted(async() => {
     <!--== End Login Area Wrapper ==-->
   </main>
   <a-modal
-    v-model:visible="visibleModalAddReference"
-    width="40%"
-    :title="modelRefReference.id ? 'Modifier référence client' : 'Ajouter une référence'"
-    @ok="() => { }"
+    v-model:visible="visibleModalAddReference" width="40%"
+    :title="modelRefReference.id ? 'Modifier référence client' : 'Ajouter une référence'" @ok="() => { }"
   >
     <div>
       <a-form layout="vertical" :wrapper-col="{ span: 24 }">
@@ -2388,9 +2318,7 @@ onMounted(async() => {
         </a-form-item>
         <a-form-item label="Choisir un domaine :" v-bind="referenceValidateInfos.domain">
           <a-select
-            v-model:value="modelRefReference.domain"
-            placeholder="Choisir un domaine"
-            :options="activities"
+            v-model:value="modelRefReference.domain" placeholder="Choisir un domaine" :options="activities"
             @blur="validate('domain', { trigger: 'blur' }).catch(() => { })"
           />
         </a-form-item>
@@ -2414,20 +2342,38 @@ onMounted(async() => {
           </div>
         </div>
         <div class="grid grid-cols-2 gap-3 w-full">
+          <div>
+            <a-form-item name="image" label="Logo" v-bind="referenceValidateInfos.image">
+              <a-upload
+                name="file"
+                :before-upload="(file) => {
+                  const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
+                  if (!isJpgOrPng) {
+                    message.error('You can only upload JPG file!');
+                  }
+                  if(isJpgOrPng) {
+                    modelRefReference.image = file
+                  }
+                  return false;
+                }"
+              >
+                <a-button class="flex items-center">
+                  <span class="i-ant-design-upload-outlined block text-md mr-1" />
+                  Upload
+                </a-button>
+              </a-upload>
+            </a-form-item>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3 w-full">
           <div class>
             <a-form-item
-              name="month-picker"
-              label="Date Début"
-              :wrapper-col="{ span: 24, offset: 0 }"
-              :label-col="{
+              name="month-picker" label="Date Début" :wrapper-col="{ span: 24, offset: 0 }" :label-col="{
                 sm: { span: 24 }
-              }"
-              v-bind="referenceValidateInfos.dateBegin"
+              }" v-bind="referenceValidateInfos.dateBegin"
             >
               <a-date-picker
-                v-model:value="modelRefReference.dateBegin"
-                style="width: 100%"
-                value-format="YYYY-MM-DD"
+                v-model:value="modelRefReference.dateBegin" style="width: 100%" value-format="YYYY-MM-DD"
                 :disabled-date="(current: Dayjs) => current && current > dayjs().endOf('day')"
                 @blur="validate('dateBegin', { trigger: 'blur' }).catch(() => { })"
               />
@@ -2437,16 +2383,11 @@ onMounted(async() => {
             <a-form-item
               :label-col="{
                 sm: { span: 24 }
-              }"
-              :wrapper-col="{ span: 24, offset: 0 }"
-              name="month-picker"
-              label="Date de fin"
+              }" :wrapper-col="{ span: 24, offset: 0 }" name="month-picker" label="Date de fin"
               v-bind="referenceValidateInfos.dateEnd"
             >
               <a-date-picker
-                v-model:value="modelRefReference.dateEnd"
-                style="width: 100%"
-                value-format="YYYY-MM-DD"
+                v-model:value="modelRefReference.dateEnd" style="width: 100%" value-format="YYYY-MM-DD"
                 :disabled-date="(current: Dayjs) => current && current > dayjs().endOf('day') || current < dayjs(modelRefReference.dateBegin)"
                 @blur="validate('dateEnd', { trigger: 'blur' }).catch(() => { })"
               />
@@ -2456,10 +2397,7 @@ onMounted(async() => {
       </a-form>
     </div>
     <template #footer>
-      <a-button
-        type="primary"
-        @click.prevent="onSubmit"
-      >
+      <a-button type="primary" @click.prevent="onSubmit">
         {{ modelRefReference.id ? 'Modifier' : 'Ajouter' }}
       </a-button>
       <a-button
@@ -2472,31 +2410,27 @@ onMounted(async() => {
   </a-modal>
   <!-- modale offer creation and update -->
   <a-modal
-    v-model:visible="visibleModalAddOffer"
-    width="40%"
-    :title="modelRefOffer.id ? 'Modifier une offre' : 'Ajouter une offre'"
-    @ok="() => { }"
+    v-model:visible="visibleModalAddOffer" width="40%"
+    :title="modelRefOffer.id ? 'Modifier une offre' : 'Ajouter une offre'" @ok="() => { }"
   >
     <div>
       <a-form layout="vertical" :wrapper-col="{ span: 24 }">
         <a-form-item label="Nom :" v-bind="validateInfosOffer.name">
-          <a-input
-            v-model:value="modelRefOffer.name"
-            @blur="validate('name', { trigger: 'blur' }).catch(() => { })"
-          />
+          <a-input v-model:value="modelRefOffer.name" @blur="validate('name', { trigger: 'blur' }).catch(() => { })" />
         </a-form-item>
         <a-form-item label="Choisir un domaine :" v-bind="validateInfosOffer.domain">
           <a-select
-            v-model:value="modelRefOffer.domain"
-            placeholder="Choisir un domaine"
-            :options="activities"
+            v-model:value="modelRefOffer.domain" placeholder="Choisir un domaine" :options="activities"
             @blur="validate('domain', { trigger: 'blur' }).catch(() => { })"
           />
         </a-form-item>
         <div class="grid grid-cols-2 gap-3 w-full">
           <div>
             <a-form-item label="prix :" v-bind="validateInfosOffer.price">
-              <a-input-number v-model:value="modelRefOffer.price" addon-after="€" @blur="validate('price', { trigger: 'blur' }).catch(() => { })" />
+              <a-input-number
+                v-model:value="modelRefOffer.price" addon-after="€"
+                @blur="validate('price', { trigger: 'blur' }).catch(() => { })"
+              />
             </a-form-item>
           </div>
           <div>
@@ -2506,19 +2440,12 @@ onMounted(async() => {
           </div>
         </div>
         <a-form-item label="Description :">
-          <a-textarea
-            v-model:value="modelRefOffer.description"
-            placeholder="description"
-            auto-size
-          />
+          <a-textarea v-model:value="modelRefOffer.description" placeholder="description" auto-size />
         </a-form-item>
       </a-form>
     </div>
     <template #footer>
-      <a-button
-        type="primary"
-        @click.prevent="onSubmitOffer"
-      >
+      <a-button type="primary" @click.prevent="onSubmitOffer">
         {{ modelRefReference.id ? 'Modifier' : 'Ajouter' }}
       </a-button>
       <a-button
@@ -2537,11 +2464,11 @@ onMounted(async() => {
           <h3> Vérification email</h3>
         </div>
         <div>
-          Lors de votre inscription sur Green-positiv, nous vous avons fait parvenir un email de vérification avec un lien de validation.
-          Merci de bien vouloir cliquer sur le lien pour confirmer votre adresse. Si vous ne l'avez pas reçu, cliquer sur ce
-          <a
-            class="link-info"
-          >lien</a> pour le recevoir.
+          Lors de votre inscription sur Green-positiv, nous vous avons fait parvenir un email de vérification avec un
+          lien de validation.
+          Merci de bien vouloir cliquer sur le lien pour confirmer votre adresse. Si vous ne l'avez pas reçu, cliquer
+          sur ce
+          <a class="link-info">lien</a> pour le recevoir.
         </div>
       </div>
     </div>
@@ -2558,7 +2485,8 @@ onMounted(async() => {
           <h3>Validation des documents</h3>
         </div>
         <div>
-          Merci de bien vouloir télécharger l'ensemble des documents demandés pour que nous puissions procéder à la validation de votre profil.
+          Merci de bien vouloir télécharger l'ensemble des documents demandés pour que nous puissions procéder à la
+          validation de votre profil.
         </div>
       </div>
     </div>
@@ -2592,7 +2520,10 @@ onMounted(async() => {
           <h3>Signature de la charte</h3>
         </div>
         <div>
-          Merci de bien vouloir lire et accepter la charte afin de valider votre profil via <router-link class="green" :to="`/charte/agence/${$props.id}`">
+          Merci de bien vouloir lire et accepter la charte afin de valider votre profil via <router-link
+            class="green"
+            :to="`/charte/agence/${$props.id}`"
+          >
             <span>ce lien</span>
           </router-link>
         </div>
@@ -2611,7 +2542,8 @@ onMounted(async() => {
           <h3>Compte validé</h3>
         </div>
         <div>
-          Afin de procéder à la validation de votre compte, tous les champs doivent être renseignés. Si ce n'est pas le cas, votre profil restera non valide jusqu'à ce que vous remplissiez toutes les étapes.
+          Afin de procéder à la validation de votre compte, tous les champs doivent être renseignés. Si ce n'est pas le
+          cas, votre profil restera non valide jusqu'à ce que vous remplissiez toutes les étapes.
         </div>
       </div>
     </div>
@@ -2626,15 +2558,19 @@ onMounted(async() => {
 .ant-tabs-tab {
   @apply px-4;
 }
-.ant-tabs-top > .ant-tabs-nav {
+
+.ant-tabs-top>.ant-tabs-nav {
   @apply mb-7;
 }
+
 .ant-tabs-nav .ant-tabs-nav-wrap {
   @apply bg-white;
 }
+
 .ant-tabs-content-holder {
   @apply rounded-sm;
 }
+
 .steps-content {
   margin-top: 12px;
   border: 1px dashed #e9e9e9;
@@ -2642,11 +2578,13 @@ onMounted(async() => {
   background-color: #fafafa;
   min-height: 200px;
 }
-.ant-tabs-tab{
+
+.ant-tabs-tab {
   padding: 20px;
   font-size: 16px;
   font-weight: bold;
 }
+
 .swiper-wrapper {
   @apply items-center;
 }

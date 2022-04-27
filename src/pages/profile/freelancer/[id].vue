@@ -92,7 +92,7 @@ const rulesDevis = reactive({
   ],
   dateEnd: [
     {
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (!value)
           return Promise.reject('Choisissez la date de fin')
         else if (modelRefDevis.dateBegin != null && value < modelRefDevis.dateBegin)
@@ -105,7 +105,7 @@ const rulesDevis = reactive({
   ],
   price_per_day: [
     {
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (!value && modelRefDevis.budget === undefined)
           return Promise.reject('Choisissez le tarif')
         else if (value > 9999)
@@ -118,7 +118,7 @@ const rulesDevis = reactive({
   ],
   budget: [
     {
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (!value && value !== undefined)
           return Promise.reject('Choisissez le budget')
         else if (value > 9999)
@@ -135,10 +135,10 @@ const resetFieldsDevis = useFormDevis.resetFields
 const validateDevis = useFormDevis.validate
 const devisValidateInfos = useFormDevis.validateInfos
 
-const sendDevis = async() => {
+const sendDevis = async () => {
   profileEntrepriseLoading.value = true
   validateDevis()
-    .then(async() => {
+    .then(async () => {
       if (currentUser.value.role === 'Freelancer') {
         const { data } = await missionApi.sendDevisFreelance(modelRefDevis)
         if (data) {
@@ -277,7 +277,7 @@ const rulesIban = reactive({
   cb_iban_postal: [
     {
       required: true,
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (!value)
           return Promise.reject(new Error('Veuillez saisir un code postal'))
         if (!Number.isInteger(+value)) {
@@ -309,7 +309,7 @@ const rulesIban = reactive({
   cb_iban_iban: [
     {
       required: true,
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (formStateIbanModule.type_iban === 'iban') {
           const numbers = value.slice(2, value.length)
           if (!value) { return Promise.reject(new Error('Veuillez saisir votre iban')) }
@@ -332,7 +332,7 @@ const rulesIban = reactive({
   cb_iban_region: [
     {
       required: true,
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (formStateTypeIban.type_iban === 'iban-us' || formStateTypeIban.type_iban === 'iban-ca' || formStateTypeIban.type_iban === 'others') {
           if (!value)
             return Promise.reject(new Error('Veuillez saisir la région'))
@@ -347,7 +347,7 @@ const rulesIban = reactive({
   cb_iban_account_number: [
     {
       required: true,
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (formStateTypeIban.type_iban === 'iban-us' || formStateTypeIban.type_iban === 'iban-ca' || formStateTypeIban.type_iban === 'others') {
           if (!value)
             return Promise.reject(new Error('Veuillez saisir votre numéro de compte'))
@@ -372,7 +372,7 @@ const rulesIban = reactive({
   cb_iban_aba_transit_number: [
     {
       required: true,
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (formStateTypeIban.type_iban === 'iban-us') {
           if (!value)
             return Promise.reject(new Error('Veuillez saisir votre ABA Transit number'))
@@ -397,7 +397,7 @@ const rulesIban = reactive({
   cb_iban_account_type: [
     {
       required: true,
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (formStateTypeIban.type_iban === 'iban-us') {
           if (!value)
             return Promise.reject(new Error('Choisir le type de compte'))
@@ -411,7 +411,7 @@ const rulesIban = reactive({
   cb_iban_branch_code: [
     {
       required: true,
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (formStateTypeIban.type_iban === 'iban-ca') {
           if (!value)
             return Promise.reject(new Error('Veuillez saisir votre numéro de compte'))
@@ -436,7 +436,7 @@ const rulesIban = reactive({
   cb_iban_number_institution: [
     {
       required: true,
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (formStateTypeIban.type_iban === 'iban-ca') {
           if (!value)
             return Promise.reject(new Error('Veuillez saisir le numéro de votre institution '))
@@ -461,7 +461,7 @@ const rulesIban = reactive({
   cb_iban_bank_name: [
     {
       required: true,
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (formStateTypeIban.type_iban === 'iban-ca') {
           if (!value)
             return Promise.reject(new Error('Veuillez saisir le nom de votre banque '))
@@ -479,7 +479,7 @@ const rulesIban = reactive({
   cb_iban_bic_swift: [
     {
       required: true,
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (formStateTypeIban.type_iban === 'others') {
           if (!value)
             return Promise.reject(new Error('Veuillez saisir le BIC/SWIFT'))
@@ -504,7 +504,7 @@ const rulesIban = reactive({
   cb_iban_account_country: [
     {
       required: true,
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (formStateTypeIban.type_iban === 'others') {
           if (!value)
             return Promise.reject(new Error('Veuillez saisir le pays du compte'))
@@ -555,7 +555,7 @@ const rulesRef = reactive({
   ],
   dateEnd: [
     {
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (modelRefExperience.actuallyPost)
           return Promise.resolve()
         else if (!value)
@@ -663,7 +663,7 @@ const rulesLegaleRepresentative = reactive({
       message: 'Saisir un code postal',
     },
     {
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (!value)
           return Promise.reject(new Error('Veuillez saisir un code postal'))
         if (!Number.isInteger(+value)) {
@@ -688,7 +688,7 @@ const rulesTaxe = reactive({
       message: 'Saisir un nombre entre 0 et 100',
     },
     {
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (!value)
           return Promise.reject(new Error('Veuillez saisir un numéro de taxe'))
         if (!Number.isInteger(+value)) {
@@ -712,7 +712,7 @@ const rulesLegaleMention = reactive({
       message: 'Saisir votre capitale',
     },
     {
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (!/^\d+$/.test(value) || Number(value) < 0)
           return Promise.reject(new Error('Veuillez saisir que des chiffres'))
         else
@@ -726,7 +726,7 @@ const rulesLegaleMention = reactive({
       message: 'Saisir le numéro SIRET',
     },
     {
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (value.length !== 14 || !/^\d+$/.test(value))
           return Promise.reject(new Error('Veuillez saisir que des chiffres'))
         else
@@ -740,7 +740,7 @@ const rulesLegaleMention = reactive({
       message: 'Saisir le champ RCS',
     },
     {
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (!/^[a-zA-Z]+$/.test(value))
           return Promise.reject(new Error('Veuillez saisir que des lettres'))
         else
@@ -754,7 +754,7 @@ const rulesLegaleMention = reactive({
       message: 'Saisir le champ NAF',
     },
     {
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         const nafNumbers = value.slice(0, value.length - 1)
         if (value.length !== 5 || !value.match('^[A-Z0-9]+$') || !/^\d+$/.test(nafNumbers) || !value[value.length - 1].match('^[A-Z]+$'))
           return Promise.reject(new Error('Veuillez saisir ce champ correctement (1234A)'))
@@ -766,9 +766,10 @@ const rulesLegaleMention = reactive({
   tva_intracom: [
     {
       required: true,
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         const tva_numbers = value.slice(2, value.length)
-        if (!value) return Promise.reject(new Error('Saisir la tva intracom'))
+        if (!value)
+          return Promise.reject(new Error('Saisir la tva intracom'))
         if (!value[0].match('F') || !value[1].match('R') || !/^\d+$/.test(tva_numbers))
           return Promise.reject(new Error('Veuillez saisir ce champ correctement (FR***********)'))
         else
@@ -782,7 +783,7 @@ const rulesLegaleMention = reactive({
       message: 'Saisir le nombre de jours (max 60)',
     },
     {
-      validator: async(_rule: RuleObject, value: number) => {
+      validator: async (_rule: RuleObject, value: number) => {
         if (value < 0 || value > 60)
           return Promise.reject(new Error('Saisir le nombre de jours (max 60)'))
         else
@@ -860,7 +861,7 @@ const calcDisponibilityFreq = (params: number, toSlide = true) => {
   }
 }
 
-const getFormData = async() => {
+const getFormData = async () => {
   globalApi.languages().then(({ data }) => {
     data.value && (languages.value = data.value.map(l => ({
       value: l.name,
@@ -950,7 +951,7 @@ const getFormData = async() => {
   })
   /**/
   profileEntreprise.value = null
-  await profileEntrepriseApi.profileEntreprise(props.id).then(async({ data }) => {
+  await profileEntrepriseApi.profileEntreprise(props.id).then(async ({ data }) => {
     if (data) {
       profileEntreprise.value = data
       const contactDetails = profileEntreprise.value?.contactDetails
@@ -1099,7 +1100,7 @@ const resetModuleIban = () => {
   formStateIbanModule.cb_iban_bic_swift = ''
   formStateIbanModule.cb_iban_account_country = ''
 }
-const updateProfile = async(profileData: any) => {
+const updateProfile = async (profileData: any) => {
   profileData.disponibility_freq = calcDisponibilityFreq(+formStateProfile.disponibility_freq, false)
   const { data } = await freelancerApi.updateProfile(profileData)
   data && message.info(data.message)
@@ -1111,9 +1112,9 @@ const updateProfile = async(profileData: any) => {
 const useFormIbanModule = useForm(formStateIbanModule, rulesIban)
 const validateIbanModule = useFormIbanModule.validate
 const validateInfosIbanModule = useFormIbanModule.validateInfos
-const onSubmitIbanModule = async() => {
+const onSubmitIbanModule = async () => {
   validateIbanModule()
-    .then(async() => {
+    .then(async () => {
       profileEntrepriseLoading.value = true
       const params = toRaw(formStateIbanModule)
       params.id_freelancer = props.id
@@ -1131,9 +1132,9 @@ const onSubmitIbanModule = async() => {
 const useFormContactDetails = useForm(formStateContactDetails, rulesContactDetails)
 const validateContactDetails = useFormContactDetails.validate
 const validateInfosContactDetails = useFormContactDetails.validateInfos
-const onSubmitContactDetails = async() => {
+const onSubmitContactDetails = async () => {
   validateContactDetails()
-    .then(async() => {
+    .then(async () => {
       profileEntrepriseLoading.value = true
       const params = toRaw(formStateContactDetails)
       params.id_freelancer = props.id
@@ -1151,7 +1152,7 @@ const onSubmitContactDetails = async() => {
 const useFormLegalRepresentative = useForm(formStateLegalRepresentative, rulesLegaleRepresentative)
 const validateLegalRepresentative = useFormLegalRepresentative.validate
 const validateInfosLegalRepresentative = useFormLegalRepresentative.validateInfos
-const onSubmitLegalRepresentative = async() => {
+const onSubmitLegalRepresentative = async () => {
   if (userDocument.value) {
     const formData = new FormData()
     formData.append('documents', userDocument.value)
@@ -1159,7 +1160,7 @@ const onSubmitLegalRepresentative = async() => {
     freelancerApi.uploadDocuments(formData).catch(err => message.error(`${err}`))
   }
   validateLegalRepresentative()
-    .then(async() => {
+    .then(async () => {
       profileEntrepriseLoading.value = true
       const params = toRaw(formStateLegalRepresentative)
       params.id_freelancer = props.id
@@ -1177,9 +1178,9 @@ const onSubmitLegalRepresentative = async() => {
 const useFormTaxe = useForm(formStateTaxe, rulesTaxe)
 const validateTaxe = useFormTaxe.validate
 const validateInfosTaxe = useFormTaxe.validateInfos
-const onSubmitTaxe = async() => {
+const onSubmitTaxe = async () => {
   validateTaxe()
-    .then(async() => {
+    .then(async () => {
       profileEntrepriseLoading.value = true
       const params = toRaw(formStateTaxe)
       params.id_freelancer = props.id
@@ -1198,9 +1199,9 @@ const onSubmitTaxe = async() => {
 const useFormLegalMention = useForm(formStateLegalMention, rulesLegaleMention)
 const validateLegalMention = useFormLegalMention.validate
 const validateInfosLegalMention = useFormLegalMention.validateInfos
-const onSubmitLegalMentions = async() => {
+const onSubmitLegalMentions = async () => {
   validateLegalMention()
-    .then(async() => {
+    .then(async () => {
       profileEntrepriseLoading.value = true
       const params = toRaw(formStateLegalMention)
       params.id_freelancer = props.id
@@ -1217,9 +1218,9 @@ const onSubmitLegalMentions = async() => {
 /* end bloc legal mention */
 /* bloc experience */
 const { resetFields, validate, validateInfos: experienceValidateInfos } = useForm(modelRefExperience, rulesRef)
-const onSubmit = async() => {
+const onSubmit = async () => {
   validate()
-    .then(async() => {
+    .then(async () => {
       profileEntrepriseLoading.value = true
       const params = toRaw(modelRefExperience)
       if (params.id) {
@@ -1281,9 +1282,9 @@ const useFormFormation = useForm(modelRefFormation, rulesForm)
 const resetFieldsFormation = useFormFormation.resetFields
 const validateFormation = useFormFormation.validate
 const validateInfosFormation = useFormFormation.validateInfos
-const onSubmitForm = async() => {
+const onSubmitForm = async () => {
   validateFormation()
-    .then(async() => {
+    .then(async () => {
       profileEntrepriseLoading.value = true
       const params = toRaw(modelRefFormation)
       if (params.id) {
@@ -1354,9 +1355,9 @@ const useFormCertification = useForm(modelRefCertification, rulesCert)
 const resetFieldsCertification = useFormCertification.resetFields
 const validateCertification = useFormCertification.validate
 const validateInfosCertification = useFormCertification.validateInfos
-const onSubmitCert = async() => {
+const onSubmitCert = async () => {
   validateCertification()
-    .then(async() => {
+    .then(async () => {
       profileEntrepriseLoading.value = true
       const params = toRaw(modelRefCertification)
       if (params.id) {
@@ -1408,7 +1409,7 @@ const deleteCertification = (id: string) => {
   })
 }
 /* end bloc certification */
-const beforeUploadProfileAvatar = async(file: any) => {
+const beforeUploadProfileAvatar = async (file: any) => {
   const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png'
   if (!isJpgOrPng)
     message.error('You can only upload JPG file!')
@@ -1422,7 +1423,7 @@ const beforeUploadProfileAvatar = async(file: any) => {
   }
   return false
 }
-const onFinish = async(values: any) => {
+const onFinish = async (values: any) => {
   if (values.avatar) {
     const formData = new FormData()
     formData.append('image', values.avatar[0].originFileObj)
@@ -1435,28 +1436,28 @@ const onFinish = async(values: any) => {
 const onFinishFailed = (errorInfo: any) => {
   console.log('Failed:', errorInfo)
 }
-const removeLanguage = async(lang: any) => {
+const removeLanguage = async (lang: any) => {
   const { data } = await freelancerApi.deleteLanguage(lang).catch(err => message.error(err.message))
   if (data) {
     message.info(data.message)
     getFormData()
   }
 }
-const updateLanguage = async(lang: any) => {
+const updateLanguage = async (lang: any) => {
   const { data } = await freelancerApi.updateLanguage(lang).catch(err => message.error(err.message))
   if (data) {
     message.info(data.message)
     getFormData()
   }
 }
-const addLanguage = async(lang: any) => {
+const addLanguage = async (lang: any) => {
   const { data } = await freelancerApi.addLanguage(lang).catch(err => message.error(err.message))
   if (data) {
     message.info(data.message)
     getFormData()
   }
 }
-onMounted(async() => {
+onMounted(async () => {
   getFormData()
 })
 </script>
@@ -1549,7 +1550,7 @@ onMounted(async() => {
                   <!--end::Info-->
                 </div>
                 <div class="flex">
-                  <a-card :bordered="false" class="bg-white" body-style="padding: 5px">
+                  <a-card :bordered="false" class="bg-white" :body-style="{padding: '5px'}">
                     <a-progress
                       type="circle" :stroke-color="{
                         '0%': '#108ee9',

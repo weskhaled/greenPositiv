@@ -42,7 +42,7 @@ http.interceptors.response.use(
     message.info(JSON.stringify(response.status))
     return response
   },
-  async(error: AxiosError) => {
+  async (error: AxiosError) => {
     const { response } = error
     if (response) {
       if (response.status === 401) {
@@ -63,8 +63,16 @@ http.interceptors.response.use(
 )
 const service = {
   get: (url: string, data?: object) => http.get(url, { params: data }),
-  post: (url: string, data?: object) => http.post(url, data),
-  patch: (url: string, data?: object) => http.patch(url, data),
+  post: (url: string, data?: object, isFormData = false) => http.post(url, data, {
+    ...(isFormData) && {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    },
+  }),
+  patch: (url: string, data?: object, isFormData = false) => http.patch(url, data, {
+    ...(isFormData) && {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    },
+  }),
   delete: (url: string, data?: object) => http.delete(url, data),
   upload: (url: string, file: FormData) =>
     http.patch(url, file, {

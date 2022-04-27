@@ -67,10 +67,8 @@ const currentStep = ref(0)
 const currentAgenceStep = ref(0)
 const currentCompanyStep = ref(0)
 const jobs = ref([])
-const departements = ref([])
-const sizeCompanies = ref([])
 
-sizeCompanies.value = [{
+const sizeCompanies = [{
   value: 0,
   label: '1 personne',
 },
@@ -98,7 +96,7 @@ sizeCompanies.value = [{
   value: 6,
   label: 'Plus de 5000',
 }]
-departements.value = [{
+const departements = [{
   value: 'IT',
   label: 'IT',
 },
