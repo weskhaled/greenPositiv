@@ -181,15 +181,13 @@ const calcWorkFreq = (params: number, toSlide = true) => {
 const onFinish = async(values: any) => {
   console.log('finished')
 }
-const getDevis = async(id: string) => {
-  if (currentUser.value.role === 'Company' || currentUser.value.role === 'Collab') {
-    await missionApi.getDevisById(id).then(({ data }) => {
-      if (data) {
-        devis.value = data.devises
-        users.value = data.users
-      }
-    })
-  }
+const getDevis = async() => {
+  missionApi.getDevisById(props.id).then(({ data }) => {
+    if (data) {
+      devis.value = data.devises
+      users.value = data.users
+    }
+  })
 }
 
 const sendDevis = async() => {
@@ -232,7 +230,7 @@ const acceptDevis = async(item: any) => {
     await missionApi.acceptFreelance(item._id, { id_freelance: item.id_freelance }).then(({ data }) => {
       if (data) {
         message.info(data.message)
-        getDevis(item.id_mission)
+        getDevis()
       }
     }).catch((err) => {
       message.error(err.message)
@@ -242,7 +240,7 @@ const acceptDevis = async(item: any) => {
     await missionApi.acceptAgence(item._id, { id_agence: item.id_agence }).then(({ data }) => {
       if (data) {
         message.info(data.message)
-        getDevis(item.id_mission)
+        getDevis()
       }
     }).catch((err) => {
       message.error(err.message)
@@ -257,7 +255,7 @@ const refuseDevis = async(item: any) => {
     await missionApi.refuseFreelance(item._id, { id_freelance: item.id_freelance }).then(({ data }) => {
       if (data) {
         message.info(data.message)
-        getDevis(item.id_mission)
+        getDevis()
       }
     }).catch((err) => {
       message.error(err.message)
@@ -267,7 +265,7 @@ const refuseDevis = async(item: any) => {
     await missionApi.refuseAgence(item._id, { id_agence: item.id_agence }).then(({ data }) => {
       if (data) {
         message.info(data.message)
-        getDevis(item.id_mission)
+        getDevis()
       }
     }).catch((err) => {
       message.error(err.message)
@@ -298,7 +296,6 @@ const getFormData = async() => {
       label: l.name,
     })))
   })
-
   await missionApi.findOneMission(props.id).then(({ data }) => {
     if (data) {
       mission.value = data.value.mission
@@ -329,8 +326,8 @@ const getFormData = async() => {
 }
 
 onMounted(async() => {
-  await getFormData()
-  await getDevis(props.yid)
+  await getDevis()
+  getFormData()
 })
 
 const onFinishFailed = (errorInfo: any) => {
@@ -369,10 +366,9 @@ const onFinishFailed = (errorInfo: any) => {
     </div>
     <!--== End Page Header Area Wrapper ==-->
 
-    <!--== Start Login Area Wrapper ==-->
     <section class="account-login-area bg-gray-100">
       <div class="container pt-5">
-        <a-skeleton v-if="!formStateMission" avatar active :paragraph="{ rows: 15 }" />
+        <a-skeleton v-if="!formStateMission && !devis" avatar active :paragraph="{ rows: 15 }" />
         <div v-else class>
           <div class="pt-0">
             <div v-if="currentUser?.role === 'Company' || currentUser?.role === 'Collab'" class>
