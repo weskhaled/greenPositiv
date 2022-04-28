@@ -42,16 +42,19 @@ http.interceptors.response.use(
     message.info(JSON.stringify(response.status))
     return response
   },
-  async(error: AxiosError) => {
+  async (error: AxiosError) => {
     const { response } = error
     if (response) {
       if (response.status === 401) {
         if (refreshToken.value) {
           const encodedJwt = ref(refreshToken.value)
           const { payload } = useJwt(encodedJwt)
-          const { data } = await useFetch(`${BASE_PREFIX}/auth/refresh`).post({ email: payload.value?.emailConnected, username: payload.value?.usernameConnected, refreshToken: refreshToken.value }).json()
-          data.value && (token.value = data.value.token)
-          console.log('response.status === 401', data)
+          const { data, error } = await useFetch(`${BASE_PREFIX}/auth/refresh`).post({ email: payload.value?.emailConnected, username: payload.value?.usernameConnected, refreshToken: refreshToken.value }).json()
+          data.value?.token && (token.value = data.value.token)
+          if (error.value) {
+            token.value = null
+            refreshToken.value = null
+          }
         }
       }
 
@@ -77,10 +80,7 @@ const service = {
   },
 }
 
-watch(token, (newVal, oldVal) => {
-  console.log('token watch')
-  console.log('new token', token)
-  console.log(newVal, oldVal)
+watch(token, () => {
   http.interceptors.request.use((config: any) => {
     if (token.value && token.value.length)
       config.headers.token = unref(token)

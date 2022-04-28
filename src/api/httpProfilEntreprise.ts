@@ -42,15 +42,19 @@ http.interceptors.response.use(
     message.info(JSON.stringify(response.status))
     return response
   },
-  async(error: AxiosError) => {
+  async (error: AxiosError) => {
     const { response } = error
     if (response) {
       if (response.status === 401) {
         if (refreshToken.value) {
           const encodedJwt = ref(refreshToken.value)
           const { payload } = useJwt(encodedJwt)
-          const { data } = await useFetch(`${BASE_PREFIX}/auth/refresh`).post({ email: payload.value?.emailConnected, username: payload.value?.usernameConnected, refreshToken: refreshToken.value }).json()
+          const { data, error } = await useFetch(`${BASE_PREFIX}/auth/refresh`).post({ email: payload.value?.emailConnected, username: payload.value?.usernameConnected, refreshToken: refreshToken.value }).json()
           data.value && (token.value = data.value.token)
+          if (error) {
+            console.log('error')
+            console.log('error', error)
+          }
         }
       }
 

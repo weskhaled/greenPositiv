@@ -1073,7 +1073,7 @@ const onSubmit = async () => {
       }
       else {
         delete params.id
-        console.log(params.image)
+
         params.old_image = 'test'
         const form_data = new FormData()
 

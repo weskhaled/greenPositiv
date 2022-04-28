@@ -85,8 +85,6 @@ const service = {
 }
 
 watch(token, (newVal, oldVal) => {
-  console.log('token watch')
-  console.log(newVal, oldVal)
   http.interceptors.request.use((config: any) => {
     if (token.value && token.value.length)
       config.headers.token = token.value
