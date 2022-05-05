@@ -109,7 +109,7 @@ const calcDisponibilityFreq = (params: number, toSlide = true) => {
       return 5
   }
 }
-const getFormData = async() => {
+const getFormData = async () => {
   globalApi.languages().then(({ data }) => {
     data.value && (languages.value = data.value.map(l => ({
       value: l.name,
@@ -160,7 +160,7 @@ const getFormData = async() => {
   /**/
   profileEntreprise.value = null
 }
-const onFinish = async(values: any) => {
+const onFinish = async (values: any) => {
   if (values.avatar) {
     const formData = new FormData()
     formData.append('image', values.avatar[0].originFileObj)
@@ -172,7 +172,7 @@ const onFinish = async(values: any) => {
 const onFinishFailed = (errorInfo: any) => {
   console.log('Failed:', errorInfo)
 }
-onMounted(async() => {
+onMounted(async () => {
   console.log('props id ', props.id)
   getFormData()
 })
@@ -286,7 +286,6 @@ onMounted(async() => {
                       @finish-failed="onFinishFailed"
                       @finish="onFinish"
                     >
-                      <h4>Comment le Green fait parti de votre de vie et comment est-il présent dans votre vie ?</h4>
                       <a-form-item class="font-bold" name="greenQuestion" label="Question GREEN">
                         <label class="font-normal">{{ formStateProfile.greenQuestion }}</label>
                       </a-form-item>

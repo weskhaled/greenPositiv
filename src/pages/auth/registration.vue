@@ -150,7 +150,7 @@ const typeSearchable = [{
   label: 'greenPositiv cherchera pour vous les profils',
 }]
 
-const validaterePassword = async(_rule: RuleObject, value: string) => {
+const validaterePassword = async (_rule: RuleObject, value: string) => {
   if (value === '')
     return Promise.reject(new Error('veuillez resaisir votre mot de passe'))
 
@@ -160,7 +160,7 @@ const validaterePassword = async(_rule: RuleObject, value: string) => {
   else
     return Promise.resolve()
 }
-const validaterePasswordAgence = async(_rule: RuleObject, value: string) => {
+const validaterePasswordAgence = async (_rule: RuleObject, value: string) => {
   if (value === '')
     return Promise.reject(new Error('veuillez resaisir votre mot de passe'))
 
@@ -170,7 +170,7 @@ const validaterePasswordAgence = async(_rule: RuleObject, value: string) => {
   else
     return Promise.resolve()
 }
-const validaterePasswordCompany = async(_rule: RuleObject, value: string) => {
+const validaterePasswordCompany = async (_rule: RuleObject, value: string) => {
   if (value === '')
     return Promise.reject(new Error('veuillez resaisir votre mot de passe'))
 
@@ -187,7 +187,7 @@ const validateConfidentiality = async(_rules, value) => {
   return Promise.reject(new Error('Please input the Confidentiality'))
 }
 */
-const validatePhone = async(_rule: RuleObject, value: any) => {
+const validatePhone = async (_rule: RuleObject, value: any) => {
   if (!value)
     return Promise.reject(new Error('Veuillez saisir un numéro de téléphone valide'))
 
@@ -202,7 +202,7 @@ const validatePhone = async(_rule: RuleObject, value: any) => {
       return Promise.resolve()
   }
 }
-const nextStep = async() => {
+const nextStep = async () => {
   if (formRegisterRef.value) {
     try {
       const values = await formRegisterRef.value.validateFields()
@@ -232,7 +232,7 @@ const nextStep = async() => {
     }
   }
 }
-const nextAgenceStep = async() => {
+const nextAgenceStep = async () => {
   if (formRegisterAgenceRef.value) {
     try {
       const values = await formRegisterAgenceRef.value.validateFields()
@@ -262,7 +262,7 @@ const nextAgenceStep = async() => {
     }
   }
 }
-const nextCompanyStep = async() => {
+const nextCompanyStep = async () => {
   if (formRegisterCompanyRef.value) {
     try {
       const values = await formRegisterCompanyRef.value.validateFields()
@@ -293,7 +293,7 @@ const nextCompanyStep = async() => {
   }
 }
 
-onMounted(async() => {
+onMounted(async () => {
   if (route.query.agence === 'true')
     activeTabKey.value = '2'
   const { data } = await adminApi.jobs()
@@ -480,7 +480,10 @@ onMounted(async() => {
 
                             <a-form-item name="price_per_day" :rules="[{ required: true, message: 'Veuillez saisir votre tarif' }]">
                               <span class="ant-form-text">Définissez votre tarif </span>
-                              <a-input-number v-model:value="formRegisterState.price_per_day" step="50" :min="50" :max="9999" />
+                              <a-input-number
+                                v-model:value="formRegisterState.price_per_day" addon-after="€" step="50" :min="50" :max="9999"
+                                @blur="validate('price_per_day', { trigger: 'blur' }).catch(() => { })"
+                              />
                             </a-form-item>
 
                             <a-form-item name="show_price" no-style :rules="[{ required: true, message: 'Afficher votre prix' }]">

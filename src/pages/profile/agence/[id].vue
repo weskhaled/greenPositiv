@@ -1583,6 +1583,14 @@ onMounted(async () => {
                             </template>
                             <a-card-meta :title="item.title">
                               <template #description>
+                                <div class="flex items-center justify-center">
+                                  <a-avatar
+                                    :src="item?.image"
+                                    shape="square"
+                                    :size="{ xs: 24, sm: 32, md: 40, lg: 64, xl: 120, xxl: 160 }"
+                                  />
+                                </div>
+                                <br>
                                 <div class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
                                     Client:

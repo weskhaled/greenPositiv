@@ -21,7 +21,10 @@ const skills = ref([])
 const freqTexts = ref([])
 const showPriceArray = ref([])
 const showSuppMonthArray = ref([])
-
+const formItemLayout = {
+  labelCol: { span: 8 },
+  wrapperCol: { span: 14 },
+}
 const formStateMission = reactive<Record<string, any>>({
   title_profile: '',
   level: '',
@@ -33,17 +36,18 @@ const formStateMission = reactive<Record<string, any>>({
   description: '',
   skills: [],
   dateBegin: null,
+  dateEnd: null,
   objectif: '',
   price_per_day: 0,
   period_per_month: 1,
-  show_price: true,
+  show_price: 'true',
   work_frequence: 0,
-  telework: false,
+  telework: 'false',
   nb_days_telework: 0,
   local_city: '',
   comments: '',
   document: null,
-  supp_month: true,
+  supp_month: 'true',
   budget: 0,
 })
 levels.value = [{
@@ -58,17 +62,17 @@ levels.value = [{
 }]
 
 showPriceArray.value = [{
-  value: true,
+  value: 'true',
   label: 'Oui',
 }, {
-  value: false,
+  value: 'false',
   label: 'Non',
 }]
 showSuppMonthArray.value = [{
-  value: true,
+  value: 'true',
   label: 'plus d\'un mois',
 }, {
-  value: false,
+  value: 'false',
   label: 'moins d\'un mois',
 }]
 freqTexts.value = ['1 jour/semaine', '2 jours/semaine', '3 jours/semaine', '4 jours/semaine', '5 jours/semaine']
@@ -83,7 +87,7 @@ const rulesMission = reactive({
   level: [
     {
       required: true,
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (currentStep.value == 0) {
           if (!value || !levels.value.map(l => l.value).includes(value))
             return Promise.reject(new Error('Veuillez saisir votre niveau'))
@@ -103,9 +107,10 @@ const rulesMission = reactive({
   ],
   skillsNeeded: [
     {
-      validator: async(_rule: RuleObject, value: any) => {
+      validator: async (_rule: RuleObject, value: any) => {
         if (currentStep.value == 0) {
-          if (value.length < 2) return Promise.reject(new Error('Veuillez saisir au minimum 2 compétences'))
+          if (value.length < 2)
+            return Promise.reject(new Error('Veuillez saisir au minimum 2 compétences'))
           else
             return Promise.resolve()
         }
@@ -115,9 +120,10 @@ const rulesMission = reactive({
   ],
   skillsAppreciated: [
     {
-      validator: async(_rule: RuleObject, value: any) => {
+      validator: async (_rule: RuleObject, value: any) => {
         if (currentStep.value == 0) {
-          if (value.length < 3) return Promise.reject(new Error('Veuillez saisir au minimum 3 compétences'))
+          if (value.length < 3)
+            return Promise.reject(new Error('Veuillez saisir au minimum 3 compétences'))
           else if (value.length > 12)
             return Promise.reject(new Error('Veuillez saisir au maximum 12 compétences'))
 
@@ -130,8 +136,8 @@ const rulesMission = reactive({
   ],
   period_per_month: [
     {
-      validator: async(_rule: RuleObject, value: any) => {
-        if (currentStep.value == 1 && formStateMission.supp_month) {
+      validator: async (_rule: RuleObject, value: any) => {
+        if (currentStep.value == 1 && formStateMission.supp_month === 'true') {
           if (!value)
             return Promise.reject(new Error('Veuillez saisir le nombre de mois'))
           if (!Number.isInteger(+value))
@@ -145,8 +151,8 @@ const rulesMission = reactive({
   ],
   price_per_day: [
     {
-      validator: async(_rule: RuleObject, value: any) => {
-        if (currentStep.value == 1 && formStateMission.supp_month) {
+      validator: async (_rule: RuleObject, value: any) => {
+        if (currentStep.value == 1 && formStateMission.supp_month === 'true') {
           if (!value)
             return Promise.reject(new Error('Veuillez saisir le prix'))
           if (!Number.isInteger(+value))
@@ -160,8 +166,8 @@ const rulesMission = reactive({
   ],
   budget: [
     {
-      validator: async(_rule: RuleObject, value: any) => {
-        if (currentStep.value == 1 && !formStateMission.supp_month) {
+      validator: async (_rule: RuleObject, value: any) => {
+        if (currentStep.value == 1 && formStateMission.supp_month === 'false') {
           if (!value)
             return Promise.reject(new Error('Veuillez saisir le budget'))
           if (!Number.isInteger(+value))
@@ -175,7 +181,7 @@ const rulesMission = reactive({
   ],
   local_city: [
     {
-      validator: async(_rule: RuleObject, value: any) => {
+      validator: async (_rule: RuleObject, value: any) => {
         if (currentStep.value == 1) {
           if (!value)
             return Promise.reject(new Error('choisir l\'emplacement de la mission'))
@@ -187,7 +193,7 @@ const rulesMission = reactive({
   ],
   name: [
     {
-      validator: async(_rule: RuleObject, value: any) => {
+      validator: async (_rule: RuleObject, value: any) => {
         if (currentStep.value == 2) {
           if (!value)
             return Promise.reject(new Error('Veuillez saisir le nom de la mission'))
@@ -199,7 +205,7 @@ const rulesMission = reactive({
   ],
   objectif: [
     {
-      validator: async(_rule: RuleObject, value: any) => {
+      validator: async (_rule: RuleObject, value: any) => {
         if (currentStep.value == 2) {
           if (!value)
             return Promise.reject(new Error('Veuillez saisir l\'objectif de la mission'))
@@ -211,10 +217,24 @@ const rulesMission = reactive({
   ],
   dateBegin: [
     {
-      validator: async(_rule: RuleObject, value: any) => {
+      validator: async (_rule: RuleObject, value: any) => {
         if (currentStep.value == 1) {
           if (!value)
             return Promise.reject(new Error('Choissiez une date'))
+          else return Promise.resolve()
+        }
+        else { return Promise.resolve() }
+      },
+    },
+  ],
+  dateEnd: [
+    {
+      validator: async (_rule: RuleObject, value: any) => {
+        if (currentStep.value == 1) {
+          if (!value)
+            return Promise.reject(new Error('Choissiez une date'))
+          else if (formStateMission.dateBegin > value)
+            return Promise.reject(new Error('l\'intervalle est erroné'))
           else return Promise.resolve()
         }
         else { return Promise.resolve() }
@@ -251,7 +271,7 @@ const calcWorkFreq = (params: number, toSlide = true) => {
   }
 }
 
-const addMission = async() => {
+const addMission = async () => {
   try {
     const formData = new FormData()
     formData.append('title_profile', formStateMission.title_profile)
@@ -266,6 +286,7 @@ const addMission = async() => {
     formData.append('city', formStateMission.city)
     formData.append('objectif', formStateMission.objectif)
     formData.append('dateBegin', formStateMission.dateBegin)
+    formData.append('dateEnd', formStateMission.dateEnd)
     formData.append('period_per_month', formStateMission.period_per_month)
     formData.append('price_per_day', formStateMission.price_per_day)
     formData.append('show_price', formStateMission.show_price)
@@ -295,13 +316,15 @@ const addMission = async() => {
     message.error(`${error.message}`)
   }
 }
-const onFinish = async(values: any) => {
+const onFinish = async (values: any) => {
   console.log('finished')
 }
-const nextStep = async() => {
+const nextStep = async () => {
   await validate()
-    .then(async() => {
+    .then(async () => {
       if (currentStep.value === 1) {
+        console.log('form ', formStateMission)
+
         formStateMission.work_frequence = calcWorkFreq(+formStateMission.work_frequence, false)
         if (formStateMission.nb_days_telework)
           formStateMission.nb_days_telework = calcWorkFreq(+formStateMission.nb_days_telework, false)
@@ -325,7 +348,7 @@ const nextStep = async() => {
     }).finally(() => profileEntrepriseLoading.value = false)
 }
 
-const getFormData = async() => {
+const getFormData = async () => {
   adminApi.jobs().then(({ data }) => {
     data.value && (jobs.value = data.value.filter(j => j._id && j.name).map(j => ({
       value: j._id,
@@ -349,7 +372,7 @@ const getFormData = async() => {
   })
 }
 
-const beforeUploadDocument = async(file: any) => {
+const beforeUploadDocument = async (file: any) => {
   const isLt2M = file.size / 1024 / 1024 < 2
   if (!isLt2M)
     message.error('Image must smaller than 2MB!')
@@ -358,7 +381,7 @@ const beforeUploadDocument = async(file: any) => {
   return false
 }
 
-onMounted(async() => {
+onMounted(async () => {
   getFormData()
 })
 
@@ -423,11 +446,11 @@ const onFinishFailed = (errorInfo: any) => {
                       />
                       <a-step
                         :disabled="!(formStateMission.title_profile && formStateMission.level)"
-                        :status="(formStateMission.dateBegin && formStateMission.local_city) ? 'finish' : (currentStep === 1 ? 'process' : 'wait')"
+                        :status="(formStateMission.dateBegin && formStateMission.dateEnd && formStateMission.local_city) ? 'finish' : (currentStep === 1 ? 'process' : 'wait')"
                         title="Condition"
                       />
                       <a-step
-                        :disabled="!(formStateMission.local_city && formStateMission.dateBegin)"
+                        :disabled="!(formStateMission.local_city && formStateMission.dateBegin && formStateMission.dateEnd)"
                         :status="(formStateMission.objectif.length > 20 && formStateMission.description.length > 20) ? 'finish' : (currentStep === 2 ? 'process' : 'wait')"
                         title="Mission"
                       />
@@ -535,28 +558,48 @@ const onFinishFailed = (errorInfo: any) => {
                           </a-form-item>
 
                           <a-form-item
-                            v-if="formStateMission.supp_month" name="period_per_month" label="veuillez saisir le nombre de mois de travail estimé"
+                            v-if="formStateMission.supp_month == 'true'" name="period_per_month" label="veuillez saisir le nombre de mois de travail estimé"
                             v-bind="missionValidateInfos.period_per_month"
                           >
-                            <a-input v-if="formStateMission.supp_month" v-model:value="formStateMission.period_per_month" />
-                          </a-form-item>
-                          <a-form-item name="date-picker" label="Date de début prévue le">
-                            <a-form-item
-                              name="date-picker"
-                              :wrapper-col="{ span: 24, offset: 0 }"
-                              :label-col="{ sm: { span: 24 } }"
-                              v-bind="missionValidateInfos.dateBegin"
-                            >
-                              <a-date-picker
-                                v-model:value="formStateMission.dateBegin"
-                                style="width: 100%"
-                                value-format="YYYY-MM-DD"
-                                :disabled-date="(current: Dayjs) => current && current <= dayjs().endOf('day')"
-                              />
-                            </a-form-item>
+                            <a-input v-if="formStateMission.supp_month == 'true'" v-model:value="formStateMission.period_per_month" />
                           </a-form-item>
                           <a-form-item
-                            v-if="formStateMission.supp_month" name="work_frequence" label="Fréquence optimale de la mission / Semaine"
+                            name="month-picker"
+                            label="Date Début"
+                            :wrapper-col="{ span: 24, offset: 0 }"
+                            :label-col="{
+                              sm: { span: 24 }
+                            }"
+                            v-bind="missionValidateInfos.dateBegin"
+                          >
+                            <a-date-picker
+                              v-model:value="formStateMission.dateBegin"
+                              style="width: 100%"
+                              value-format="YYYY-MM-DD"
+                              :disabled-date="(current: Dayjs) => current && current <= dayjs().endOf('day')"
+                              @blur="validate('dateBegin', { trigger: 'blur' }).catch(() => { })"
+                            />
+                          </a-form-item>
+                          <a-form-item
+                            :label-col="{
+                              sm: { span: 24 }
+                            }"
+                            :wrapper-col="{ span: 24, offset: 0 }"
+                            name="month-picker"
+                            label="Date de fin"
+                            v-bind="missionValidateInfos.dateEnd"
+                          >
+                            <a-date-picker
+                              v-model:value="formStateMission.dateEnd"
+                              style="width: 100%"
+                              value-format="YYYY-MM-DD"
+                              :disabled-date="(current: Dayjs) => current && current <= dayjs().endOf('day') || current < dayjs(formStateMission.dateBegin)"
+                              @blur="validate('dateEnd', { trigger: 'blur' }).catch(() => { })"
+                            />
+                          </a-form-item>
+
+                          <a-form-item
+                            v-if="formStateMission.supp_month == 'true'" name="work_frequence" label="Fréquence optimale de la mission / Semaine"
                           >
                             <a-slider
                               v-model:value="formStateMission.work_frequence"
@@ -572,10 +615,13 @@ const onFinishFailed = (errorInfo: any) => {
                             />
                           </a-form-item>
                           <a-form-item
-                            v-if="formStateMission.supp_month" name="price_per_day" label="Le tarif du freelance €/Jour"
-                            v-bind="missionValidateInfos.price_per_day"
+                            v-if="formStateMission.supp_month == 'true'" name="price_per_day" label="Le tarif du freelance €/Jour"
+                            v-bind="missionValidateInfos.price_per_day" :wrapper-col="{ span: 24, offset: 0 }"
                           >
-                            <a-input v-model:value="formStateMission.price_per_day" />
+                            <a-input-number
+                              v-model:value="formStateMission.price_per_day" addon-after="€"
+                              @blur="validate('price_per_day', { trigger: 'blur' }).catch(() => { })"
+                            />
                           </a-form-item>
                           <a-form-item
                             v-else name="budget" label="Le budget alloué est estimé à"
@@ -584,7 +630,7 @@ const onFinishFailed = (errorInfo: any) => {
                             <a-input v-model:value="formStateMission.budget" />
                           </a-form-item>
                           <a-form-item
-                            v-if="formStateMission.supp_month" name="show_price" label="Afficher le prix aux freelance"
+                            v-if="formStateMission.supp_month == 'true'" name="show_price" label="Afficher le prix aux freelance"
                           >
                             <a-select
                               v-model:value="formStateMission.show_price"
@@ -597,7 +643,7 @@ const onFinishFailed = (errorInfo: any) => {
                               :options="showPriceArray"
                             />
                           </a-form-item>
-                          <a-form-item v-if="formStateMission.telework" name="nb_days_telework" label="A la hauteur de">
+                          <a-form-item v-if="formStateMission.telework == 'true'" name="nb_days_telework" label="A la hauteur de">
                             <a-slider
                               v-model:value="formStateMission.nb_days_telework"
                               :step="null"
@@ -813,7 +859,7 @@ const onFinishFailed = (errorInfo: any) => {
                                   @finish-failed="onFinishFailed"
                                   @finish="onFinish"
                                 >
-                                  <div v-if="formStateMission.supp_month">
+                                  <div v-if="formStateMission.supp_month == 'true'">
                                     <a-form-item class="font-bold" name="supp_month" label="Durée de la mission :">
                                       <label class="font-normal">plus d'un mois</label>
                                     </a-form-item>
@@ -826,7 +872,7 @@ const onFinishFailed = (errorInfo: any) => {
                                     <label>Fréquence / semaine</label>
                                     <a-form-item name="work_frequence" class="font-bold">
                                       <a-slider
-                                        v-model:value="formStateMission.work_frequence"
+                                        :value="calcWorkFreq(formStateMission.work_frequence,true)"
                                         :step="null"
                                         disabled="true"
                                         :tip-formatter="null"
@@ -848,7 +894,7 @@ const onFinishFailed = (errorInfo: any) => {
                                       <label class="font-normal">{{ formStateMission.budget }}</label>
                                     </a-form-item>
                                   </div>
-                                  <a-form-item class="font-bold" name="dateBegin" label="Date de début :">
+                                  <a-form-item class="font-bold" name="dateBegin" label="Période :">
                                     <label class="font-normal">
                                       <span
                                         class="i-carbon-time inline-block text-gray-700 text-xs mr-0.5"
@@ -856,11 +902,13 @@ const onFinishFailed = (errorInfo: any) => {
                                       <span>
                                         {{
                                           dayjs(formStateMission.dateBegin).format("DD-MM-YYYY")
+                                        }} -  {{
+                                          dayjs(formStateMission.dateEnd).format("DD-MM-YYYY")
                                         }}
                                       </span>
                                     </label>
                                   </a-form-item>
-                                  <div v-if="formStateMission.telework">
+                                  <div v-if="formStateMission.telework == 'true'">
                                     <a-form-item class="font-bold" name="telework" label="Télétravail :">
                                       <label class="font-normal"><a-tag
                                         class="text-xs ml-2 leading-5"
@@ -872,7 +920,7 @@ const onFinishFailed = (errorInfo: any) => {
                                     <label>Fréquence télétravail / semaine</label>
                                     <a-form-item name="nb_days_telework" class="font-bold">
                                       <a-slider
-                                        v-model:value="formStateMission.nb_days_telework"
+                                        :value="calcWorkFreq(formStateMission.nb_days_telework,true)"
                                         :step="null"
                                         disabled="true"
                                         :tip-formatter="null"

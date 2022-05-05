@@ -60,7 +60,7 @@ const rulesDevis = reactive({
   ],
   dateEnd: [
     {
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (!value)
           return Promise.reject('Choisissez la date de fin')
         else if (modelRefDevis.dateBegin != null && value < modelRefDevis.dateBegin)
@@ -73,7 +73,7 @@ const rulesDevis = reactive({
   ],
   price_per_day: [
     {
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (!value)
           return Promise.reject('Choisissez le tarif')
         else if (value > 9999)
@@ -86,7 +86,7 @@ const rulesDevis = reactive({
   ],
   budget: [
     {
-      validator: async(_rule: RuleObject, value: string) => {
+      validator: async (_rule: RuleObject, value: string) => {
         if (!value && !formStateMission.supp_month)
           return Promise.reject('Choisissez le budget')
         else if (value > 9999)
@@ -178,10 +178,10 @@ const calcWorkFreq = (params: number, toSlide = true) => {
   }
 }
 
-const onFinish = async(values: any) => {
+const onFinish = async (values: any) => {
   console.log('finished')
 }
-const getDevis = async() => {
+const getDevis = async () => {
   missionApi.getDevisById(props.id).then(({ data }) => {
     if (data) {
       devis.value = data.devises
@@ -190,10 +190,10 @@ const getDevis = async() => {
   })
 }
 
-const sendDevis = async() => {
+const sendDevis = async () => {
   profileEntrepriseLoading.value = true
   validate()
-    .then(async() => {
+    .then(async () => {
       modelRefDevis.id_company = mission.value.id_company
       modelRefDevis.id_mission = mission.value._id
       if (formStateMission.supp_month == false)
@@ -224,7 +224,7 @@ const sendDevis = async() => {
       console.log('error', err)
     }).finally(() => profileEntrepriseLoading.value = false)
 }
-const acceptDevis = async(item: any) => {
+const acceptDevis = async (item: any) => {
   if (item.state == 'terminé') { message.warning('vous avez déja répondu à ce devis') }
   else if (item.id_freelance) {
     await missionApi.acceptFreelance(item._id, { id_freelance: item.id_freelance }).then(({ data }) => {
@@ -249,7 +249,7 @@ const acceptDevis = async(item: any) => {
   else { message.error('un probléme est survenu de l\'acceptation du devis') }
 }
 
-const refuseDevis = async(item: any) => {
+const refuseDevis = async (item: any) => {
   if (item.state == 'terminé') { message.warning('vous avez déja répondu à ce devis') }
   else if (item.id_freelance) {
     await missionApi.refuseFreelance(item._id, { id_freelance: item.id_freelance }).then(({ data }) => {
@@ -274,7 +274,7 @@ const refuseDevis = async(item: any) => {
   else { message.error('un probléme est survenu de l\'acceptation du devis') }
 }
 
-const getFormData = async() => {
+const getFormData = async () => {
   adminApi.jobs().then(({ data }) => {
     data.value && (jobs.value = data.value.filter(j => j._id && j.name).map(j => ({
       value: j._id,
@@ -325,7 +325,7 @@ const getFormData = async() => {
   })
 }
 
-onMounted(async() => {
+onMounted(async () => {
   await getDevis()
   getFormData()
 })
@@ -494,13 +494,13 @@ const onFinishFailed = (errorInfo: any) => {
                                   <span class="text-dark-300 mr-1.5">
                                     <b>Date de début :</b>
                                   </span>
-                                  {{ item.dateBegin }}
+                                  {{ dayjs(item.dateBegin).format("DD-MM-YYYY") }}
                                 </div>
                                 <div class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
                                     <b>Date de fin :</b>
                                   </span>
-                                  {{ item.dateEnd }}
+                                  {{ dayjs(item.dateEnd).format("DD-MM-YYYY") }}
                                 </div>
                                 <div v-if="formStateMission.supp_month" class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
@@ -577,13 +577,13 @@ const onFinishFailed = (errorInfo: any) => {
                                 <span class="text-dark-300 mr-1.5">
                                   <b>Date de début :</b>
                                 </span>
-                                {{ item.dateBegin }}
+                                {{ dayjs(item.dateBegin).format("DD-MM-YYYY") }}
                               </div>
                               <div class="flex items-center">
                                 <span class="text-dark-300 mr-1.5">
                                   <b>Date de fin :</b>
                                 </span>
-                                {{ item.dateEnd }}
+                                {{ dayjs(item.daetEnd).format("DD-MM-YYYY") }}
                               </div>
                               <div v-if="formStateMission.supp_month" class="flex items-center">
                                 <span class="text-dark-300 mr-1.5">
@@ -1041,7 +1041,7 @@ const onFinishFailed = (errorInfo: any) => {
                             <label class="font-normal">moins d'un mois</label>
                           </a-form-item>
                           <a-form-item class="font-bold" name="budget" label="Budget :">
-                            <label class="font-normal">{{ formStateMission.budget }}</label>
+                            <label class="font-normal">{{ formStateMission.budget }} €</label>
                           </a-form-item>
                         </div>
                         <a-form-item class="font-bold" name="dateBegin" label="Date de début :">
@@ -1133,9 +1133,10 @@ const onFinishFailed = (errorInfo: any) => {
           v-bind="devisValidateInfos.budget"
         >
           <a-input-number
-            v-model:value="modelRefDevis.budget"
+            v-model:value="modelRefDevis.budget" addon-after="€"
             :min="50"
             :max="9999"
+            @blur="validate('budget', { trigger: 'blur' }).catch(() => { })"
           />
         </a-form-item>
         <a-form-item
@@ -1145,9 +1146,10 @@ const onFinishFailed = (errorInfo: any) => {
           v-bind="devisValidateInfos.price_per_day"
         >
           <a-input-number
-            v-model:value="modelRefDevis.price_per_day"
+            v-model:value="modelRefDevis.price_per_day" addon-after="€"
             :min="50"
             :max="9999"
+            @blur="validate('price_per_day', { trigger: 'blur' }).catch(() => { })"
           />
         </a-form-item>
         <a-form-item

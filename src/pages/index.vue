@@ -400,7 +400,7 @@ onMounted(async () => {
         </div>
         <div class="row">
           <div class="col-12">
-            <p class="justify-self-auto desc">
+            <p class="justify-self-auto desc text-size-22px bold">
               1 - Première plateforme de Freelancers 100% GreenNotre équipe met un point d’honneur à vérifier chaque profil pour qu’ils soient en adéquation avec votre projet de transition écologique !<br>
               2 - Une facturation 100% transparente Obtenez rapidement un devis de la part de nos talentueux freelance. 0 frais caché ! <br>
               3  -  Restez  informé  des  obligations  d’entreprise  en  matière  de  transition  écologique  avec  notre blog régulièrement mis à jour. <br>

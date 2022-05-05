@@ -35,6 +35,7 @@ const departements = ref([])
 const sizeCompanies = ref([])
 const typeSearchable = ref([])
 const missions = ref([])
+const demands = ref([])
 const jobs = ref([])
 const jobsName = ref([])
 const jobsId = ref([])
@@ -46,12 +47,18 @@ const visibleModalGreenQuestion = ref(false)
 const visibleModalInformationValidated = ref(false)
 const visibleModalAddCollaborator = ref(false)
 const profileEntrepriseLoading = ref(false)
+const sendDemandLoading = ref(false)
+const valdiateDemandLoading = ref(false)
+const unvaldiateDemandLoading = ref(false)
 
 const controlledSwiper = ref(null)
 const setControlledSwiper = (swiper) => {
   controlledSwiper.value = swiper
 }
 const setMissionSwiper = (swiper) => {
+  controlledSwiper.value = swiper
+}
+const setDemandSwiper = (swiper) => {
   controlledSwiper.value = swiper
 }
 
@@ -340,6 +347,9 @@ const getFormData = async () => {
     missions.value = data
   })
 
+  missionApi.getDemands().then(({ data }) => {
+    demands.value = data
+  })
   globalApi.activities().then(({ data }) => {
     data.value && (activities.value = data.value.filter(a => a.code && a.name).map(a => ({
       value: a.code,
@@ -453,6 +463,18 @@ const deleteFavoris = (id: string) => {
 }
 
 /* end bloc reference */
+const sendSearchDemand = async (id: string) => {
+  sendDemandLoading.value = true
+  await missionApi.sendDemand(id).then(({ data }) => {
+    message.info(data.message)
+    sendDemandLoading.value = false
+  }).catch((err) => {
+    message.error(err.message)
+    sendDemandLoading.value = false
+  })
+
+  sendDemandLoading.value = false
+}
 
 const onLoad = () => {
   profileEntrepriseLoading.value = true
@@ -545,6 +567,9 @@ const onSubmitProfileEntreprise = async () => {
 const updateMission = (id: string) => {
   router.push(`/missions/update/${id}`)
 }
+const searchDemand = (id: string) => {
+  router.push(`/missions/search/green/${id}`)
+}
 const searchProfiles = (id: string) => {
   router.push(`/missions/search/${id}`)
 }
@@ -609,7 +634,34 @@ const showFrequence = (value: any) => {
   else if (value === 4)
     return '5 Jours / semaine'
 }
-
+const validateDemand = async (id: string, state: string) => {
+  if (state === 'validé') { message.warning('demande déja validée') }
+  else {
+    valdiateDemandLoading.value = true
+    missionApi.validateDemand(id).then(({ data }) => {
+      message.success(data.message)
+      valdiateDemandLoading.value = false
+      getFormData()
+    }).catch((err) => {
+      message.error(err.message)
+      valdiateDemandLoading.value = false
+    })
+  }
+}
+const unvalidateDemand = async (id: string, state: string) => {
+  if (state === 'refusé') { message.warning('demande déja refusée') }
+  else {
+    unvaldiateDemandLoading.value = true
+    missionApi.unvalidateDemand(id).then(({ data }) => {
+      message.success(data.message)
+      unvaldiateDemandLoading.value = false
+      getFormData()
+    }).catch((err) => {
+      message.error(err.message)
+      unvaldiateDemandLoading.value = false
+    })
+  }
+}
 const onFinish = async (values: any) => {
   if (values.avatar) {
     const formData = new FormData()
@@ -1321,11 +1373,14 @@ onMounted(async () => {
                           <a-badge-ribbon class="mr-2" color="blue" :text="`${item.nbDevis} devis non traité`">
                             <a-card class="mr-2" hoverable>
                               <template #actions>
-                                <span v-if="isSupported" key="edit" class="i-carbon-search inline-block" @click="searchProfiles(item.mission._id)" />
+                                <span v-if="isSupported && !sendDemandLoading" key="green" class="i-carbon-catalog inline-block greenIconAction" @click="sendSearchDemand(item.mission._id)" />
+                                <span v-else key="green-spin" class="inline-block"><a-spin class="mx-auto" /></span>
+                                <span v-if="isSupported" key="search" class="i-carbon-search inline-block" @click="searchProfiles(item.mission._id)" />
                                 <span v-if="isSupported" key="edit" class="i-carbon-edit inline-block" @click="updateMission(item.mission._id)" />
                                 <span key="delete" class="i-ant-design-delete-twotone inline-block" @click="deleteMission(item.mission._id)" />
-                                <span v-if="isSupported" key="edit" class="i-ant-design-copy-twotone inline-block" @click="copyToClipboardMission(`${item.mission._id}`)" />
+                                <span v-if="isSupported" key="copy" class="i-ant-design-copy-twotone inline-block" @click="copyToClipboardMission(`${item.mission._id}`)" />
                               </template>
+
                               <a-card-meta :title="`Mission : ${item.mission.name}`">
                                 <template #description>
                                   <div class="flex items-center">
@@ -1345,7 +1400,7 @@ onMounted(async () => {
                                       <span class="text-dark-300 mr-1.5">
                                         <b>Prix / jour :</b>
                                       </span>
-                                      {{ item.mission.price_per_day }}
+                                      {{ item.mission.price_per_day }} €
                                     </div>
                                     <div class="flex items-center">
                                       <span class="text-dark-300 mr-1.5">
@@ -1359,13 +1414,13 @@ onMounted(async () => {
                                       <span class="text-dark-300 mr-1.5">
                                         <b>Budget :</b>
                                       </span>
-                                      {{ item.mission.budget }}
+                                      {{ item.mission.budget }} €
                                     </div>
                                     <div class="flex items-center">
                                       <span class="text-dark-300 mr-1.5">
                                         <b>Nombre de mois :</b>
                                       </span>
-                                      1
+                                      1 mois
                                     </div>
                                   </div>
                                   <div class="flex items-center">
@@ -1501,6 +1556,86 @@ onMounted(async () => {
                         </swiper-slide>
                       </swiper>
                     </div>
+                  </a-card>
+                </div>
+              </a-tab-pane>
+              <a-tab-pane key="6" tab="Demandes Green" force-render>
+                <div class>
+                  <a-card title="Demandes Green" :bordered="false" class="rounded-sm">
+                    <div v-if="demands">
+                      <swiper
+                        :modules="[Controller]"
+                        :slides-per-view="4" class="p-3"
+                        :pagination="{
+                          clickable: true,
+                        }"
+                        :grab-cursor="true"
+                        @swiper="setDemandSwiper"
+                      >
+                        <swiper-slide
+                          v-for="(item, index) in demands"
+                          :key="index"
+                        >
+                          <a-card class="mr-2" hoverable>
+                            <template #actions>
+                              <span v-if="isSupported" key="search" class="i-carbon-search inline-block" @click="searchDemand(item._id)" />
+                              <span v-if="isSupported && !valdiateDemandLoading" key="validate" class="i-carbon-checkmark-outline inline-block" @click="validateDemand(item._id,item.state)" />
+                              <span v-else key="validate-spin" class="inline-block"><a-spin class="mx-auto" /></span>
+                              <span v-if="isSupported && !unvaldiateDemandLoading" key="unvalidate" class="i-carbon-close-outline inline-block" @click="unvalidateDemand(item._id,item.state)" />
+                              <span v-else key="validate-spin" class="inline-block"><a-spin class="mx-auto" /></span>
+                            </template>
+                            <a-card-meta :title="`Mission : ${item.name}`">
+                              <template #description>
+                                <div v-if="item.state == 'en cours'">
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Etat :</b>
+                                    </span>
+                                    <a-tag
+                                      class="text-xs ml-2 leading-5"
+                                      color="#05f"
+                                    >
+                                      En cours
+                                    </a-tag>
+                                  </div>
+                                </div>
+                                <div v-else-if="item.state == 'validé'">
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Etat :</b>
+                                    </span>
+                                    <a-tag
+                                      class="text-xs ml-2 leading-5"
+                                      color="#080"
+                                    >
+                                      validé
+                                    </a-tag>
+                                  </div>
+                                </div>
+                                <div v-else>
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Etat :</b>
+                                    </span>
+                                    <a-tag
+                                      class="text-xs ml-2 leading-5"
+                                      color="#D00"
+                                    >
+                                      refusé
+                                    </a-tag>
+                                  </div>
+                                </div>
+                              </template>
+                            </a-card-meta>
+                          </a-card>
+                        </swiper-slide>
+                      </swiper>
+                    </div>
+                    <a-result
+                      v-else
+                      status="404"
+                      title="aucune demandes de recherche"
+                    />
                   </a-card>
                 </div>
               </a-tab-pane>
@@ -1669,6 +1804,11 @@ onMounted(async () => {
   </a-modal>
 </template>
 <style lang="scss">
+.greenIconAction {
+  background-color: rgb(0, 136, 0);
+  color: #fff;
+}
+
 .ant-tabs-tab {
   @apply px-4;
 }

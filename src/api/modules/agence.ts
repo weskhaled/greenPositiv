@@ -26,6 +26,8 @@ const agenceApi = {
   uploadVigilanceDocuments: async (file: FormData) => service.upload(`${BASE_PREFIX}/agence/vigilance-documents`, file),
   uploadSasuDocuments: async (file: FormData) => service.upload(`${BASE_PREFIX}/agence/sasu-documents`, file),
 
+  // required profiles
+  requiredProfiles: async (params: object) => useFetch(`${BASE_PREFIX}/agence/required-profile`).post(params).json(),
 }
 
 export default agenceApi

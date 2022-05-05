@@ -1660,10 +1660,10 @@ onMounted(async () => {
                             :rules="[{ required: true, message: 'Veuillez saisir votre tarif' }]"
                           >
                             <a-input-number
-                              v-model:value="formStateProfile.price_per_day"
-                              step="50"
-                              :min="50"
+                              v-model:value="formStateProfile.price_per_day" addon-after="€"
+                              step="50" :min="50"
                               :max="9999"
+                              @blur="validate('price_per_day', { trigger: 'blur' }).catch(() => { })"
                             />
                           </a-form-item>
                           <a-form-item name="show_price" label="Afficher le tarif">
@@ -3379,9 +3379,10 @@ onMounted(async () => {
           v-bind="devisValidateInfos.budget"
         >
           <a-input-number
-            v-model:value="modelRefDevis.budget"
+            v-model:value="modelRefDevis.budget" addon-after="€"
             :min="50"
             :max="9999"
+            @blur="validate('budget', { trigger: 'blur' }).catch(() => { })"
           />
         </a-form-item>
         <a-form-item
@@ -3391,9 +3392,10 @@ onMounted(async () => {
           v-bind="devisValidateInfos.price_per_day"
         >
           <a-input-number
-            v-model:value="modelRefDevis.price_per_day"
+            v-model:value="modelRefOffer.price_per_day" addon-after="€"
             :min="50"
             :max="9999"
+            @blur="validate('price_per_day', { trigger: 'blur' }).catch(() => { })"
           />
         </a-form-item>
         <a-form-item
