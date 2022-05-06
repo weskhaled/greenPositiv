@@ -7,6 +7,7 @@ import SwiperCore, { Controller, Pagination } from 'swiper'
 import { Swiper, SwiperSlide } from 'swiper/vue'
 import adminApi from '~/api/modules/admin'
 import missionApi from '~/api/modules/mission'
+import authApi from '~/api/modules/auth'
 
 import globalApi from '~/api/modules/global'
 import { currentUser } from '~/stores'
@@ -48,8 +49,10 @@ const modelRefDevis = reactive({
   id_mission: undefined,
   dateBegin: null,
   dateEnd: null,
-  price_per_day: 50,
-  budget: 50,
+  tasks: [],
+})
+const formStateUser = reactive<Record<string, any>>({
+  role: '',
 })
 const rulesDevis = reactive({
   dateBegin: [
@@ -71,34 +74,22 @@ const rulesDevis = reactive({
       trigger: 'blur',
     },
   ],
-  price_per_day: [
-    {
-      validator: async (_rule: RuleObject, value: string) => {
-        if (!value)
-          return Promise.reject('Choisissez le tarif')
-        else if (value > 9999)
-          return Promise.reject('Choisissez un tarif acceptable')
-        else
-          return Promise.resolve()
-      },
-      trigger: 'blur',
-    },
-  ],
-  budget: [
-    {
-      validator: async (_rule: RuleObject, value: string) => {
-        if (!value && !formStateMission.supp_month)
-          return Promise.reject('Choisissez le budget')
-        else if (value > 9999)
-          return Promise.reject('Choisissez un budget acceptable')
-        else
-          return Promise.resolve()
-      },
-      trigger: 'blur',
-    },
-  ],
 })
 const { resetFields, validate, validateInfos: devisValidateInfos } = useForm(modelRefDevis, rulesDevis)
+
+const formStateBloc = reactive<Record<string, any>>({
+  description: '',
+  cost_per_hour: 50,
+  nb_hours: 1,
+})
+const addBloc = () => {
+  const task = {
+    description: formStateBloc.description,
+    cost_per_hour: formStateBloc.cost_per_hour,
+    nb_hours: formStateBloc.nb_hours,
+  }
+  modelRefDevis.tasks.push(task)
+}
 
 const formStateMission = reactive<Record<string, any>>({
   title_profile: '',
@@ -323,10 +314,14 @@ const getFormData = async () => {
       spinningValue.value = false
     }
   })
+
+  await authApi.currentUser().then(({ data }) => {
+    if (data.role === 'Company')
+      getDevis()
+  })
 }
 
 onMounted(async () => {
-  await getDevis()
   getFormData()
 })
 
@@ -418,17 +413,11 @@ const onFinishFailed = (errorInfo: any) => {
                                   </span>
                                   {{ dayjs(item.dateEnd).format("DD-MM-YYYY") }}
                                 </div>
-                                <div v-if="formStateMission.supp_month" class="flex items-center">
+                                <div class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
-                                    <b>Tarif / jour :</b>
+                                    <b>Total :</b>
                                   </span>
-                                  {{ item.price_per_day }} €
-                                </div>
-                                <div v-else class="flex items-center">
-                                  <span class="text-dark-300 mr-1.5">
-                                    <b>Budget :</b>
-                                  </span>
-                                  {{ item.budget }} €
+                                  {{ item.total }} €
                                 </div>
                                 <div v-if="item.state == 'terminé'">
                                   <div class="flex items-center">
@@ -502,17 +491,11 @@ const onFinishFailed = (errorInfo: any) => {
                                   </span>
                                   {{ dayjs(item.dateEnd).format("DD-MM-YYYY") }}
                                 </div>
-                                <div v-if="formStateMission.supp_month" class="flex items-center">
+                                <div class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
-                                    <b>Tarif / jour :</b>
+                                    <b>Total :</b>
                                   </span>
-                                  {{ item.price_per_day }} €
-                                </div>
-                                <div v-else class="flex items-center">
-                                  <span class="text-dark-300 mr-1.5">
-                                    <b>Budget :</b>
-                                  </span>
-                                  {{ item.budget }} €
+                                  {{ item.total }} €
                                 </div>
                                 <div v-if="item.state == 'terminé'">
                                   <div class="flex items-center">
@@ -585,17 +568,11 @@ const onFinishFailed = (errorInfo: any) => {
                                 </span>
                                 {{ dayjs(item.daetEnd).format("DD-MM-YYYY") }}
                               </div>
-                              <div v-if="formStateMission.supp_month" class="flex items-center">
+                              <div class="flex items-center">
                                 <span class="text-dark-300 mr-1.5">
-                                  <b>Tarif / jour :</b>
+                                  <b>Total :</b>
                                 </span>
-                                {{ item.price_per_day }} €
-                              </div>
-                              <div v-else class="flex items-center">
-                                <span class="text-dark-300 mr-1.5">
-                                  <b>Budget :</b>
-                                </span>
-                                {{ item.budget }} €
+                                {{ item.total }} €
                               </div>
                               <div v-if="item.state == 'terminé'">
                                 <div class="flex items-center">
@@ -670,17 +647,11 @@ const onFinishFailed = (errorInfo: any) => {
                                   </span>
                                   {{ dayjs(item.dateEnd).format("DD-MM-YYYY") }}
                                 </div>
-                                <div v-if="formStateMission.supp_month" class="flex items-center">
+                                <div class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
-                                    <b>Tarif / jour :</b>
+                                    <b>Total :</b>
                                   </span>
-                                  {{ item.price_per_day }} €
-                                </div>
-                                <div v-else class="flex items-center">
-                                  <span class="text-dark-300 mr-1.5">
-                                    <b>Budget :</b>
-                                  </span>
-                                  {{ item.budget }} €
+                                  {{ item.total }} €
                                 </div>
                                 <div v-if="item.state == 'terminé'">
                                   <div class="flex items-center">
@@ -754,17 +725,11 @@ const onFinishFailed = (errorInfo: any) => {
                                   </span>
                                   {{ item.dateEnd }}
                                 </div>
-                                <div v-if="formStateMission.supp_month" class="flex items-center">
+                                <div class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
-                                    <b>Tarif / jour :</b>
+                                    <b>Total :</b>
                                   </span>
-                                  {{ item.price_per_day }} €
-                                </div>
-                                <div v-else class="flex items-center">
-                                  <span class="text-dark-300 mr-1.5">
-                                    <b>Budget :</b>
-                                  </span>
-                                  {{ item.budget }} €
+                                  {{ item.total }} €
                                 </div>
                                 <div v-if="item.state == 'terminé'">
                                   <div class="flex items-center">
@@ -837,17 +802,11 @@ const onFinishFailed = (errorInfo: any) => {
                                 </span>
                                 {{ item.dateEnd }}
                               </div>
-                              <div v-if="formStateMission.supp_month" class="flex items-center">
+                              <div class="flex items-center">
                                 <span class="text-dark-300 mr-1.5">
-                                  <b>Tarif / jour :</b>
+                                  <b>Total :</b>
                                 </span>
-                                {{ item.price_per_day }} €
-                              </div>
-                              <div v-else class="flex items-center">
-                                <span class="text-dark-300 mr-1.5">
-                                  <b>Budget :</b>
-                                </span>
-                                {{ item.budget }} €
+                                {{ item.total }} €
                               </div>
                               <div v-if="item.state == 'terminé'">
                                 <div class="flex items-center">
@@ -1126,32 +1085,47 @@ const onFinishFailed = (errorInfo: any) => {
   >
     <div>
       <a-form layout="vertical" :wrapper-col="{ span: 24 }">
-        <a-form-item
-          v-if="formStateMission.supp_month == false"
-          name="budget"
-          label="Définissez le budget"
-          v-bind="devisValidateInfos.budget"
-        >
+        <a-form-item name="nb_hours">
+          <span class="ant-form-text">nombre d'heures : </span>
           <a-input-number
-            v-model:value="modelRefDevis.budget" addon-after="€"
-            :min="50"
-            :max="9999"
-            @blur="validate('budget', { trigger: 'blur' }).catch(() => { })"
+            v-model:value="formStateBloc.nb_hours" step="1" :min="1" :max="9999"
           />
         </a-form-item>
-        <a-form-item
-          v-else
-          name="price_per_day"
-          label="Définissez votre tarif"
-          v-bind="devisValidateInfos.price_per_day"
-        >
+        <a-form-item name="cost_per_hour">
+          <span class="ant-form-text">Coût / heure : </span>
           <a-input-number
-            v-model:value="modelRefDevis.price_per_day" addon-after="€"
-            :min="50"
-            :max="9999"
-            @blur="validate('price_per_day', { trigger: 'blur' }).catch(() => { })"
+            v-model:value="formStateBloc.cost_per_hour" addon-after="€" step="50" :min="50" :max="9999"
           />
         </a-form-item>
+        <a-form-item name="description" label="Description">
+          <a-input v-model:value="formStateBloc.description" />
+        </a-form-item>
+        <a-form-item>
+          <a-button
+            v-if="currentUser?.role === 'Freelancer' || currentUser?.role === 'Agence'"
+            class="btn-theme m-2"
+            @click="addBloc()"
+          >
+            ajouter un bloc
+          </a-button>
+        </a-form-item>
+        <div v-if="modelRefDevis.tasks.length > 0">
+          <br>
+          <span
+            v-for="(item, index) in modelRefDevis.tasks"
+            :key="index" class="font-normal"
+          > Tâche {{ index++ }}
+            <br>
+            <b>Coût / heure:</b> {{ item.cost_per_hour }} €
+            <br>
+            <b>Coût / heure:</b> {{ item.nb_hours }}
+            <br>
+            <b>Description:</b>
+            <br>
+            <span class="text-justify"> {{ item.description }}</span>
+            <br>
+          </span>
+        </div>
         <a-form-item
           name="month-picker"
           label="Date Début"
