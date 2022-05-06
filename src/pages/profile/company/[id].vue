@@ -573,6 +573,9 @@ const searchDemand = (id: string) => {
 const searchProfiles = (id: string) => {
   router.push(`/missions/search/${id}`)
 }
+const showMission = (id: string) => {
+  router.push(`/missions/${id}`)
+}
 const deleteMission = (id: string) => {
   setTimeout(() => {
     Modal.confirm({
@@ -1375,6 +1378,7 @@ onMounted(async () => {
                               <template #actions>
                                 <span v-if="isSupported && !sendDemandLoading" key="green" class="i-carbon-catalog inline-block greenIconAction" @click="sendSearchDemand(item.mission._id)" />
                                 <span v-else key="green-spin" class="inline-block"><a-spin class="mx-auto" /></span>
+                                <span v-if="isSupported" key="show" class="i-carbon-view inline-block" @click="showMission(item.mission._id)" />
                                 <span v-if="isSupported" key="search" class="i-carbon-search inline-block" @click="searchProfiles(item.mission._id)" />
                                 <span v-if="isSupported" key="edit" class="i-carbon-edit inline-block" @click="updateMission(item.mission._id)" />
                                 <span key="delete" class="i-ant-design-delete-twotone inline-block" @click="deleteMission(item.mission._id)" />

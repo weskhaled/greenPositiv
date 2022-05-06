@@ -20,7 +20,11 @@ const controlledSwiper = ref(null)
 const setDevisSwiper = (swiper) => {
   controlledSwiper.value = swiper
 }
+const controlledBlocSwiper = ref(null)
 
+const setBlocSwiper = (swiper) => {
+  controlledBlocSwiper.value = swiper
+}
 const formItemLayout = {
   labelCol: { span: 6 },
   wrapperCol: { span: 16 },
@@ -39,10 +43,18 @@ const mission = ref(null)
 const profile = ref(null)
 const visibleModalSendDevis = ref(false)
 const profileEntrepriseLoading = ref(false)
+const showUpdateBloc = ref(false)
 const devis = ref([])
 const users = ref([])
 const spinningValue = ref(true)
-
+const modelTotal = reactive({
+  total: 0,
+  tva: 20,
+  totalTva: 0,
+  totalGreen: 0,
+  totalGreenTva: 0,
+  totalUser: 0,
+})
 const modelRefDevis = reactive({
   id: null,
   id_company: undefined,
@@ -51,9 +63,7 @@ const modelRefDevis = reactive({
   dateEnd: null,
   tasks: [],
 })
-const formStateUser = reactive<Record<string, any>>({
-  role: '',
-})
+let indexBloc = null
 const rulesDevis = reactive({
   dateBegin: [
     {
@@ -82,6 +92,21 @@ const formStateBloc = reactive<Record<string, any>>({
   cost_per_hour: 50,
   nb_hours: 1,
 })
+const getTotal = () => {
+  modelTotal.total = 0
+  modelRefDevis.tasks.map((el) => {
+    modelTotal.total += el.nb_hours * el.cost_per_hour
+  })
+  modelTotal.totalTva = modelTotal.total + modelTotal.total * (modelTotal.tva / 100)
+  modelTotal.totalGreen = modelTotal.total * 0.1
+  modelTotal.totalGreenTva = modelTotal.totalGreen + modelTotal.totalGreen * (modelTotal.tva / 100)
+  modelTotal.totalUser = modelTotal.totalTva - modelTotal.totalGreenTva
+}
+const applicateTva = () => {
+  modelTotal.totalTva = modelTotal.total + modelTotal.total * (modelTotal.tva / 100)
+  modelTotal.totalGreenTva = modelTotal.totalGreen + modelTotal.totalGreen * (modelTotal.tva / 100)
+  modelTotal.totalUser = modelTotal.totalTva - modelTotal.totalGreenTva
+}
 const addBloc = () => {
   const task = {
     description: formStateBloc.description,
@@ -89,6 +114,23 @@ const addBloc = () => {
     nb_hours: formStateBloc.nb_hours,
   }
   modelRefDevis.tasks.push(task)
+  getTotal()
+}
+
+const updateBloc = (item: any, index: number) => {
+  formStateBloc.description = item.description,
+  formStateBloc.cost_per_hour = item.cost_per_hour,
+  formStateBloc.nb_hours = item.nb_hours,
+  indexBloc = index
+  showUpdateBloc.value = true
+  getTotal()
+}
+
+const updateTask = () => {
+  modelRefDevis.tasks[indexBloc] = formStateBloc
+  showUpdateBloc.value = false
+  indexBloc = null
+  getTotal()
 }
 
 const formStateMission = reactive<Record<string, any>>({
@@ -462,7 +504,7 @@ const onFinishFailed = (errorInfo: any) => {
                             </a-card-meta>
                           </a-card>
                         </a-badge-ribbon>
-                        <a-badge-ribbon v-else-if="!item.confirmed == false" class="mr-2" color="red" text="refusé">
+                        <a-badge-ribbon v-else-if="!item.confirmed" class="mr-2" color="red" text="refusé">
                           <a-card class="mr-2" hoverable>
                             <template #actions>
                               <span key="accept" class="i-carbon-checkmark-outline inline-block" @click="acceptDevis(item)" />
@@ -618,7 +660,7 @@ const onFinishFailed = (errorInfo: any) => {
                         </a-card>
                       </div>
                       <div v-else>
-                        <a-badge-ribbon v-if="item.confirmed == true " class="mr-2" color="green" text="accepté">
+                        <a-badge-ribbon v-if="item.confirmed" class="mr-2" color="green" text="accepté">
                           <a-card class="mr-2" hoverable>
                             <template #actions>
                               <span key="accept" class="i-carbon-checkmark-outline inline-block" @click="acceptDevis(item)" />
@@ -696,7 +738,7 @@ const onFinishFailed = (errorInfo: any) => {
                             </a-card-meta>
                           </a-card>
                         </a-badge-ribbon>
-                        <a-badge-ribbon v-else-if="item.confirmed == false" class="mr-2" color="red" text="refusé">
+                        <a-badge-ribbon v-else-if="!item.confirmed" class="mr-2" color="red" text="refusé">
                           <a-card class="mr-2" hoverable>
                             <template #actions>
                               <span key="accept" class="i-carbon-checkmark-outline inline-block" @click="acceptDevis(item)" />
@@ -1053,7 +1095,6 @@ const onFinishFailed = (errorInfo: any) => {
                         <a-form-item class="font-bold" name="local_city" label="Emplacement de la mission :">
                           <label class="font-normal">{{ formStateMission.local_city }}</label>
                         </a-form-item>
-
                         <div class="row">
                           <div class="col text-center">
                             <a-button
@@ -1098,7 +1139,7 @@ const onFinishFailed = (errorInfo: any) => {
           />
         </a-form-item>
         <a-form-item name="description" label="Description">
-          <a-input v-model:value="formStateBloc.description" />
+          <a-textarea v-model:value="formStateBloc.description" placeholder="description" auto-size />
         </a-form-item>
         <a-form-item>
           <a-button
@@ -1110,21 +1151,72 @@ const onFinishFailed = (errorInfo: any) => {
           </a-button>
         </a-form-item>
         <div v-if="modelRefDevis.tasks.length > 0">
+          <swiper
+            :modules="[Controller]"
+            :slides-per-view="2" class="p-3"
+            :pagination="{
+              clickable: true,
+            }"
+            :grab-cursor="true"
+            @swiper="setBlocSwiper"
+          >
+            <swiper-slide
+              v-for="(item, index) in modelRefDevis.tasks"
+              :key="index"
+            >
+              <div>
+                <a-card class="mr-2" hoverable>
+                  <template #actions>
+                    <span key="accept" class="i-carbon-edit inline-block" @click="updateBloc(item,index)" />
+                  </template>
+                  <a-card-meta :title="`Tâche : ${index+1}`">
+                    <template #description>
+                      Tâche {{ index+1 }}
+                      <div class="flex items-center">
+                        <span class="text-dark-300 mr-1.5">
+                          <b>Nombre d'heures :</b>
+                        </span>
+                        {{ item.nb_hours }} heures
+                      </div>
+                      <div class="flex items-center">
+                        <span class="text-dark-300 mr-1.5">
+                          <b>Coût / heure :</b>
+                        </span>
+                        {{ item.cost_per_hour }} €
+                      </div>
+                    </template>
+                  </a-card-meta>
+                </a-card>
+              </div>
+            </swiper-slide>
+          </swiper>
           <br>
-          <span
-            v-for="(item, index) in modelRefDevis.tasks"
-            :key="index" class="font-normal"
-          > Tâche {{ index++ }}
-            <br>
-            <b>Coût / heure:</b> {{ item.cost_per_hour }} €
-            <br>
-            <b>Coût / heure:</b> {{ item.nb_hours }}
-            <br>
-            <b>Description:</b>
-            <br>
-            <span class="text-justify"> {{ item.description }}</span>
-            <br>
-          </span>
+        </div>
+        <div v-if="showUpdateBloc">
+          <a-form-item name="nb_hours">
+            <span class="ant-form-text">nombre d'heures : </span>
+            <a-input-number
+              v-model:value="formStateBloc.nb_hours" step="1" :min="1" :max="9999"
+            />
+          </a-form-item>
+          <a-form-item name="cost_per_hour">
+            <span class="ant-form-text">Coût / heure : </span>
+            <a-input-number
+              v-model:value="formStateBloc.cost_per_hour" addon-after="€" step="50" :min="50" :max="9999"
+            />
+          </a-form-item>
+          <a-form-item name="description" label="Description">
+            <a-textarea v-model:value="formStateBloc.description" placeholder="description" auto-size />
+          </a-form-item>
+          <a-form-item>
+            <a-button
+              v-if="currentUser?.role === 'Freelancer' || currentUser?.role === 'Agence'"
+              class="btn-theme m-2"
+              @click="updateTask()"
+            >
+              modifier ce bloc
+            </a-button>
+          </a-form-item>
         </div>
         <a-form-item
           name="month-picker"
@@ -1162,11 +1254,33 @@ const onFinishFailed = (errorInfo: any) => {
         </a-form-item>
       </a-form>
     </div>
+    <br>
+    <label><b> Total : </b> {{ modelTotal.total }} €</label>
+    <br><br>
+    <span class="ant-form-text mb-20"> <b>TVA :   </b>
+      <a-input-number
+        v-model:value="modelTotal.tva" addon-after="%" step="1" :min="0" :max="100" @change="applicateTva($event)"
+      />
+    </span>
+    <br><br>
+    <label><b> Total TTC : </b> {{ modelTotal.totalTva }} €</label>
+    <br><br>
+    <label><b> Frais GreenPositiv (10% HT): </b> {{ modelTotal.totalGreen }} €</label>
+    <br><br>
+    <label><b> Frais GreenPositiv (TTC): </b> {{ modelTotal.totalGreenTva }} €</label>
+    <br><br>
+    <label class="green"><b>VOUS RECEVEREZ (TTC): </b> <a-tag
+      class="text-xs ml-2 leading-5"
+      color="#080"
+    >
+      {{ modelTotal.totalUser }} €
+    </a-tag></label>
+    <br><br>
     <template #footer>
       <a-button type="primary" :loading="profileEntrepriseLoading" @click="sendDevis">
         Créer
       </a-button>
-      <a-button style="margin-left: 10px" @click="resetFields">
+      <a-button style="margin-left: 10px" @click="resetFields; modelTotal.total = 0; modelRefDevis.tasks= []">
         Réinitialiser
       </a-button>
     </template>

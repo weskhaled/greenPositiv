@@ -81,6 +81,8 @@ const visibleModalGreenQuestion = ref(false)
 const visibleModalInformationValidated = ref(false)
 const profileEntrepriseLoading = ref(false)
 const visibleModalUpdateDevis = ref(false)
+const showUpdateBloc = ref(false)
+let indexBloc = null
 
 /* module devis */
 const modelRefDevis = reactive({
@@ -90,7 +92,8 @@ const modelRefDevis = reactive({
   id_mission: undefined,
   dateBegin: null,
   dateEnd: null,
-  price_per_day: 50,
+  tasks: [],
+  total: null,
   confirmed: undefined,
 })
 const rulesDevis = reactive({
@@ -113,39 +116,13 @@ const rulesDevis = reactive({
       trigger: 'blur',
     },
   ],
-  price_per_day: [
-    {
-      validator: async (_rule: RuleObject, value: string) => {
-        if (!value && modelRefDevis.budget === undefined)
-          return Promise.reject('Choisissez le tarif')
-        else if (value > 9999)
-          return Promise.reject('Choisissez un tarif acceptable')
-        else
-          return Promise.resolve()
-      },
-      trigger: 'blur',
-    },
-  ],
-  budget: [
-    {
-      validator: async (_rule: RuleObject, value: string) => {
-        if (!value && value !== undefined)
-          return Promise.reject('Choisissez le budget')
-        else if (value > 9999)
-          return Promise.reject('Choisissez un budget acceptable')
-        else
-          return Promise.resolve()
-      },
-      trigger: 'blur',
-    },
-  ],
 })
 const useFormDevis = useForm(modelRefDevis, rulesDevis)
 const resetFieldsDevis = useFormDevis.resetFields
 const validateDevis = useFormDevis.validate
 const devisValidateInfos = useFormDevis.validateInfos
 
-const sendDevis = async () => {
+const sendDevis = async (index) => {
   profileEntrepriseLoading.value = true
   validateDevis()
     .then(async () => {
@@ -921,10 +898,8 @@ const getFormData = async () => {
     })))
   })
   missionApi.getDevisFreelance().then(({ data }) => {
-    if (data) {
-      console.log('devis ', data)
+    if (data)
       devis.value = data
-    }
   })
   profile.value = null
   await freelancerApi.profile(props.id).then(({ data }) => {
@@ -1336,11 +1311,31 @@ const updateDevis = (item, idCompany) => {
     modelRefDevis.dateBegin = item.dateBegin
     modelRefDevis.dateEnd = item.dateEnd
     modelRefDevis.state = item.state
-    modelRefDevis.price_per_day = item.price_per_day
-    modelRefDevis.budget = item.budget
+    modelRefDevis.tasks = item.tasks
+    modelRefDevis.total = item.total
     visibleModalUpdateDevis.value = true
   }
   else { message.warning('vous ne pouvez pas modifier ce devis') }
+}
+const formStateBloc = reactive<Record<string, any>>({
+  description: '',
+  cost_per_hour: 50,
+  nb_hours: 1,
+})
+const updateBloc = (index: number) => {
+  indexBloc = index
+  formStateBloc.description = modelRefDevis.tasks[indexBloc].description
+  formStateBloc.cost_per_hour = modelRefDevis.tasks[indexBloc].cost_per_hour
+  formStateBloc.nb_hours = modelRefDevis.tasks[indexBloc].nb_hours
+  showUpdateBloc.value = true
+}
+
+const updateTask = () => {
+  modelRefDevis.tasks[indexBloc].description = formStateBloc.description
+  modelRefDevis.tasks[indexBloc].cost_per_hour = formStateBloc.cost_per_hour
+  modelRefDevis.tasks[indexBloc].nb_hours = formStateBloc.nb_hours
+  showUpdateBloc.value = false
+  indexBloc = null
 }
 const deleteFormation = (id: string) => {
   setTimeout(() => {
@@ -2188,7 +2183,7 @@ onMounted(async () => {
                   </a-card>
                 </div>
               </a-tab-pane>
-              <a-tab-pane key="6" tab="Centres d'intérets" force-render>
+              <a-tab-pane key="5" tab="Centres d'intérets" force-render>
                 <div class>
                   <a-card title="Centre d'interet" :bordered="false" class="rounded-sm">
                     <div>
@@ -2261,7 +2256,7 @@ onMounted(async () => {
                   </a-card>
                 </div>
               </a-tab-pane>
-              <a-tab-pane key="7" tab="Ma micro entreprise" force-render>
+              <a-tab-pane key="6" tab="Ma micro entreprise" force-render>
                 <div class>
                   <a-card title="Profile entreprise" :bordered="false" class="rounded-sm">
                     <div>
@@ -2901,7 +2896,7 @@ onMounted(async () => {
                   </a-card>
                 </div>
               </a-tab-pane>
-              <a-tab-pane key="8" tab="Devis" force-render>
+              <a-tab-pane key="7" tab="Devis" force-render>
                 <div class>
                   <swiper
                     :modules="[Controller]"
@@ -3739,32 +3734,74 @@ onMounted(async () => {
   >
     <div>
       <a-form layout="vertical" :wrapper-col="{ span: 24 }">
-        <a-form-item
-          v-if="modelRefDevis.budget !== undefined"
-          name="budget"
-          label="Définissez le budget"
-          v-bind="devisValidateInfos.budget"
-        >
-          <a-input-number
-            v-model:value="modelRefDevis.budget" addon-after="€"
-            :min="50"
-            :max="9999"
-            @blur="validate('budget', { trigger: 'blur' }).catch(() => { })"
-          />
-        </a-form-item>
-        <a-form-item
-          v-else
-          name="price_per_day"
-          label="Définissez votre tarif"
-          v-bind="devisValidateInfos.price_per_day"
-        >
-          <a-input-number
-            v-model:value="modelRefOffer.price_per_day" addon-after="€"
-            :min="50"
-            :max="9999"
-            @blur="validate('price_per_day', { trigger: 'blur' }).catch(() => { })"
-          />
-        </a-form-item>
+        <div v-if="modelRefDevis.tasks.length > 0">
+          <swiper
+            :modules="[Controller]"
+            :slides-per-view="2" class="p-3"
+            :pagination="{
+              clickable: true,
+            }"
+            :grab-cursor="true"
+            @swiper="setBlocSwiper"
+          >
+            <swiper-slide
+              v-for="(item2, index2) in modelRefDevis.tasks"
+              :key="index2"
+            >
+              <div>
+                <a-card class="mr-2" hoverable>
+                  <template #actions>
+                    <span key="accept" class="i-carbon-edit inline-block" @click="updateBloc(index2)" />
+                  </template>
+                  <a-card-meta :title="`Tâche : ${index2}`">
+                    <template #description>
+                      Tâche {{ index2 }}
+                      <div class="flex items-center">
+                        <span class="text-dark-300 mr-1.5">
+                          <b>Nombre d'heures :</b>
+                        </span>
+                        {{ item2.nb_hours }} heures
+                      </div>
+                      <div class="flex items-center">
+                        <span class="text-dark-300 mr-1.5">
+                          <b>Coût / heure :</b>
+                        </span>
+                        {{ item2.cost_per_hour }} €
+                      </div>
+                    </template>
+                  </a-card-meta>
+                </a-card>
+              </div>
+            </swiper-slide>
+          </swiper>
+          <br>
+        </div>
+        <div v-if="showUpdateBloc">
+          <a-form-item name="nb_hours">
+            <span class="ant-form-text">nombre d'heures : </span>
+            <a-input-number
+              v-model:value="formStateBloc.nb_hours" step="1" :min="1" :max="9999"
+            />
+          </a-form-item>
+          <a-form-item name="cost_per_hour">
+            <span class="ant-form-text">Coût / heure : </span>
+            <a-input-number
+              v-model:value="formStateBloc.cost_per_hour" addon-after="€" step="50" :min="50" :max="9999"
+            />
+          </a-form-item>
+          <a-form-item name="description" label="Description">
+            <a-input v-model:value="formStateBloc.description" />
+          </a-form-item>
+          <a-form-item>
+            <a-button
+              v-if="currentUser?.role === 'Freelancer' || currentUser?.role === 'Agence'"
+              class="btn-theme m-2"
+              @click="updateTask()"
+            >
+              modifier ce bloc
+            </a-button>
+          </a-form-item>
+        </div>
         <a-form-item
           name="month-picker"
           label="Date Début"
