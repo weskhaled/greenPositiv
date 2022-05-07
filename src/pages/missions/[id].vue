@@ -47,14 +47,7 @@ const showUpdateBloc = ref(false)
 const devis = ref([])
 const users = ref([])
 const spinningValue = ref(true)
-const modelTotal = reactive({
-  total: 0,
-  tva: 20,
-  totalTva: 0,
-  totalGreen: 0,
-  totalGreenTva: 0,
-  totalUser: 0,
-})
+
 const modelRefDevis = reactive({
   id: null,
   id_company: undefined,
@@ -62,6 +55,12 @@ const modelRefDevis = reactive({
   dateBegin: null,
   dateEnd: null,
   tasks: [],
+  total: 0,
+  tva: 20,
+  totalTva: 0,
+  totalGreen: 0,
+  totalGreenTva: 0,
+  totalUser: 0,
 })
 let indexBloc = null
 const rulesDevis = reactive({
@@ -92,20 +91,21 @@ const formStateBloc = reactive<Record<string, any>>({
   cost_per_hour: 50,
   nb_hours: 1,
 })
-const getTotal = () => {
-  modelTotal.total = 0
-  modelRefDevis.tasks.map((el) => {
-    modelTotal.total += el.nb_hours * el.cost_per_hour
+const getTotal = async () => {
+  modelRefDevis.total = 0
+  await modelRefDevis.tasks.map((el) => {
+    modelRefDevis.total += el.nb_hours * el.cost_per_hour
   })
-  modelTotal.totalTva = modelTotal.total + modelTotal.total * (modelTotal.tva / 100)
-  modelTotal.totalGreen = modelTotal.total * 0.1
-  modelTotal.totalGreenTva = modelTotal.totalGreen + modelTotal.totalGreen * (modelTotal.tva / 100)
-  modelTotal.totalUser = modelTotal.totalTva - modelTotal.totalGreenTva
+
+  modelRefDevis.totalTva = modelRefDevis.total + modelRefDevis.total * (modelRefDevis.tva / 100)
+  modelRefDevis.totalGreen = modelRefDevis.total * 0.1
+  modelRefDevis.totalGreenTva = modelRefDevis.totalGreen + modelRefDevis.totalGreen * (modelRefDevis.tva / 100)
+  modelRefDevis.totalUser = modelRefDevis.totalTva - modelRefDevis.totalGreenTva
 }
 const applicateTva = () => {
-  modelTotal.totalTva = modelTotal.total + modelTotal.total * (modelTotal.tva / 100)
-  modelTotal.totalGreenTva = modelTotal.totalGreen + modelTotal.totalGreen * (modelTotal.tva / 100)
-  modelTotal.totalUser = modelTotal.totalTva - modelTotal.totalGreenTva
+  modelRefDevis.totalTva = modelRefDevis.total + modelRefDevis.total * (modelRefDevis.tva / 100)
+  modelRefDevis.totalGreenTva = modelRefDevis.totalGreen + modelRefDevis.totalGreen * (modelRefDevis.tva / 100)
+  modelRefDevis.totalUser = modelRefDevis.totalTva - modelRefDevis.totalGreenTva
 }
 const addBloc = () => {
   const task = {
@@ -123,6 +123,10 @@ const updateBloc = (item: any, index: number) => {
   formStateBloc.nb_hours = item.nb_hours,
   indexBloc = index
   showUpdateBloc.value = true
+  getTotal()
+}
+const deleteBloc = (item: any, index: number) => {
+  modelRefDevis.tasks.splice(index, 1)
   getTotal()
 }
 
@@ -229,9 +233,6 @@ const sendDevis = async () => {
     .then(async () => {
       modelRefDevis.id_company = mission.value.id_company
       modelRefDevis.id_mission = mission.value._id
-      if (formStateMission.supp_month == false)
-        modelRefDevis.price_per_day = undefined
-
       if (currentUser.value.role === 'Freelancer') {
         const { data } = await missionApi.sendDevisFreelance(modelRefDevis)
         if (data) {
@@ -255,7 +256,9 @@ const sendDevis = async () => {
     })
     .catch((err) => {
       console.log('error', err)
-    }).finally(() => profileEntrepriseLoading.value = false)
+    }).finally(() => {
+      profileEntrepriseLoading.value = false
+    })
 }
 const acceptDevis = async (item: any) => {
   if (item.state == 'terminé') { message.warning('vous avez déja répondu à ce devis') }
@@ -457,9 +460,15 @@ const onFinishFailed = (errorInfo: any) => {
                                 </div>
                                 <div class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
-                                    <b>Total :</b>
+                                    <b>Total HT:</b>
                                   </span>
                                   {{ item.total }} €
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Total TTC :</b>
+                                  </span>
+                                  {{ item.totalTva }} €
                                 </div>
                                 <div v-if="item.state == 'terminé'">
                                   <div class="flex items-center">
@@ -504,7 +513,7 @@ const onFinishFailed = (errorInfo: any) => {
                             </a-card-meta>
                           </a-card>
                         </a-badge-ribbon>
-                        <a-badge-ribbon v-else-if="!item.confirmed" class="mr-2" color="red" text="refusé">
+                        <a-badge-ribbon v-else-if="item.confirmed == false" class="mr-2" color="red" text="refusé">
                           <a-card class="mr-2" hoverable>
                             <template #actions>
                               <span key="accept" class="i-carbon-checkmark-outline inline-block" @click="acceptDevis(item)" />
@@ -535,9 +544,15 @@ const onFinishFailed = (errorInfo: any) => {
                                 </div>
                                 <div class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
-                                    <b>Total :</b>
+                                    <b>Total HT:</b>
                                   </span>
                                   {{ item.total }} €
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Total TTC :</b>
+                                  </span>
+                                  {{ item.totalTva }} €
                                 </div>
                                 <div v-if="item.state == 'terminé'">
                                   <div class="flex items-center">
@@ -612,9 +627,15 @@ const onFinishFailed = (errorInfo: any) => {
                               </div>
                               <div class="flex items-center">
                                 <span class="text-dark-300 mr-1.5">
-                                  <b>Total :</b>
+                                  <b>Total HT:</b>
                                 </span>
                                 {{ item.total }} €
+                              </div>
+                              <div class="flex items-center">
+                                <span class="text-dark-300 mr-1.5">
+                                  <b>Total TTC :</b>
+                                </span>
+                                {{ item.totalTva }} €
                               </div>
                               <div v-if="item.state == 'terminé'">
                                 <div class="flex items-center">
@@ -691,9 +712,15 @@ const onFinishFailed = (errorInfo: any) => {
                                 </div>
                                 <div class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
-                                    <b>Total :</b>
+                                    <b>Total HT:</b>
                                   </span>
                                   {{ item.total }} €
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Total TTC :</b>
+                                  </span>
+                                  {{ item.totalTva }} €
                                 </div>
                                 <div v-if="item.state == 'terminé'">
                                   <div class="flex items-center">
@@ -738,7 +765,7 @@ const onFinishFailed = (errorInfo: any) => {
                             </a-card-meta>
                           </a-card>
                         </a-badge-ribbon>
-                        <a-badge-ribbon v-else-if="!item.confirmed" class="mr-2" color="red" text="refusé">
+                        <a-badge-ribbon v-else-if="item.confirmed ==false" class="mr-2" color="red" text="refusé">
                           <a-card class="mr-2" hoverable>
                             <template #actions>
                               <span key="accept" class="i-carbon-checkmark-outline inline-block" @click="acceptDevis(item)" />
@@ -769,9 +796,15 @@ const onFinishFailed = (errorInfo: any) => {
                                 </div>
                                 <div class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
-                                    <b>Total :</b>
+                                    <b>Total HT:</b>
                                   </span>
                                   {{ item.total }} €
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Total TTC :</b>
+                                  </span>
+                                  {{ item.totalTva }} €
                                 </div>
                                 <div v-if="item.state == 'terminé'">
                                   <div class="flex items-center">
@@ -846,9 +879,15 @@ const onFinishFailed = (errorInfo: any) => {
                               </div>
                               <div class="flex items-center">
                                 <span class="text-dark-300 mr-1.5">
-                                  <b>Total :</b>
+                                  <b>Total HT:</b>
                                 </span>
                                 {{ item.total }} €
+                              </div>
+                              <div class="flex items-center">
+                                <span class="text-dark-300 mr-1.5">
+                                  <b>Total TTC :</b>
+                                </span>
+                                {{ item.totalTva }} €
                               </div>
                               <div v-if="item.state == 'terminé'">
                                 <div class="flex items-center">
@@ -1167,7 +1206,8 @@ const onFinishFailed = (errorInfo: any) => {
               <div>
                 <a-card class="mr-2" hoverable>
                   <template #actions>
-                    <span key="accept" class="i-carbon-edit inline-block" @click="updateBloc(item,index)" />
+                    <span key="update" class="i-carbon-edit inline-block" @click="updateBloc(item,index)" />
+                    <span key="delete" class="i-carbon-delete inline-block" @click="deleteBloc(item,index)" />
                   </template>
                   <a-card-meta :title="`Tâche : ${index+1}`">
                     <template #description>
@@ -1255,32 +1295,32 @@ const onFinishFailed = (errorInfo: any) => {
       </a-form>
     </div>
     <br>
-    <label><b> Total : </b> {{ modelTotal.total }} €</label>
+    <label><b> Total : </b> {{ modelRefDevis.total }} €</label>
     <br><br>
     <span class="ant-form-text mb-20"> <b>TVA :   </b>
       <a-input-number
-        v-model:value="modelTotal.tva" addon-after="%" step="1" :min="0" :max="100" @change="applicateTva($event)"
+        v-model:value="modelRefDevis.tva" addon-after="%" step="1" :min="0" :max="100" @change="applicateTva($event)"
       />
     </span>
     <br><br>
-    <label><b> Total TTC : </b> {{ modelTotal.totalTva }} €</label>
+    <label><b> Total TTC : </b> {{ modelRefDevis.totalTva }} €</label>
     <br><br>
-    <label><b> Frais GreenPositiv (10% HT): </b> {{ modelTotal.totalGreen }} €</label>
+    <label><b> Frais GreenPositiv (10% HT): </b> {{ modelRefDevis.totalGreen }} €</label>
     <br><br>
-    <label><b> Frais GreenPositiv (TTC): </b> {{ modelTotal.totalGreenTva }} €</label>
+    <label><b> Frais GreenPositiv (TTC): </b> {{ modelRefDevis.totalGreenTva }} €</label>
     <br><br>
     <label class="green"><b>VOUS RECEVEREZ (TTC): </b> <a-tag
       class="text-xs ml-2 leading-5"
       color="#080"
     >
-      {{ modelTotal.totalUser }} €
+      {{ modelRefDevis.totalUser }} €
     </a-tag></label>
     <br><br>
     <template #footer>
       <a-button type="primary" :loading="profileEntrepriseLoading" @click="sendDevis">
         Créer
       </a-button>
-      <a-button style="margin-left: 10px" @click="resetFields; modelTotal.total = 0; modelRefDevis.tasks= []">
+      <a-button style="margin-left: 10px" @click="resetFields; modelRefDevis.total = 0; modelRefDevis.tasks= []">
         Réinitialiser
       </a-button>
     </template>

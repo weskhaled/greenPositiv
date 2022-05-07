@@ -103,11 +103,6 @@ onClickOutside(asideOffcanvasMenu.value, () => {
                           <span>ajouter une mission</span>
                         </router-link>
                       </li>
-                      <li v-if="currentUser && (currentUser.role === 'Freelancer' || currentUser.role === 'Agence')">
-                        <router-link class="nav-link" to="#">
-                          <span>Créer un devis </span>
-                        </router-link>
-                      </li>
                       <li>
                         <router-link class="nav-link" to="/auth/parameter-account">
                           <span>Paramètre de compte</span>
@@ -214,6 +209,11 @@ onClickOutside(asideOffcanvasMenu.value, () => {
               <li v-else-if="currentUser && currentUser.role === 'Collab'">
                 <router-link class="nav-link" :to="`/profile/collaborator/${currentUser?.idUser}`">
                   <span>Modifier mon profil</span>
+                </router-link>
+              </li>
+              <li>
+                <router-link class="nav-link" :to="`/missions/search`">
+                  <span>Recherche Freelance</span>
                 </router-link>
               </li>
               <li v-if="currentUser && (currentUser.role === 'Company')">

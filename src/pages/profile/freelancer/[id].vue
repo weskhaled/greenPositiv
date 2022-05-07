@@ -93,7 +93,12 @@ const modelRefDevis = reactive({
   dateBegin: null,
   dateEnd: null,
   tasks: [],
-  total: null,
+  total: 0,
+  tva: 20,
+  totalTva: 0,
+  totalGreen: 0,
+  totalGreenTva: 0,
+  totalUser: 0,
   confirmed: undefined,
 })
 const rulesDevis = reactive({
@@ -1313,6 +1318,12 @@ const updateDevis = (item, idCompany) => {
     modelRefDevis.state = item.state
     modelRefDevis.tasks = item.tasks
     modelRefDevis.total = item.total
+    modelRefDevis.tva = item.tva
+    modelRefDevis.totalTva = item.totalTva
+    modelRefDevis.totalGreen = item.totalGreen
+    modelRefDevis.totalGreenTva = item.totalGreenTva
+    modelRefDevis.totalUser = item.totalUser
+
     visibleModalUpdateDevis.value = true
   }
   else { message.warning('vous ne pouvez pas modifier ce devis') }
@@ -2943,6 +2954,29 @@ onMounted(async () => {
                                   </span>
                                   {{ item.total }} €
                                 </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>TVA :</b>
+                                  </span>
+                                  {{ item.tva }} %
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Total TTC :</b>
+                                  </span>
+                                  {{ item.totalTva }} €
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>VOUS RECEVEREZ (TTC) :</b>
+                                  </span>
+                                  <a-tag
+                                    class="text-xs ml-2 leading-5"
+                                    color="#080"
+                                  >
+                                    {{ item.totalUser }} €
+                                  </a-tag>
+                                </div>
                                 <div v-if="item.state == 'terminé'">
                                   <div class="flex items-center">
                                     <span class="text-dark-300 mr-1.5">
@@ -3017,6 +3051,29 @@ onMounted(async () => {
                                   </span>
                                   {{ item.total }} €
                                 </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>TVA :</b>
+                                  </span>
+                                  {{ item.tva }} %
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Total TTC :</b>
+                                  </span>
+                                  {{ item.totalTva }} €
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>VOUS RECEVEREZ (TTC) :</b>
+                                  </span>
+                                  <a-tag
+                                    class="text-xs ml-2 leading-5"
+                                    color="#080"
+                                  >
+                                    {{ item.totalUser }} €
+                                  </a-tag>
+                                </div>
                                 <div v-if="item.state == 'terminé'">
                                   <div class="flex items-center">
                                     <span class="text-dark-300 mr-1.5">
@@ -3089,6 +3146,29 @@ onMounted(async () => {
                                   <b>Total :</b>
                                 </span>
                                 {{ item.total }} €
+                              </div>
+                              <div class="flex items-center">
+                                <span class="text-dark-300 mr-1.5">
+                                  <b>TVA :</b>
+                                </span>
+                                {{ item.tva }} %
+                              </div>
+                              <div class="flex items-center">
+                                <span class="text-dark-300 mr-1.5">
+                                  <b>Total TTC :</b>
+                                </span>
+                                {{ item.totalTva }} €
+                              </div>
+                              <div class="flex items-center">
+                                <span class="text-dark-300 mr-1.5">
+                                  <b>VOUS RECEVEREZ (TTC) :</b>
+                                </span>
+                                <a-tag
+                                  class="text-xs ml-2 leading-5"
+                                  color="#080"
+                                >
+                                  {{ item.totalUser }} €
+                                </a-tag>
                               </div>
                               <div v-if="item.state == 'terminé'">
                                 <div class="flex items-center">
@@ -3163,6 +3243,29 @@ onMounted(async () => {
                                   </span>
                                   {{ item.total }} €
                                 </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>TVA :</b>
+                                  </span>
+                                  {{ item.tva }} %
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Total TTC :</b>
+                                  </span>
+                                  {{ item.totalTva }} €
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>VOUS RECEVEREZ (TTC) :</b>
+                                  </span>
+                                  <a-tag
+                                    class="text-xs ml-2 leading-5"
+                                    color="#080"
+                                  >
+                                    {{ item.totalUser }} €
+                                  </a-tag>
+                                </div>
                                 <div v-if="item.state == 'terminé'">
                                   <div class="flex items-center">
                                     <span class="text-dark-300 mr-1.5">
@@ -3237,6 +3340,29 @@ onMounted(async () => {
                                   </span>
                                   {{ item.total }} €
                                 </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>TVA :</b>
+                                  </span>
+                                  {{ item.tva }} %
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Total TTC :</b>
+                                  </span>
+                                  {{ item.totalTva }} €
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>VOUS RECEVEREZ (TTC) :</b>
+                                  </span>
+                                  <a-tag
+                                    class="text-xs ml-2 leading-5"
+                                    color="#080"
+                                  >
+                                    {{ item.totalUser }} €
+                                  </a-tag>
+                                </div>
                                 <div v-if="item.state == 'terminé'">
                                   <div class="flex items-center">
                                     <span class="text-dark-300 mr-1.5">
@@ -3309,6 +3435,29 @@ onMounted(async () => {
                                   <b>Total :</b>
                                 </span>
                                 {{ item.total }} €
+                              </div>
+                              <div class="flex items-center">
+                                <span class="text-dark-300 mr-1.5">
+                                  <b>TVA :</b>
+                                </span>
+                                {{ item.tva }} %
+                              </div>
+                              <div class="flex items-center">
+                                <span class="text-dark-300 mr-1.5">
+                                  <b>Total TTC :</b>
+                                </span>
+                                {{ item.totalTva }} €
+                              </div>
+                              <div class="flex items-center">
+                                <span class="text-dark-300 mr-1.5">
+                                  <b>VOUS RECEVEREZ (TTC) :</b>
+                                </span>
+                                <a-tag
+                                  class="text-xs ml-2 leading-5"
+                                  color="#080"
+                                >
+                                  {{ item.totalUser }} €
+                                </a-tag>
                               </div>
                               <div v-if="item.state == 'terminé'">
                                 <div class="flex items-center">
