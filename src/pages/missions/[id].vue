@@ -31,6 +31,9 @@ const formItemLayout = {
 }
 const props = defineProps<{ id: string }>()
 const jobs = ref([])
+const offers = ref([])
+const offersLabel = ref([])
+const offersId = ref([])
 const jobsName = ref([])
 const jobsId = ref([])
 const languages = ref([])
@@ -42,6 +45,7 @@ const showSuppMonthArray = ref([])
 const mission = ref(null)
 const profile = ref(null)
 const visibleModalSendDevis = ref(false)
+const visibleModalSendDevisAgence = ref(false)
 const profileEntrepriseLoading = ref(false)
 const showUpdateBloc = ref(false)
 const devis = ref([])
@@ -61,6 +65,8 @@ const modelRefDevis = reactive({
   totalGreen: 0,
   totalGreenTva: 0,
   totalUser: 0,
+  offer: undefined,
+  id_offer: undefined,
 })
 let indexBloc = null
 const rulesDevis = reactive({
@@ -91,6 +97,18 @@ const formStateBloc = reactive<Record<string, any>>({
   cost_per_hour: 50,
   nb_hours: 1,
 })
+const getOffers = async () => {
+  await missionApi.getOffers().then(({ data }) => {
+    offers.value = data
+    offersLabel.value = data.filter(j => j._id && j.name).map(j => ({
+      value: j._id,
+      label: j.name,
+    }))
+    offersId.value = data.map(o => o._id)
+  }).catch((err) => {
+    message.error(err.message)
+  })
+}
 const getTotal = async () => {
   modelRefDevis.total = 0
   await modelRefDevis.tasks.map((el) => {
@@ -243,9 +261,12 @@ const sendDevis = async () => {
         else { message.error(data.message) }
       }
       else if (currentUser.value.role === 'Agence') {
+        modelRefDevis.id_offer = modelRefDevis.offer
+        const offer = offers.value[offersId.value.indexOf(modelRefDevis.offer)]
+        modelRefDevis.offer = offer
         const { data } = await missionApi.sendDevisAgence(modelRefDevis)
         if (data) {
-          visibleModalSendDevis.value = false
+          visibleModalSendDevisAgence.value = false
 
           message.info(data.message)
           profileEntrepriseLoading.value = false
@@ -700,6 +721,12 @@ const onFinishFailed = (errorInfo: any) => {
                                 <br>
                                 <div class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
+                                    <b>Solution innovante :</b>
+                                  </span>
+                                  {{ item.offer.name }}
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
                                     <b>Date de début :</b>
                                   </span>
                                   {{ dayjs(item.dateBegin).format("DD-MM-YYYY") }}
@@ -784,6 +811,12 @@ const onFinishFailed = (errorInfo: any) => {
                                 <br>
                                 <div class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
+                                    <b>Solution innovante :</b>
+                                  </span>
+                                  {{ item.offer.name }}
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
                                     <b>Date de début :</b>
                                   </span>
                                   {{ item.dateBegin }}
@@ -865,6 +898,12 @@ const onFinishFailed = (errorInfo: any) => {
                                 />
                               </div>
                               <br>
+                              <div class="flex items-center">
+                                <span class="text-dark-300 mr-1.5">
+                                  <b>Solution innovante :</b>
+                                </span>
+                                {{ item.offer.name }}
+                              </div>
                               <div class="flex items-center">
                                 <span class="text-dark-300 mr-1.5">
                                   <b>Date de début :</b>
@@ -1137,9 +1176,16 @@ const onFinishFailed = (errorInfo: any) => {
                         <div class="row">
                           <div class="col text-center">
                             <a-button
-                              v-if="currentUser?.role === 'Freelancer' || currentUser?.role === 'Agence'"
+                              v-if="currentUser?.role === 'Freelancer'"
                               class="btn-theme m-2"
                               @click="() => { resetFields(); modelRefDevis.id = undefined; visibleModalSendDevis = true }"
+                            >
+                              Envoyer un Devis
+                            </a-button>
+                            <a-button
+                              v-if="currentUser?.role === 'Agence'"
+                              class="btn-theme m-2"
+                              @click="() => { resetFields(); modelRefDevis.id = undefined; visibleModalSendDevisAgence = true;getOffers() }"
                             >
                               Envoyer un Devis
                             </a-button>
@@ -1321,6 +1367,183 @@ const onFinishFailed = (errorInfo: any) => {
         Créer
       </a-button>
       <a-button style="margin-left: 10px" @click="resetFields; modelRefDevis.total = 0; modelRefDevis.tasks= []">
+        Réinitialiser
+      </a-button>
+    </template>
+  </a-modal>
+  <a-modal
+    v-model:visible="visibleModalSendDevisAgence"
+    width="40%"
+    :title="modelRefDevis.id ? 'Modifier Devis' : 'Ajouter Devis'"
+    @ok="() => { }"
+  >
+    <div>
+      <a-form-item
+        name="Offer"
+        has-feedback
+      >
+        <label for="level">Choisissez votre offre :</label>
+        <a-select
+          v-model:value="modelRefDevis.offer" :options="offersLabel" placeholder="Veuillez choisir une de vos offres"
+        />
+      </a-form-item>
+      <a-form layout="vertical" :wrapper-col="{ span: 24 }">
+        <a-form-item name="nb_hours">
+          <span class="ant-form-text">nombre d'heures : </span>
+          <a-input-number
+            v-model:value="formStateBloc.nb_hours" step="1" :min="1" :max="9999"
+          />
+        </a-form-item>
+        <a-form-item name="cost_per_hour">
+          <span class="ant-form-text">Coût / heure : </span>
+          <a-input-number
+            v-model:value="formStateBloc.cost_per_hour" addon-after="€" step="50" :min="50" :max="9999"
+          />
+        </a-form-item>
+        <a-form-item name="description" label="Description">
+          <a-textarea v-model:value="formStateBloc.description" placeholder="description" auto-size />
+        </a-form-item>
+        <a-form-item>
+          <a-button
+            v-if="currentUser?.role === 'Freelancer' || currentUser?.role === 'Agence'"
+            class="btn-theme m-2"
+            @click="addBloc()"
+          >
+            ajouter un bloc
+          </a-button>
+        </a-form-item>
+        <div v-if="modelRefDevis.tasks.length > 0">
+          <swiper
+            :modules="[Controller]"
+            :slides-per-view="2" class="p-3"
+            :pagination="{
+              clickable: true,
+            }"
+            :grab-cursor="true"
+            @swiper="setBlocSwiper"
+          >
+            <swiper-slide
+              v-for="(item, index) in modelRefDevis.tasks"
+              :key="index"
+            >
+              <div>
+                <a-card class="mr-2" hoverable>
+                  <template #actions>
+                    <span key="update" class="i-carbon-edit inline-block" @click="updateBloc(item,index)" />
+                    <span key="delete" class="i-carbon-delete inline-block" @click="deleteBloc(item,index)" />
+                  </template>
+                  <a-card-meta :title="`Tâche : ${index+1}`">
+                    <template #description>
+                      Tâche {{ index+1 }}
+                      <div class="flex items-center">
+                        <span class="text-dark-300 mr-1.5">
+                          <b>Nombre d'heures :</b>
+                        </span>
+                        {{ item.nb_hours }} heures
+                      </div>
+                      <div class="flex items-center">
+                        <span class="text-dark-300 mr-1.5">
+                          <b>Coût / heure :</b>
+                        </span>
+                        {{ item.cost_per_hour }} €
+                      </div>
+                    </template>
+                  </a-card-meta>
+                </a-card>
+              </div>
+            </swiper-slide>
+          </swiper>
+          <br>
+        </div>
+        <div v-if="showUpdateBloc">
+          <a-form-item name="nb_hours">
+            <span class="ant-form-text">nombre d'heures : </span>
+            <a-input-number
+              v-model:value="formStateBloc.nb_hours" step="1" :min="1" :max="9999"
+            />
+          </a-form-item>
+          <a-form-item name="cost_per_hour">
+            <span class="ant-form-text">Coût / heure : </span>
+            <a-input-number
+              v-model:value="formStateBloc.cost_per_hour" addon-after="€" step="50" :min="50" :max="9999"
+            />
+          </a-form-item>
+          <a-form-item name="description" label="Description">
+            <a-textarea v-model:value="formStateBloc.description" placeholder="description" auto-size />
+          </a-form-item>
+          <a-form-item>
+            <a-button
+              v-if="currentUser?.role === 'Freelancer' || currentUser?.role === 'Agence'"
+              class="btn-theme m-2"
+              @click="updateTask()"
+            >
+              modifier ce bloc
+            </a-button>
+          </a-form-item>
+        </div>
+        <a-form-item
+          name="month-picker"
+          label="Date Début"
+          :wrapper-col="{ span: 24, offset: 0 }"
+          :label-col="{
+            sm: { span: 24 }
+          }"
+          v-bind="devisValidateInfos.dateBegin"
+        >
+          <a-date-picker
+            v-model:value="modelRefDevis.dateBegin"
+            style="width: 100%"
+            value-format="YYYY-MM-DD"
+            :disabled-date="(current: Dayjs) => current && current <= dayjs().endOf('day')"
+            @blur="validate('dateBegin', { trigger: 'blur' }).catch(() => { })"
+          />
+        </a-form-item>
+        <a-form-item
+          :label-col="{
+            sm: { span: 24 }
+          }"
+          :wrapper-col="{ span: 24, offset: 0 }"
+          name="month-picker"
+          label="Date de fin"
+          v-bind="devisValidateInfos.dateEnd"
+        >
+          <a-date-picker
+            v-model:value="modelRefDevis.dateEnd"
+            style="width: 100%"
+            value-format="YYYY-MM-DD"
+            :disabled-date="(current: Dayjs) => current && current <= dayjs().endOf('day') || current < dayjs(modelRefDevis.dateBegin)"
+            @blur="validate('dateEnd', { trigger: 'blur' }).catch(() => { })"
+          />
+        </a-form-item>
+      </a-form>
+    </div>
+    <br>
+    <label><b> Total : </b> {{ modelRefDevis.total }} €</label>
+    <br><br>
+    <span class="ant-form-text mb-20"> <b>TVA :   </b>
+      <a-input-number
+        v-model:value="modelRefDevis.tva" addon-after="%" step="1" :min="0" :max="100" @change="applicateTva($event)"
+      />
+    </span>
+    <br><br>
+    <label><b> Total TTC : </b> {{ modelRefDevis.totalTva }} €</label>
+    <br><br>
+    <label><b> Frais GreenPositiv (10% HT): </b> {{ modelRefDevis.totalGreen }} €</label>
+    <br><br>
+    <label><b> Frais GreenPositiv (TTC): </b> {{ modelRefDevis.totalGreenTva }} €</label>
+    <br><br>
+    <label class="green"><b>VOUS RECEVEREZ (TTC): </b> <a-tag
+      class="text-xs ml-2 leading-5"
+      color="#080"
+    >
+      {{ modelRefDevis.totalUser }} €
+    </a-tag></label>
+    <br><br>
+    <template #footer>
+      <a-button type="primary" :loading="profileEntrepriseLoading" @click="sendDevis">
+        Créer
+      </a-button>
+      <a-button style="margin-left: 10px" @click="resetFields; modelRefDevis.total = 0; modelRefDevis.tasks= [],modelRefDevis.offer = undefined;">
         Réinitialiser
       </a-button>
     </template>

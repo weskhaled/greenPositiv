@@ -30,6 +30,8 @@ const missionApi = {
 
   sendDevisAgence: async (params: object) => service.post(`${BASE_PREFIX}/agence/send-devis`, params),
   getDevisAgence: async () => service.get(`${BASE_PREFIX}/agence/devis`),
+  getOffers: async () => service.get(`${BASE_PREFIX}/agence/offers`),
+
   sendDemand: async (id: string) => service.post(`${BASE_PREFIX}/demands/${id}`),
   getDemands: async () => service.get(`${BASE_PREFIX}/demands/`),
   getDemandById: async (id: string) => service.get(`${BASE_PREFIX}/demands/${id}`),

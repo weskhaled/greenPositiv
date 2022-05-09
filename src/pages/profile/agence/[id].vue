@@ -8,6 +8,7 @@ import type { RuleObject } from 'ant-design-vue/es/form'
 import adminApi from '~/api/modules/admin'
 import globalApi from '~/api/modules/global'
 import agenceApi from '~/api/modules/agence'
+import missionApi from '~/api/modules/mission'
 import profileEntrepriseApi from '~/api/modules/profil-entreprise'
 import { currentUser, token } from '~/stores'
 import 'swiper/css/pagination'
@@ -64,6 +65,14 @@ const countriesIban = ref([])
 const countriesIbanOthers = ref([])
 const jobs = ref([])
 const typesIban = ref([])
+const devis = ref([])
+const visibleModalUpdateDevis = ref(false)
+const showUpdateBloc = ref(false)
+let indexBloc = null
+const offersDevis = ref([])
+const offersLabel = ref([])
+const offersId = ref([])
+
 const activities = ref([])
 const activitiesCode = ref([])
 const visibleModalAddReference = ref(false)
@@ -171,6 +180,180 @@ const modelRefOffer = reactive({
   description: '',
 })
 
+/* module devis */
+const devisIndex = reactive({
+  index: null,
+})
+const modelRefDevis = reactive({
+  _id: null,
+  id_freelance: undefined,
+  id_company: undefined,
+  id_mission: undefined,
+  dateBegin: null,
+  dateEnd: null,
+  tasks: [],
+  total: 0,
+  tva: 20,
+  totalTva: 0,
+  totalGreen: 0,
+  totalGreenTva: 0,
+  totalUser: 0,
+  confirmed: undefined,
+  offer: undefined,
+})
+const rulesDevis = reactive({
+  dateBegin: [
+    {
+      required: true,
+      message: 'Choisissez la date de début',
+    },
+  ],
+  dateEnd: [
+    {
+      validator: async (_rule: RuleObject, value: string) => {
+        if (!value)
+          return Promise.reject('Choisissez la date de fin')
+        else if (modelRefDevis.dateBegin != null && value < modelRefDevis.dateBegin)
+          return Promise.reject('La date de fin doit être supérieur à la date de début')
+        else
+          return Promise.resolve()
+      },
+      trigger: 'blur',
+    },
+  ],
+})
+
+const useFormDevis = useForm(modelRefDevis, rulesDevis)
+const resetFieldsDevis = useFormDevis.resetFields
+const validateDevis = useFormDevis.validate
+const devisValidateInfos = useFormDevis.validateInfos
+
+const getOffers = async () => {
+  await missionApi.getOffers().then(({ data }) => {
+    offersDevis.value = data
+    offersLabel.value = data.filter(j => j._id && j.name).map(j => ({
+      value: j._id,
+      label: j.name,
+    }))
+    offersId.value = data.map(o => o._id)
+  }).catch((err) => {
+    message.error(err.message)
+  })
+}
+const sendDevis = async () => {
+  profileEntrepriseLoading.value = true
+  validateDevis()
+    .then(async () => {
+      if (currentUser.value.role === 'Freelancer') {
+        const { data } = await missionApi.sendDevisFreelance(modelRefDevis)
+        if (data) {
+          visibleModalUpdateDevis.value = false
+          message.info(data.message)
+          profileEntrepriseLoading.value = false
+        }
+        else { message.error(data.message) }
+      }
+      else if (currentUser.value.role === 'Agence') {
+        modelRefDevis.id_offer = modelRefDevis.offer
+        const offer = offersDevis.value[offersId.value.indexOf(modelRefDevis.offer)]
+        modelRefDevis.offer = offer
+        const { data } = await missionApi.sendDevisAgence(modelRefDevis)
+        if (data) {
+          visibleModalUpdateDevis.value = false
+          devis.value.devises[devisIndex.index].state = 'en cours'
+          devis.value.devises[devisIndex.index].total = modelRefDevis.total
+          devis.value.devises[devisIndex.index].tva = modelRefDevis.tva
+          devis.value.devises[devisIndex.index].totalTva = modelRefDevis.totalTva
+          devis.value.devises[devisIndex.index].totalGreen = modelRefDevis.totalGreen
+          devis.value.devises[devisIndex.index].totalGreenTva = modelRefDevis.totalGreenTva
+          devis.value.devises[devisIndex.index].totalUser = modelRefDevis.totalUser
+
+          message.info(data.message)
+          profileEntrepriseLoading.value = false
+        }
+        else { message.error(data.message) }
+      }
+      else { console.log('problem in send Devis') }
+    })
+    .catch((err) => {
+    }).finally(() => profileEntrepriseLoading.value = false)
+}
+const updateDevis = (item, idCompany, index) => {
+  if (item.state === 'terminé' && item.confirmed === false) {
+    getOffers()
+    modelRefDevis._id = item._id
+    modelRefDevis.id_agence = item.id_agence
+    modelRefDevis.id_mission = item.id_mission
+    modelRefDevis.id_company = idCompany
+    modelRefDevis.dateBegin = item.dateBegin
+    modelRefDevis.dateEnd = item.dateEnd
+    modelRefDevis.state = item.state
+    modelRefDevis.tasks = item.tasks
+    modelRefDevis.total = item.total
+    modelRefDevis.tva = item.tva
+    modelRefDevis.totalTva = item.totalTva
+    modelRefDevis.totalGreen = item.totalGreen
+    modelRefDevis.totalGreenTva = item.totalGreenTva
+    modelRefDevis.totalUser = item.totalUser
+    modelRefDevis.offer = item.id_offer
+    visibleModalUpdateDevis.value = true
+    devisIndex.index = index
+  }
+  else { message.warning('vous ne pouvez pas modifier ce devis') }
+}
+const formStateBloc = reactive<Record<string, any>>({
+  description: '',
+  cost_per_hour: 50,
+  nb_hours: 1,
+})
+const getTotal = async () => {
+  modelRefDevis.total = 0
+  await modelRefDevis.tasks.map((el) => {
+    modelRefDevis.total += el.nb_hours * el.cost_per_hour
+  })
+
+  modelRefDevis.totalTva = modelRefDevis.total + modelRefDevis.total * (modelRefDevis.tva / 100)
+  modelRefDevis.totalGreen = modelRefDevis.total * 0.1
+  modelRefDevis.totalGreenTva = modelRefDevis.totalGreen + modelRefDevis.totalGreen * (modelRefDevis.tva / 100)
+  modelRefDevis.totalUser = modelRefDevis.totalTva - modelRefDevis.totalGreenTva
+}
+const applicateTva = () => {
+  modelRefDevis.totalTva = modelRefDevis.total + modelRefDevis.total * (modelRefDevis.tva / 100)
+  modelRefDevis.totalGreenTva = modelRefDevis.totalGreen + modelRefDevis.totalGreen * (modelRefDevis.tva / 100)
+  modelRefDevis.totalUser = modelRefDevis.totalTva - modelRefDevis.totalGreenTva
+}
+const addBloc = () => {
+  const task = {
+    description: formStateBloc.description,
+    cost_per_hour: formStateBloc.cost_per_hour,
+    nb_hours: formStateBloc.nb_hours,
+  }
+  modelRefDevis.tasks.push(task)
+  getTotal()
+}
+
+const updateBloc = (item: any, index: number) => {
+  formStateBloc.description = item.description,
+  formStateBloc.cost_per_hour = item.cost_per_hour,
+  formStateBloc.nb_hours = item.nb_hours,
+  indexBloc = index
+  showUpdateBloc.value = true
+  getTotal()
+}
+const deleteBloc = (item: any, index: number) => {
+  modelRefDevis.tasks.splice(index, 1)
+  getTotal()
+}
+
+const updateTask = () => {
+  modelRefDevis.tasks[indexBloc].description = formStateBloc.description
+  modelRefDevis.tasks[indexBloc].cost_per_hour = formStateBloc.cost_per_hour
+  modelRefDevis.tasks[indexBloc].nb_hours = formStateBloc.nb_hours
+  showUpdateBloc.value = false
+  indexBloc = null
+  getTotal()
+}
+/* end module devis */
 const rulesIban = reactive({
   cb_iban_name_lastname: [
     {
@@ -745,6 +928,10 @@ const getFormData = async () => {
       label: a.name,
     })))
   })
+  missionApi.getDevisAgence().then(({ data }) => {
+    if (data)
+      devis.value = data
+  })
   profile.value = null
   await agenceApi.profile(props.id).then(({ data }) => {
     if (data.value) {
@@ -1055,8 +1242,6 @@ const onSubmit = async () => {
 
         for (const key in params)
           form_data.append(key, params[key])
-
-        console.log(form_data)
         const { data } = await agenceApi.updateReference(id, form_data)
         message.info(data.message)
         visibleModalAddReference.value = false
@@ -1225,7 +1410,6 @@ const onFinishFailed = (errorInfo: any) => {
   console.log('Failed:', errorInfo)
 }
 onMounted(async () => {
-  console.log('props id ', props.id)
   getFormData()
 })
 </script>
@@ -1762,7 +1946,7 @@ onMounted(async () => {
                   </a-card>
                 </div>
               </a-tab-pane>
-              <a-tab-pane key="7" tab="Notre entreprise" force-render>
+              <a-tab-pane key="4" tab="Notre entreprise" force-render>
                 <div class>
                   <a-card title="Profile entreprise" :bordered="false" class="rounded-sm">
                     <div>
@@ -2305,6 +2489,641 @@ onMounted(async () => {
                   </a-card>
                 </div>
               </a-tab-pane>
+              <a-tab-pane key="5" tab="Devis" force-render>
+                <div class>
+                  <swiper
+                    :modules="[Controller]"
+                    :slides-per-view="4" class="p-3"
+                    :pagination="{
+                      clickable: true,
+                    }"
+                    :grab-cursor="true"
+                    @swiper="setDevisSwiper"
+                  >
+                    <swiper-slide
+                      v-for="(item, index) in devis.devises"
+                      :key="index"
+                    >
+                      <div v-if="item.id_freelance">
+                        <a-badge-ribbon v-if="item.confirmed == true" class="mr-2" color="green" text="accepté">
+                          <a-card class="mr-2" hoverable>
+                            <template #actions>
+                              <span key="update" class="i-carbon-edit inline-block" @click="updateDevis(item,devis?.missions[index].id_company,index)" />
+                            </template>
+                            <a-card-meta :title="Devis">
+                              <template #description>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Mission :</b>
+                                  </span>
+                                  {{ devis?.missions[index].name }}
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Offre :</b>
+                                  </span>
+                                  {{ item.offer.name }}
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Date de début :</b>
+                                  </span>
+                                  {{ dayjs(item.dateBegin).format("DD-MM-YYYY") }}
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Date de fin :</b>
+                                  </span>
+                                  {{ dayjs(item.dateEnd).format("DD-MM-YYYY") }}
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Total :</b>
+                                  </span>
+                                  {{ item.total }} €
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>TVA :</b>
+                                  </span>
+                                  {{ item.tva }} %
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Total TTC :</b>
+                                  </span>
+                                  {{ item.totalTva }} €
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>VOUS RECEVEREZ (TTC) :</b>
+                                  </span>
+                                  <a-tag
+                                    class="text-xs ml-2 leading-5"
+                                    color="#080"
+                                  >
+                                    {{ item.totalUser }} €
+                                  </a-tag>
+                                </div>
+                                <div v-if="item.state == 'terminé'">
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Etat :</b>
+                                    </span>
+                                    <a-tag
+                                      class="text-xs ml-2 leading-5"
+                                      color="#080"
+                                    >
+                                      Répondu
+                                    </a-tag>
+                                  </div>
+                                </div>
+                                <div v-else-if="item.state == 'en cours'">
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Etat :</b>
+                                    </span>
+                                    <a-tag
+                                      class="text-xs ml-2 leading-5"
+                                      color="#05f"
+                                    >
+                                      En cours
+                                    </a-tag>
+                                  </div>
+                                </div>
+                                <div v-else>
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Etat :</b>
+                                    </span>
+                                    <a-tag
+                                      class="text-xs ml-2 leading-5"
+                                      color="#D00"
+                                    >
+                                      Répondu
+                                    </a-tag>
+                                  </div>
+                                </div>
+                              </template>
+                            </a-card-meta>
+                          </a-card>
+                        </a-badge-ribbon>
+                        <a-badge-ribbon v-else-if="item.confirmed == false" class="mr-2" color="red" text="refusé">
+                          <a-card class="mr-2" hoverable>
+                            <template #actions>
+                              <span key="update" class="i-carbon-edit inline-block" @click="updateDevis(item,devis?.missions[index].id_company,index)" />
+                            </template>
+                            <a-card-meta :title="Devis">
+                              <template #description>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Mission :</b>
+                                  </span>
+                                  {{ devis?.missions[index].name }}
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Offre :</b>
+                                  </span>
+                                  {{ item.offer.name }}
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Date de début :</b>
+                                  </span>
+                                  {{ dayjs(item.dateBegin).format("DD-MM-YYYY") }}
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Date de fin :</b>
+                                  </span>
+                                  {{ dayjs(item.dateEnd).format("DD-MM-YYYY") }}
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Total :</b>
+                                  </span>
+                                  {{ item.total }} €
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>TVA :</b>
+                                  </span>
+                                  {{ item.tva }} %
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Total TTC :</b>
+                                  </span>
+                                  {{ item.totalTva }} €
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>VOUS RECEVEREZ (TTC) :</b>
+                                  </span>
+                                  <a-tag
+                                    class="text-xs ml-2 leading-5"
+                                    color="#080"
+                                  >
+                                    {{ item.totalUser }} €
+                                  </a-tag>
+                                </div>
+                                <div v-if="item.state == 'terminé'">
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Etat :</b>
+                                    </span>
+                                    <a-tag
+                                      class="text-xs ml-2 leading-5"
+                                      color="#080"
+                                    >
+                                      Répondu
+                                    </a-tag>
+                                  </div>
+                                </div>
+                                <div v-else-if="item.state == 'en cours'">
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Etat :</b>
+                                    </span>
+                                    <a-tag
+                                      class="text-xs ml-2 leading-5"
+                                      color="#05f"
+                                    >
+                                      En cours
+                                    </a-tag>
+                                  </div>
+                                </div>
+                                <div v-else>
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Etat :</b>
+                                    </span>
+                                    <a-tag
+                                      class="text-xs ml-2 leading-5"
+                                      color="#D00"
+                                    >
+                                      Répondu
+                                    </a-tag>
+                                  </div>
+                                </div>
+                              </template>
+                            </a-card-meta>
+                          </a-card>
+                        </a-badge-ribbon>
+                        <a-card v-else class="mr-2" hoverable>
+                          <template #actions>
+                            <span key="update" class="i-carbon-edit inline-block" @click="updateDevis(item,devis?.missions[index].id_company,index)" />
+                          </template>
+                          <a-card-meta :title="Devis">
+                            <template #description>
+                              <div class="flex items-center">
+                                <span class="text-dark-300 mr-1.5">
+                                  <b>Mission :</b>
+                                </span>
+                                {{ devis?.missions[index].name }}
+                              </div>
+                              <div class="flex items-center">
+                                <span class="text-dark-300 mr-1.5">
+                                  <b>Mission :</b>
+                                </span>
+                                {{ item.offer.name }}
+                              </div>
+                              <div class="flex items-center">
+                                <span class="text-dark-300 mr-1.5">
+                                  <b>Date de début :</b>
+                                </span>
+                                {{ dayjs(item.dateBegin).format("DD-MM-YYYY") }}
+                              </div>
+                              <div class="flex items-center">
+                                <span class="text-dark-300 mr-1.5">
+                                  <b>Date de fin :</b>
+                                </span>
+                                {{ dayjs(item.dateEnd).format("DD-MM-YYYY") }}
+                              </div>
+                              <div class="flex items-center">
+                                <span class="text-dark-300 mr-1.5">
+                                  <b>Total :</b>
+                                </span>
+                                {{ item.total }} €
+                              </div>
+                              <div class="flex items-center">
+                                <span class="text-dark-300 mr-1.5">
+                                  <b>TVA :</b>
+                                </span>
+                                {{ item.tva }} %
+                              </div>
+                              <div class="flex items-center">
+                                <span class="text-dark-300 mr-1.5">
+                                  <b>Total TTC :</b>
+                                </span>
+                                {{ item.totalTva }} €
+                              </div>
+                              <div class="flex items-center">
+                                <span class="text-dark-300 mr-1.5">
+                                  <b>VOUS RECEVEREZ (TTC) :</b>
+                                </span>
+                                <a-tag
+                                  class="text-xs ml-2 leading-5"
+                                  color="#080"
+                                >
+                                  {{ item.totalUser }} €
+                                </a-tag>
+                              </div>
+                              <div v-if="item.state == 'terminé'">
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Etat :</b>
+                                  </span>
+                                  <a-tag
+                                    class="text-xs ml-2 leading-5"
+                                    color="#080"
+                                  >
+                                    Répondu
+                                  </a-tag>
+                                </div>
+                              </div>
+                              <div v-else-if="item.state == 'en cours'">
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Etat :</b>
+                                  </span>
+                                  <a-tag
+                                    class="text-xs ml-2 leading-5"
+                                    color="#05f"
+                                  >
+                                    En cours
+                                  </a-tag>
+                                </div>
+                              </div>
+                              <div v-else>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Etat :</b>
+                                  </span>
+                                  <a-tag
+                                    class="text-xs ml-2 leading-5"
+                                    color="#D00"
+                                  >
+                                    Répondu
+                                  </a-tag>
+                                </div>
+                              </div>
+                            </template>
+                          </a-card-meta>
+                        </a-card>
+                      </div>
+                      <div v-else-if="item.id_agence">
+                        <a-badge-ribbon v-if="item.confirmed == true " class="mr-2" color="green" text="accepté">
+                          <a-card class="mr-2" hoverable>
+                            <template #actions />
+                            <a-card-meta :title="Devis">
+                              <template #description>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Mission :</b>
+                                  </span>
+                                  {{ devis?.missions[index].name }}
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Offre :</b>
+                                  </span>
+                                  {{ item.offer.name }}
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Date de début :</b>
+                                  </span>
+                                  {{ dayjs(item.dateBegin).format("DD-MM-YYYY") }}
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Date de fin :</b>
+                                  </span>
+                                  {{ dayjs(item.dateEnd).format("DD-MM-YYYY") }}
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Total :</b>
+                                  </span>
+                                  {{ item.total }} €
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>TVA :</b>
+                                  </span>
+                                  {{ item.tva }} %
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Total TTC :</b>
+                                  </span>
+                                  {{ item.totalTva }} €
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>VOUS RECEVEREZ (TTC) :</b>
+                                  </span>
+                                  <a-tag
+                                    class="text-xs ml-2 leading-5"
+                                    color="#080"
+                                  >
+                                    {{ item.totalUser }} €
+                                  </a-tag>
+                                </div>
+                                <div v-if="item.state == 'terminé'">
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Etat :</b>
+                                    </span>
+                                    <a-tag
+                                      class="text-xs ml-2 leading-5"
+                                      color="#080"
+                                    >
+                                      Répondu
+                                    </a-tag>
+                                  </div>
+                                </div>
+                                <div v-else-if="item.state == 'en cours'">
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Etat :</b>
+                                    </span>
+                                    <a-tag
+                                      class="text-xs ml-2 leading-5"
+                                      color="#05f"
+                                    >
+                                      En cours
+                                    </a-tag>
+                                  </div>
+                                </div>
+                                <div v-else>
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Etat :</b>
+                                    </span>
+                                    <a-tag
+                                      class="text-xs ml-2 leading-5"
+                                      color="#D00"
+                                    >
+                                      Répondu
+                                    </a-tag>
+                                  </div>
+                                </div>
+                              </template>
+                            </a-card-meta>
+                          </a-card>
+                        </a-badge-ribbon>
+                        <a-badge-ribbon v-else-if="item.confirmed == false" class="mr-2" color="red" text="refusé">
+                          <a-card class="mr-2" hoverable>
+                            <template #actions>
+                              <span key="update" class="i-carbon-edit inline-block" @click="updateDevis(item,devis?.missions[index].id_company,index)" />
+                            </template>
+                            <a-card-meta :title="Devis">
+                              <template #description>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Mission :</b>
+                                  </span>
+                                  {{ devis?.missions[index].name }}
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Offre :</b>
+                                  </span>
+                                  {{ item.offer.name }}
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Date de début :</b>
+                                  </span>
+                                  {{ dayjs(item.dateBegin).format("DD-MM-YYYY") }}
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Date de fin :</b>
+                                  </span>
+                                  {{ dayjs(item.dateEnd).format("DD-MM-YYYY") }}
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Total :</b>
+                                  </span>
+                                  {{ item.total }} €
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>TVA :</b>
+                                  </span>
+                                  {{ item.tva }} %
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Total TTC :</b>
+                                  </span>
+                                  {{ item.totalTva }} €
+                                </div>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>VOUS RECEVEREZ (TTC) :</b>
+                                  </span>
+                                  <a-tag
+                                    class="text-xs ml-2 leading-5"
+                                    color="#080"
+                                  >
+                                    {{ item.totalUser }} €
+                                  </a-tag>
+                                </div>
+                                <div v-if="item.state == 'terminé'">
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Etat :</b>
+                                    </span>
+                                    <a-tag
+                                      class="text-xs ml-2 leading-5"
+                                      color="#080"
+                                    >
+                                      Répondu
+                                    </a-tag>
+                                  </div>
+                                </div>
+                                <div v-else-if="item.state == 'en cours'">
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Etat :</b>
+                                    </span>
+                                    <a-tag
+                                      class="text-xs ml-2 leading-5"
+                                      color="#05f"
+                                    >
+                                      En cours
+                                    </a-tag>
+                                  </div>
+                                </div>
+                                <div v-else>
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Etat :</b>
+                                    </span>
+                                    <a-tag
+                                      class="text-xs ml-2 leading-5"
+                                      color="#D00"
+                                    >
+                                      Répondu
+                                    </a-tag>
+                                  </div>
+                                </div>
+                              </template>
+                            </a-card-meta>
+                          </a-card>
+                        </a-badge-ribbon>
+                        <a-card v-else class="mr-2" hoverable>
+                          <template #actions>
+                            <span key="update" class="i-carbon-edit inline-block" @click="updateDevis(item,devis?.missions[index].id_company,index)" />
+                          </template>
+                          <a-card-meta :title="Devis">
+                            <template #description>
+                              <div class="flex items-center">
+                                <span class="text-dark-300 mr-1.5">
+                                  <b>Mission :</b>
+                                </span>
+                                {{ devis?.missions[index].name }}
+                              </div>
+                              <div class="flex items-center">
+                                <span class="text-dark-300 mr-1.5">
+                                  <b>Offre :</b>
+                                </span>
+                                {{ item.offer.name }}
+                              </div>
+                              <div class="flex items-center">
+                                <span class="text-dark-300 mr-1.5">
+                                  <b>Date de début :</b>
+                                </span>
+                                {{ dayjs(item.dateBegin).format("DD-MM-YYYY") }}
+                              </div>
+                              <div class="flex items-center">
+                                <span class="text-dark-300 mr-1.5">
+                                  <b>Date de fin :</b>
+                                </span>
+                                {{ dayjs(item.dateEnd).format("DD-MM-YYYY") }}
+                              </div>
+                              <div class="flex items-center">
+                                <span class="text-dark-300 mr-1.5">
+                                  <b>Total :</b>
+                                </span>
+                                {{ item.total }} €
+                              </div>
+                              <div class="flex items-center">
+                                <span class="text-dark-300 mr-1.5">
+                                  <b>TVA :</b>
+                                </span>
+                                {{ item.tva }} %
+                              </div>
+                              <div class="flex items-center">
+                                <span class="text-dark-300 mr-1.5">
+                                  <b>Total TTC :</b>
+                                </span>
+                                {{ item.totalTva }} €
+                              </div>
+                              <div class="flex items-center">
+                                <span class="text-dark-300 mr-1.5">
+                                  <b>VOUS RECEVEREZ (TTC) :</b>
+                                </span>
+                                <a-tag
+                                  class="text-xs ml-2 leading-5"
+                                  color="#080"
+                                >
+                                  {{ item.totalUser }} €
+                                </a-tag>
+                              </div>
+                              <div v-if="item.state == 'terminé'">
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Etat :</b>
+                                  </span>
+                                  <a-tag
+                                    class="text-xs ml-2 leading-5"
+                                    color="#080"
+                                  >
+                                    Répondu
+                                  </a-tag>
+                                </div>
+                              </div>
+                              <div v-else-if="item.state == 'en cours'">
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Etat :</b>
+                                  </span>
+                                  <a-tag
+                                    class="text-xs ml-2 leading-5"
+                                    color="#05f"
+                                  >
+                                    En cours
+                                  </a-tag>
+                                </div>
+                              </div>
+                              <div v-else>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5">
+                                    <b>Etat :</b>
+                                  </span>
+                                  <a-tag
+                                    class="text-xs ml-2 leading-5"
+                                    color="#D00"
+                                  >
+                                    Répondu
+                                  </a-tag>
+                                </div>
+                              </div>
+                            </template>
+                          </a-card-meta>
+                        </a-card>
+                      </div>
+                    </swiper-slide>
+                  </swiper>
+                </div>
+              </a-tab-pane>
             </a-tabs>
           </div>
         </div>
@@ -2558,6 +3377,182 @@ onMounted(async () => {
     <template #footer>
       <a-button type="primary" @click="visibleModalInformationValidated = false">
         Retour
+      </a-button>
+    </template>
+  </a-modal>
+  <a-modal
+    v-model:visible="visibleModalUpdateDevis"
+    width="40%"
+    :title="modelRefDevis._id ? 'Modifier le devis' : 'Ajouter un devis'"
+    @ok="() => { }"
+  >
+    <div>
+      <a-form layout="vertical" :wrapper-col="{ span: 24 }">
+        <a-form-item
+          name="Offer"
+          has-feedback
+        >
+          <label for="level">Choisissez votre offre :</label>
+          <a-select
+            v-model:value="modelRefDevis.offer" :options="offersLabel" placeholder="Veuillez choisir une de vos offres"
+          />
+        </a-form-item>
+        <a-form-item name="nb_hours">
+          <span class="ant-form-text">nombre d'heures : </span>
+          <a-input-number
+            v-model:value="formStateBloc.nb_hours" step="1" :min="1" :max="9999"
+          />
+        </a-form-item>
+        <a-form-item name="cost_per_hour">
+          <span class="ant-form-text">Coût / heure : </span>
+          <a-input-number
+            v-model:value="formStateBloc.cost_per_hour" addon-after="€" step="50" :min="50" :max="9999"
+          />
+        </a-form-item>
+        <a-form-item name="description" label="Description">
+          <a-textarea v-model:value="formStateBloc.description" placeholder="description" auto-size />
+        </a-form-item>
+        <a-form-item>
+          <a-button
+            v-if="currentUser?.role === 'Freelancer' || currentUser?.role === 'Agence'"
+            class="btn-theme m-2"
+            @click="addBloc()"
+          >
+            ajouter un bloc
+          </a-button>
+        </a-form-item>
+        <div v-if="modelRefDevis.tasks.length > 0">
+          <swiper
+            :modules="[Controller]"
+            :slides-per-view="2" class="p-3"
+            :pagination="{
+              clickable: true,
+            }"
+            :grab-cursor="true"
+            @swiper="setBlocSwiper"
+          >
+            <swiper-slide
+              v-for="(item2, index2) in modelRefDevis.tasks"
+              :key="index2"
+            >
+              <div>
+                <a-card class="mr-2" hoverable>
+                  <template #actions>
+                    <span key="accept" class="i-carbon-edit inline-block" @click="updateBloc(item2,index2)" />
+                    <span key="delete" class="i-carbon-delete inline-block" @click="deleteBloc(item2,index2)" />
+                  </template>
+                  <a-card-meta :title="`Tâche : ${index2 + 1}`">
+                    <template #description>
+                      <div class="flex items-center">
+                        <span class="text-dark-300 mr-1.5">
+                          <b>Nombre d'heures :</b>
+                        </span>
+                        {{ item2.nb_hours }} heures
+                      </div>
+                      <div class="flex items-center">
+                        <span class="text-dark-300 mr-1.5">
+                          <b>Coût / heure :</b>
+                        </span>
+                        {{ item2.cost_per_hour }} €
+                      </div>
+                    </template>
+                  </a-card-meta>
+                </a-card>
+              </div>
+            </swiper-slide>
+          </swiper>
+          <br>
+        </div>
+        <div v-if="showUpdateBloc">
+          <a-form-item name="nb_hours">
+            <span class="ant-form-text">nombre d'heures : </span>
+            <a-input-number
+              v-model:value="formStateBloc.nb_hours" step="1" :min="1" :max="9999"
+            />
+          </a-form-item>
+          <a-form-item name="cost_per_hour">
+            <span class="ant-form-text">Coût / heure : </span>
+            <a-input-number
+              v-model:value="formStateBloc.cost_per_hour" addon-after="€" step="50" :min="50" :max="9999"
+            />
+          </a-form-item>
+          <a-form-item name="description" label="Description">
+            <a-input v-model:value="formStateBloc.description" />
+          </a-form-item>
+          <a-form-item>
+            <a-button
+              v-if="currentUser?.role === 'Freelancer' || currentUser?.role === 'Agence'"
+              class="btn-theme m-2"
+              @click="updateTask()"
+            >
+              modifier ce bloc
+            </a-button>
+          </a-form-item>
+        </div>
+        <a-form-item
+          name="month-picker"
+          label="Date Début"
+          :wrapper-col="{ span: 24, offset: 0 }"
+          :label-col="{
+            sm: { span: 24 }
+          }"
+          v-bind="devisValidateInfos.dateBegin"
+        >
+          <a-date-picker
+            v-model:value="modelRefDevis.dateBegin"
+            style="width: 100%"
+            value-format="YYYY-MM-DD"
+            :disabled-date="(current: Dayjs) => current && current <= dayjs().endOf('day')"
+            @blur="validate('dateBegin', { trigger: 'blur' }).catch(() => { })"
+          />
+        </a-form-item>
+        <a-form-item
+          :label-col="{
+            sm: { span: 24 }
+          }"
+          :wrapper-col="{ span: 24, offset: 0 }"
+          name="month-picker"
+          label="Date de fin"
+          v-bind="devisValidateInfos.dateEnd"
+        >
+          <a-date-picker
+            v-model:value="modelRefDevis.dateEnd"
+            style="width: 100%"
+            value-format="YYYY-MM-DD"
+            :disabled-date="(current: Dayjs) => current && current <= dayjs().endOf('day') || current < dayjs(modelRefDevis.dateBegin)"
+            @blur="validate('dateEnd', { trigger: 'blur' }).catch(() => { })"
+          />
+        </a-form-item>
+      </a-form>
+    </div>
+    <br>
+    <label><b> Total : </b> {{ modelRefDevis.total }} €</label>
+    <br><br>
+    <span class="ant-form-text mb-20"> <b>TVA :   </b>
+      <a-input-number
+        v-model:value="modelRefDevis.tva" addon-after="%" step="1" :min="0" :max="100" @change="applicateTva($event)"
+      />
+    </span>
+    <br><br>
+    <label><b> Total TTC : </b> {{ modelRefDevis.totalTva }} €</label>
+    <br><br>
+    <label><b> Frais GreenPositiv (10% HT): </b> {{ modelRefDevis.totalGreen }} €</label>
+    <br><br>
+    <label><b> Frais GreenPositiv (TTC): </b> {{ modelRefDevis.totalGreenTva }} €</label>
+    <br><br>
+    <label class="green"><b>VOUS RECEVEREZ (TTC): </b> <a-tag
+      class="text-xs ml-2 leading-5"
+      color="#080"
+    >
+      {{ modelRefDevis.totalUser }} €
+    </a-tag></label>
+    <br><br>
+    <template #footer>
+      <a-button type="primary" :loading="profileEntrepriseLoading" @click="sendDevis">
+        Créer
+      </a-button>
+      <a-button style="margin-left: 10px" @click="resetFieldsDevis">
+        Réinitialiser
       </a-button>
     </template>
   </a-modal>

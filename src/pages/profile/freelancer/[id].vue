@@ -126,8 +126,10 @@ const useFormDevis = useForm(modelRefDevis, rulesDevis)
 const resetFieldsDevis = useFormDevis.resetFields
 const validateDevis = useFormDevis.validate
 const devisValidateInfos = useFormDevis.validateInfos
-
-const sendDevis = async (index) => {
+const devisIndex = reactive({
+  index: null,
+})
+const sendDevis = async () => {
   profileEntrepriseLoading.value = true
   validateDevis()
     .then(async () => {
@@ -135,6 +137,14 @@ const sendDevis = async (index) => {
         const { data } = await missionApi.sendDevisFreelance(modelRefDevis)
         if (data) {
           visibleModalUpdateDevis.value = false
+
+          devis.value.devises[devisIndex.index].state = 'en cours'
+          devis.value.devises[devisIndex.index].total = modelRefDevis.total
+          devis.value.devises[devisIndex.index].tva = modelRefDevis.tva
+          devis.value.devises[devisIndex.index].totalTva = modelRefDevis.totalTva
+          devis.value.devises[devisIndex.index].totalGreen = modelRefDevis.totalGreen
+          devis.value.devises[devisIndex.index].totalGreenTva = modelRefDevis.totalGreenTva
+          devis.value.devises[devisIndex.index].totalUser = modelRefDevis.totalUser
           message.info(data.message)
           profileEntrepriseLoading.value = false
         }
@@ -1307,7 +1317,7 @@ const updateFormation = (item) => {
   modelRefFormation.description = item.description
   visibleModalAddFormation.value = true
 }
-const updateDevis = (item, idCompany) => {
+const updateDevis = (item, idCompany, index) => {
   if (item.state === 'terminé' && item.confirmed === false) {
     modelRefDevis._id = item._id
     modelRefDevis.id_freelance = item.id_freelance
@@ -1325,6 +1335,7 @@ const updateDevis = (item, idCompany) => {
     modelRefDevis.totalUser = item.totalUser
 
     visibleModalUpdateDevis.value = true
+    devisIndex.index = index
   }
   else { message.warning('vous ne pouvez pas modifier ce devis') }
 }
@@ -1333,20 +1344,50 @@ const formStateBloc = reactive<Record<string, any>>({
   cost_per_hour: 50,
   nb_hours: 1,
 })
-const updateBloc = (index: number) => {
-  indexBloc = index
-  formStateBloc.description = modelRefDevis.tasks[indexBloc].description
-  formStateBloc.cost_per_hour = modelRefDevis.tasks[indexBloc].cost_per_hour
-  formStateBloc.nb_hours = modelRefDevis.tasks[indexBloc].nb_hours
-  showUpdateBloc.value = true
-}
+const getTotal = async () => {
+  modelRefDevis.total = 0
+  await modelRefDevis.tasks.map((el) => {
+    modelRefDevis.total += el.nb_hours * el.cost_per_hour
+  })
 
+  modelRefDevis.totalTva = modelRefDevis.total + modelRefDevis.total * (modelRefDevis.tva / 100)
+  modelRefDevis.totalGreen = modelRefDevis.total * 0.1
+  modelRefDevis.totalGreenTva = modelRefDevis.totalGreen + modelRefDevis.totalGreen * (modelRefDevis.tva / 100)
+  modelRefDevis.totalUser = modelRefDevis.totalTva - modelRefDevis.totalGreenTva
+}
+const applicateTva = () => {
+  modelRefDevis.totalTva = modelRefDevis.total + modelRefDevis.total * (modelRefDevis.tva / 100)
+  modelRefDevis.totalGreenTva = modelRefDevis.totalGreen + modelRefDevis.totalGreen * (modelRefDevis.tva / 100)
+  modelRefDevis.totalUser = modelRefDevis.totalTva - modelRefDevis.totalGreenTva
+}
+const addBloc = () => {
+  const task = {
+    description: formStateBloc.description,
+    cost_per_hour: formStateBloc.cost_per_hour,
+    nb_hours: formStateBloc.nb_hours,
+  }
+  modelRefDevis.tasks.push(task)
+  getTotal()
+}
+const updateBloc = (item: any, index: number) => {
+  formStateBloc.description = item.description,
+  formStateBloc.cost_per_hour = item.cost_per_hour,
+  formStateBloc.nb_hours = item.nb_hours,
+  indexBloc = index
+  showUpdateBloc.value = true
+  getTotal()
+}
+const deleteBloc = (item: any, index: number) => {
+  modelRefDevis.tasks.splice(index, 1)
+  getTotal()
+}
 const updateTask = () => {
   modelRefDevis.tasks[indexBloc].description = formStateBloc.description
   modelRefDevis.tasks[indexBloc].cost_per_hour = formStateBloc.cost_per_hour
   modelRefDevis.tasks[indexBloc].nb_hours = formStateBloc.nb_hours
   showUpdateBloc.value = false
   indexBloc = null
+  getTotal()
 }
 const deleteFormation = (id: string) => {
   setTimeout(() => {
@@ -2926,7 +2967,7 @@ onMounted(async () => {
                         <a-badge-ribbon v-if="item.confirmed == true" class="mr-2" color="green" text="accepté">
                           <a-card class="mr-2" hoverable>
                             <template #actions>
-                              <span key="update" class="i-carbon-edit inline-block" @click="updateDevis(item,devis?.missions[index].id_company)" />
+                              <span key="update" class="i-carbon-edit inline-block" @click="updateDevis(item,devis?.missions[index].id_company,index)" />
                             </template>
                             <a-card-meta :title="Devis">
                               <template #description>
@@ -3023,7 +3064,7 @@ onMounted(async () => {
                         <a-badge-ribbon v-else-if="!item.confirmed" class="mr-2" color="red" text="refusé">
                           <a-card class="mr-2" hoverable>
                             <template #actions>
-                              <span key="update" class="i-carbon-edit inline-block" @click="updateDevis(item,devis?.missions[index].id_company)" />
+                              <span key="update" class="i-carbon-edit inline-block" @click="updateDevis(item,devis?.missions[index].id_company,index)" />
                             </template>
                             <a-card-meta :title="Devis">
                               <template #description>
@@ -3119,7 +3160,7 @@ onMounted(async () => {
                         </a-badge-ribbon>
                         <a-card v-else class="mr-2" hoverable>
                           <template #actions>
-                            <span key="update" class="i-carbon-edit inline-block" @click="updateDevis(item,devis?.missions[index].id_company)" />
+                            <span key="update" class="i-carbon-edit inline-block" @click="updateDevis(item,devis?.missions[index].id_company,index)" />
                           </template>
                           <a-card-meta :title="Devis">
                             <template #description>
@@ -3312,7 +3353,7 @@ onMounted(async () => {
                         <a-badge-ribbon v-else-if="!item.confirmed" class="mr-2" color="red" text="refusé">
                           <a-card class="mr-2" hoverable>
                             <template #actions>
-                              <span key="update" class="i-carbon-edit inline-block" @click="updateDevis(item,devis?.missions[index].id_company)" />
+                              <span key="update" class="i-carbon-edit inline-block" @click="updateDevis(item,devis?.missions[index].id_company,index)" />
                             </template>
                             <a-card-meta :title="Devis">
                               <template #description>
@@ -3408,7 +3449,7 @@ onMounted(async () => {
                         </a-badge-ribbon>
                         <a-card v-else class="mr-2" hoverable>
                           <template #actions>
-                            <span key="update" class="i-carbon-edit inline-block" @click="updateDevis(item,devis?.missions[index].id_company)" />
+                            <span key="update" class="i-carbon-edit inline-block" @click="updateDevis(item,devis?.missions[index].id_company,index)" />
                           </template>
                           <a-card-meta :title="Devis">
                             <template #description>
@@ -3883,6 +3924,30 @@ onMounted(async () => {
   >
     <div>
       <a-form layout="vertical" :wrapper-col="{ span: 24 }">
+        <a-form-item name="nb_hours">
+          <span class="ant-form-text">nombre d'heures : </span>
+          <a-input-number
+            v-model:value="formStateBloc.nb_hours" step="1" :min="1" :max="9999"
+          />
+        </a-form-item>
+        <a-form-item name="cost_per_hour">
+          <span class="ant-form-text">Coût / heure : </span>
+          <a-input-number
+            v-model:value="formStateBloc.cost_per_hour" addon-after="€" step="50" :min="50" :max="9999"
+          />
+        </a-form-item>
+        <a-form-item name="description" label="Description">
+          <a-textarea v-model:value="formStateBloc.description" placeholder="description" auto-size />
+        </a-form-item>
+        <a-form-item>
+          <a-button
+            v-if="currentUser?.role === 'Freelancer' || currentUser?.role === 'Agence'"
+            class="btn-theme m-2"
+            @click="addBloc()"
+          >
+            ajouter un bloc
+          </a-button>
+        </a-form-item>
         <div v-if="modelRefDevis.tasks.length > 0">
           <swiper
             :modules="[Controller]"
@@ -3900,9 +3965,10 @@ onMounted(async () => {
               <div>
                 <a-card class="mr-2" hoverable>
                   <template #actions>
-                    <span key="accept" class="i-carbon-edit inline-block" @click="updateBloc(index2)" />
+                    <span key="accept" class="i-carbon-edit inline-block" @click="updateBloc(item2,index2)" />
+                    <span key="delete" class="i-carbon-delete inline-block" @click="deleteBloc(item2,index2)" />
                   </template>
-                  <a-card-meta :title="`Tâche : ${index2}`">
+                  <a-card-meta :title="`Tâche : ${index2 + 1}`">
                     <template #description>
                       Tâche {{ index2 }}
                       <div class="flex items-center">
@@ -3987,6 +4053,28 @@ onMounted(async () => {
         </a-form-item>
       </a-form>
     </div>
+    <br>
+    <label><b> Total : </b> {{ modelRefDevis.total }} €</label>
+    <br><br>
+    <span class="ant-form-text mb-20"> <b>TVA :   </b>
+      <a-input-number
+        v-model:value="modelRefDevis.tva" addon-after="%" step="1" :min="0" :max="100" @change="applicateTva($event)"
+      />
+    </span>
+    <br><br>
+    <label><b> Total TTC : </b> {{ modelRefDevis.totalTva }} €</label>
+    <br><br>
+    <label><b> Frais GreenPositiv (10% HT): </b> {{ modelRefDevis.totalGreen }} €</label>
+    <br><br>
+    <label><b> Frais GreenPositiv (TTC): </b> {{ modelRefDevis.totalGreenTva }} €</label>
+    <br><br>
+    <label class="green"><b>VOUS RECEVEREZ (TTC): </b> <a-tag
+      class="text-xs ml-2 leading-5"
+      color="#080"
+    >
+      {{ modelRefDevis.totalUser }} €
+    </a-tag></label>
+    <br><br>
     <template #footer>
       <a-button type="primary" :loading="profileEntrepriseLoading" @click="sendDevis">
         Créer
