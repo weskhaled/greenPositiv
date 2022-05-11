@@ -237,7 +237,7 @@ const onFinish = async (values: any) => {
   console.log('finished')
 }
 const getDevis = async () => {
-  missionApi.getDevisById(props.id).then(({ data }) => {
+  missionApi.getDevisByMissionId(props.id).then(({ data }) => {
     if (data) {
       devis.value = data.devises
       users.value = data.users

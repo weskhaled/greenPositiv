@@ -7,7 +7,8 @@ const BASE_PREFIX = `${import.meta.env.VITE_API_MISSION}`
 const missionApi = {
 
   getMissions: async () => service.get(`${BASE_PREFIX}/missions/all`),
-  getDevisById: async (id: string) => service.get(`${BASE_PREFIX}/missions/devis/${id}`),
+  getDevisByMissionId: async (id: string) => service.get(`${BASE_PREFIX}/missions/devis/${id}`),
+  getDevisById: async (id: string) => service.get(`${BASE_PREFIX}/missions/get-devis/${id}`),
   getDevis: async () => service.get(`${BASE_PREFIX}/missions/devis`),
   addMission: async (params: FormData) => service.post(`${BASE_PREFIX}/missions/`, params),
   updateMission: async (id: string, params: object) => service.patch(`${BASE_PREFIX}/missions/${id}`, params),
@@ -37,6 +38,8 @@ const missionApi = {
   getDemandById: async (id: string) => service.get(`${BASE_PREFIX}/demands/${id}`),
   validateDemand: async (id: string) => service.patch(`${BASE_PREFIX}/demands/validate/${id}`),
   unvalidateDemand: async (id: string) => service.patch(`${BASE_PREFIX}/demands/unvalidate/${id}`),
+
+  pay: async (id: string) => service.post(`${BASE_PREFIX}/payment/${id}`),
 }
 
 export default missionApi
