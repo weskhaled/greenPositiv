@@ -39,7 +39,9 @@ const missionApi = {
   validateDemand: async (id: string) => service.patch(`${BASE_PREFIX}/demands/validate/${id}`),
   unvalidateDemand: async (id: string) => service.patch(`${BASE_PREFIX}/demands/unvalidate/${id}`),
 
-  pay: async (id: string) => service.post(`${BASE_PREFIX}/payment/${id}`),
+  pay: async (id: string, params: object) => service.post(`${BASE_PREFIX}/payment/get/${id}`, params),
+  getPayment: async (params: object) => service.post(`${BASE_PREFIX}/payment/`, params),
+
 }
 
 export default missionApi

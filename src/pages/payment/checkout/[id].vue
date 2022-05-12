@@ -44,6 +44,9 @@ const formStateDevis = reactive<Record<string, any>>({
   offer: undefined,
   id_offer: undefined,
 })
+const formStateUnpayed = reactive<any>({
+  amount: 0,
+})
 const formState = reactive<any>({
   name: '',
   email: '',
@@ -51,6 +54,7 @@ const formState = reactive<any>({
   city: '',
   state: '',
   zip: '',
+  amount: 0,
   card: '',
 })
 let stripe = null
@@ -67,6 +71,16 @@ const validatePostal = async (_rule: RuleObject, value: string) => {
     else
       return Promise.resolve()
   }
+}
+const validateAmount = async (_rule: RuleObject, value: string) => {
+  if (value === '')
+    return Promise.reject(new Error('Veuillez saisir un montant valide'))
+  if (!Number.isInteger(+value))
+    return Promise.reject(new Error('Veuillez saisir que des chiffres'))
+  else if (formState.amount > formStateUnpayed.amount)
+    return Promise.reject(new Error('Vous avez dépassé le montant estimé'))
+
+  return Promise.resolve()
 }
 
 const setupStripe = async () => {
@@ -100,7 +114,6 @@ const getFormData = async () => {
     else {
       missionApi.getDevisById(props.id).then(({ data }) => {
         const { devise } = data
-        console.log('devise ', devise)
         formStateDevis._id = devise._id
         formStateDevis.totalTva = devise.totalTva
         formStateDevis.dateBegin = devise.dateBegin
@@ -113,10 +126,24 @@ const getFormData = async () => {
 
         if (devise.id_agence)
           formStateDevis.id_agence = devise.id_agence
-
-        formStateDevis.id_agence = devise.id_agence
         tasks.value = devise.tasks
         devisLoading.value = false
+        if (formStateDevis.id_freelance) {
+          missionApi.getPayment({
+            id_freelance: formStateDevis.id_freelance,
+            id_mission: formStateDevis.id_mission,
+          }).then(({ data }) => {
+            formStateUnpayed.amount = data.unpayed
+          })
+        }
+        else if (formStateDevis.id_agence) {
+          missionApi.getPayment({
+            id_agence: formStateDevis.id_agence,
+            id_mission: formStateDevis.id_mission,
+          }).then(({ data }) => {
+            formStateUnpayed.amount = data.unpayed
+          })
+        }
         setupStripe()
       })
     }
@@ -141,7 +168,7 @@ const onFinish = async (values: any) => {
   }
   const elements = stripe.elements()
   try {
-    const response = await missionApi.pay(props.id)
+    const response = await missionApi.pay(props.id, { amount: formState.amount })
 
     const { secret } = await response.data
     const paymentMethodReq = await stripe.createPaymentMethod({
@@ -160,30 +187,7 @@ const onFinish = async (values: any) => {
     else {
       paymentLoading.value = false
       message.info('paiement effectué')
-      if (formStateDevis.id_freelance) {
-        const body = { id_freelance: formStateDevis.id_freelance }
-
-        await missionApi.acceptFreelance(formStateDevis._id, body).then(({ data }) => {
-          if (data) {
-            message.info(data.message)
-            router.push(`/missions/${formStateDevis.id_mission}`)
-          }
-        }).catch((err) => {
-          message.error(err.message)
-        })
-      }
-      else if (formStateDevis.id_agence) {
-        const body = { id_agence: formStateDevis.id_agence }
-
-        await missionApi.acceptAgence(formStateDevis._id, body).then(({ data }) => {
-          if (data) {
-            message.info(data.message)
-            router.push(`/missions/${formStateDevis.id_mission}`)
-          }
-        }).catch((err) => {
-          message.error(err.message)
-        })
-      }
+      router.push(`/missions/${formStateDevis.id_mission}`)
     }
   }
   catch (error) {
@@ -293,7 +297,7 @@ onMounted(async () => {
                   <br>
                   <label><b> TOTAL à payer (TTC): </b> {{ formStateDevis.totalTva }} €</label>
                   <br>
-                  <label><b> 1er versement (30% du total à payer): </b> {{ formStateDevis.totalTva * 0.3 }} €</label>
+                  <label><b> Montant restant à payer: </b> {{ formStateUnpayed.amount }} €</label>
                   <br>
                 </div>
                 <div class="form-title">
@@ -346,6 +350,12 @@ onMounted(async () => {
                     >
                       <a-input v-model:value="formState.zip" placeholder="code postal" />
                     </a-form-item>
+                    <a-form-item
+                      name="amount"
+                      :rules="[{ required: true,validator: validateAmount, trigger: 'change' }]"
+                    >
+                      <a-input v-model:value="formState.amount" placeholder="montant à envoyer" />
+                    </a-form-item>
                     <div id="stripe-element-mount-point" />
                     <br>
                     <label id="card-errors" />
@@ -354,7 +364,7 @@ onMounted(async () => {
 
                     <a-form-item :wrapper-col="{ offset: 0, span: 24 }">
                       <a-button type="primary" block html-type="submit" :loading="paymentLoading">
-                        Payer {{ formStateDevis.totalTva * 0.3 }} €
+                        Payer
                       </a-button>
                     </a-form-item>
                   </a-form>

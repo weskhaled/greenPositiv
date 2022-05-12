@@ -51,6 +51,10 @@ const profileEntrepriseLoading = ref(false)
 const showUpdateBloc = ref(false)
 const devis = ref([])
 const users = ref([])
+const unpayedAmounts = ref([])
+const diff = reactive<any>({
+  amount: 0,
+})
 const spinningValue = ref(true)
 const modelRefDevis = reactive({
   id: null,
@@ -241,10 +245,10 @@ const getDevis = async () => {
     if (data) {
       devis.value = data.devises
       users.value = data.users
+      unpayedAmounts.value = data.unpayedAmounts
     }
   })
 }
-
 const sendDevis = async () => {
   profileEntrepriseLoading.value = true
   validate()
@@ -285,6 +289,9 @@ const acceptDevis = async (item: any) => {
   if (item.state === 'terminé')
     message.warning('vous avez déja répondu à ce devis')
   else router.push(`/payment/${item._id}`)
+}
+const payment = async (item: any) => {
+  router.push(`/payment/checkout/${item._id}`)
 }
 
 const refuseDevis = async (item: any) => {
@@ -433,9 +440,11 @@ const onFinishFailed = (errorInfo: any) => {
                       <div v-if="item.id_freelance">
                         <a-badge-ribbon v-if="item.confirmed == true" class="mr-2" color="green" text="accepté">
                           <a-card class="mr-2" hoverable>
-                            <template #actions>
+                            <template v-if="item.confirmed == true" #actions>
+                              <span key="payment" class="i-carbon-wireless-checkout inline-block" @click="payment(item)" />
+                            </template>
+                            <template v-else #actions>
                               <span key="accept" class="i-carbon-checkmark-outline inline-block" @click="acceptDevis(item)" />
-
                               <span key="refuse" class="i-carbon-misuse-outline inline-block" @click="refuseDevis(item)" />
                             </template>
                             <a-card-meta :title="`Freelance : ${users[index].firstName} ${users[index].lastName}`">
@@ -445,6 +454,15 @@ const onFinishFailed = (errorInfo: any) => {
                                     :src="users[index].image"
                                     shape="square"
                                     :size="{ xs: 24, sm: 32, md: 40, lg: 64, xl: 120, xxl: 160 }"
+                                  />
+                                </div>
+                                <br>
+                                <div class="flex">
+                                  <a-progress
+                                    :stroke-color="{
+                                      '0%': '#108ee9',
+                                      '100%': '#87d068',
+                                    }" :percent="unpayedAmounts[index]"
                                   />
                                 </div>
                                 <br>
@@ -686,11 +704,13 @@ const onFinishFailed = (errorInfo: any) => {
                         </a-card>
                       </div>
                       <div v-else>
-                        <a-badge-ribbon v-if="item.confirmed" class="mr-2" color="green" text="accepté">
+                        <a-badge-ribbon v-if="item.confirmed == true" class="mr-2" color="green" text="accepté">
                           <a-card class="mr-2" hoverable>
-                            <template #actions>
+                            <template v-if="item.confirmed == true" #actions>
+                              <span key="payment" class="i-carbon-wireless-checkout inline-block" @click="payment(item)" />
+                            </template>
+                            <template v-else #actions>
                               <span key="accept" class="i-carbon-checkmark-outline inline-block" @click="acceptDevis(item)" />
-
                               <span key="refuse" class="i-carbon-misuse-outline inline-block" @click="refuseDevis(item)" />
                             </template>
                             <a-card-meta :title="`Agence : ${users[index].nameAgence}`">
@@ -700,6 +720,15 @@ const onFinishFailed = (errorInfo: any) => {
                                     :src="users[index].image"
                                     shape="square"
                                     :size="{ xs: 24, sm: 32, md: 40, lg: 64, xl: 120, xxl: 160 }"
+                                  />
+                                </div>
+                                <br>
+                                <div class="flex">
+                                  <a-progress
+                                    :stroke-color="{
+                                      '0%': '#108ee9',
+                                      '100%': '#87d068',
+                                    }" :percent="unpayedAmounts[index]"
                                   />
                                 </div>
                                 <br>
