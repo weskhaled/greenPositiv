@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { message } from 'ant-design-vue'
+import { Form, message } from 'ant-design-vue'
 import dayjs, { Dayjs } from 'dayjs'
 import SwiperCore, { Controller, Pagination } from 'swiper'
 import { Swiper, SwiperSlide } from 'swiper/vue'
 import { loadStripe } from '@stripe/stripe-js'
+import { currentUser } from '~/stores'
 
 import missionApi from '~/api/modules/mission'
+import authApi from '~/api/modules/auth'
+import companyApi from '~/api/modules/company'
 import 'swiper/css/pagination'
 SwiperCore.use([Controller, Pagination])
 
@@ -19,6 +22,7 @@ const router = useRouter()
 const { t } = useI18n()
 const devisLoading = ref(true)
 const paymentLoading = ref(true)
+const validatedLoading = ref(false)
 const props = defineProps<{ id: string }>()
 const tasks = ref([])
 const cardElement = ref()
@@ -26,6 +30,8 @@ const formStateDevis = reactive<Record<string, any>>({
   id: null,
   id_company: undefined,
   id_mission: undefined,
+  id_freelance: '',
+  id_agence: '',
   dateBegin: undefined,
   dateEnd: undefined,
   tasks: [],
@@ -48,6 +54,20 @@ const formState = reactive<any>({
   card: '',
 })
 let stripe = null
+const validatePostal = async (_rule: RuleObject, value: string) => {
+  if (value === '')
+    return Promise.reject(new Error('Veuillez saisir un code postal'))
+  if (!Number.isInteger(+value)) {
+    return Promise.reject(new Error('Veuillez saisir que des chiffres'))
+  }
+  else {
+    if (value.length !== 5)
+    // eslint-disable-next-line prefer-promise-reject-errors
+      return Promise.reject(`${'le numéro doit contenir 5 chiffres'}`)
+    else
+      return Promise.resolve()
+  }
+}
 
 const setupStripe = async () => {
   const ELEMENT_TYPE = 'card'
@@ -62,24 +82,51 @@ const setupStripe = async () => {
     else
       displayError.textContent = ''
   })
-
   paymentLoading.value = false
 }
-
+const goToProfile = async () => {
+  router.push(`/profile/company/${currentUser.value.idUser}`)
+}
 const getFormData = async () => {
-  missionApi.getDevisById(props.id).then(({ data }) => {
-    const { devise } = data
-    formStateDevis._id = devise._id
-    formStateDevis.dateBegin = devise.dateBegin
-    formStateDevis.dateEnd = devise.dateEnd
-    formStateDevis.totalGreen = devise.totalGreen
-    formStateDevis.totalGreenTva = devise.totalGreenTva
-    tasks.value = devise.tasks
+  const { data: currentUserData } = await authApi.currentUser()
+  if (currentUserData) {
+    currentUser.value = currentUserData
+    const { data } = await companyApi.profile(currentUser.value.idUser)
+    const { company } = data.value
+    if (company.validated === false) {
+      validatedLoading.value = true
+      devisLoading.value = false
+    }
+    else {
+      missionApi.getDevisById(props.id).then(({ data }) => {
+        const { devise } = data
+        console.log('devise ', devise)
+        formStateDevis._id = devise._id
+        formStateDevis.dateBegin = devise.dateBegin
+        formStateDevis.dateEnd = devise.dateEnd
+        formStateDevis.totalGreen = devise.totalGreen
+        formStateDevis.totalGreenTva = devise.totalGreenTva
+        formStateDevis.id_mission = devise.id_mission
+        if (devise.id_freelance)
+          formStateDevis.id_freelance = devise.id_freelance
+
+        if (devise.id_agence)
+          formStateDevis.id_agence = devise.id_agence
+
+        formStateDevis.id_agence = devise.id_agence
+        tasks.value = devise.tasks
+        devisLoading.value = false
+        setupStripe()
+      })
+    }
+  }
+  else {
+    validatedLoading.value = true
     devisLoading.value = false
-  })
+  }
 }
 const onFinish = async (values: any) => {
-  devisLoading.value = true
+  paymentLoading.value = true
   const { name, email, address, city, state, zip } = formState
   const billingDetails = {
     name,
@@ -105,24 +152,48 @@ const onFinish = async (values: any) => {
       payment_method: paymentMethodReq.paymentMethod.id,
     })
     if (error) {
-      console.log('error confirm ', error)
+      message.error(error)
+      setupStripe()
       return
     }
     else {
-      devisLoading.value = false
+      paymentLoading.value = false
       message.info('paiement effectué')
-      router.push(`/mission/${formStateDevis.id_mission}`)
+      if (formStateDevis.id_freelance) {
+        const body = { id_freelance: formStateDevis.id_freelance }
+
+        await missionApi.acceptFreelance(formStateDevis._id, body).then(({ data }) => {
+          if (data) {
+            message.info(data.message)
+            router.push(`/missions/${formStateDevis.id_mission}`)
+          }
+        }).catch((err) => {
+          message.error(err.message)
+        })
+      }
+      else if (formStateDevis.id_agence) {
+        const body = { id_agence: formStateDevis.id_agence }
+
+        await missionApi.acceptAgence(formStateDevis._id, body).then(({ data }) => {
+          if (data) {
+            message.info(data.message)
+            router.push(`/missions/${formStateDevis.id_mission}`)
+          }
+        }).catch((err) => {
+          message.error(err.message)
+        })
+      }
     }
   }
   catch (error) {
     devisLoading.value = false
     message.error('le paiement n\'a pas pu être effectué')
+    setupStripe()
   }
 }
 
 onMounted(async () => {
   getFormData()
-  setupStripe()
 })
 </script>
 
@@ -160,7 +231,7 @@ onMounted(async () => {
           <div class="col-md-8 col-lg-7 col-xl-6">
             <div class="login-register-form-wrap">
               <a-spin v-if="devisLoading" class="mx-auto" />
-              <div v-else class="login-register-form">
+              <div v-else-if="validatedLoading == false" class="login-register-form">
                 <div class="form-title">
                   <h4 class="title">
                     Devis
@@ -266,9 +337,9 @@ onMounted(async () => {
                     </a-form-item>
                     <a-form-item
                       name="zip"
-                      :rules="[{ required: true,message:'veuillez saisir votre code postal', trigger: 'change' }]"
+                      :rules="[{ required: true, validator: validatePostal, trigger: 'change' }]"
                     >
-                      <a-input v-model:value="formState.zip" placeholder="zip" />
+                      <a-input v-model:value="formState.zip" placeholder="code postal" />
                     </a-form-item>
                     <div id="stripe-element-mount-point" />
                     <br>
@@ -277,13 +348,25 @@ onMounted(async () => {
                     <br><br>
 
                     <a-form-item :wrapper-col="{ offset: 0, span: 24 }">
-                      <a-button type="primary" block html-type="submit" :loading="devisLoading">
+                      <a-button type="primary" block html-type="submit" :loading="paymentLoading">
                         Payer {{ formStateDevis.totalGreenTva }} €
                       </a-button>
                     </a-form-item>
                   </a-form>
                 </div>
               </div>
+              <a-result
+                v-else
+                status="404"
+                title="Vous devez valider votre compte"
+                sub-title="veuillez terminer le remplissage de votre profil pour le valider"
+              >
+                <template #extra>
+                  <a-button type="primary" @click="goToProfile()">
+                    personaliser votre profil
+                  </a-button>
+                </template>
+              </a-result>
             </div>
           </div>
         </div>

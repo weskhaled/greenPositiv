@@ -12,6 +12,7 @@ import authApi from '~/api/modules/auth'
 import globalApi from '~/api/modules/global'
 import { currentUser } from '~/stores'
 import 'swiper/css/pagination'
+const router = useRouter()
 
 SwiperCore.use([Controller, Pagination])
 const useForm = Form.useForm
@@ -51,7 +52,6 @@ const showUpdateBloc = ref(false)
 const devis = ref([])
 const users = ref([])
 const spinningValue = ref(true)
-
 const modelRefDevis = reactive({
   id: null,
   id_company: undefined,
@@ -282,32 +282,13 @@ const sendDevis = async () => {
     })
 }
 const acceptDevis = async (item: any) => {
-  if (item.state == 'terminé') { message.warning('vous avez déja répondu à ce devis') }
-  else if (item.id_freelance) {
-    await missionApi.acceptFreelance(item._id, { id_freelance: item.id_freelance }).then(({ data }) => {
-      if (data) {
-        message.info(data.message)
-        getDevis()
-      }
-    }).catch((err) => {
-      message.error(err.message)
-    })
-  }
-  else if (item.id_agence) {
-    await missionApi.acceptAgence(item._id, { id_agence: item.id_agence }).then(({ data }) => {
-      if (data) {
-        message.info(data.message)
-        getDevis()
-      }
-    }).catch((err) => {
-      message.error(err.message)
-    })
-  }
-  else { message.error('un probléme est survenu de l\'acceptation du devis') }
+  if (item.state === 'terminé')
+    message.warning('vous avez déja répondu à ce devis')
+  else router.push(`/payment/${item._id}`)
 }
 
 const refuseDevis = async (item: any) => {
-  if (item.state == 'terminé') { message.warning('vous avez déja répondu à ce devis') }
+  if (item.state === 'terminé') { message.warning('vous avez déja répondu à ce devis') }
   else if (item.id_freelance) {
     await missionApi.refuseFreelance(item._id, { id_freelance: item.id_freelance }).then(({ data }) => {
       if (data) {
@@ -467,6 +448,9 @@ const onFinishFailed = (errorInfo: any) => {
                                   />
                                 </div>
                                 <br>
+                                <div class="flex items-center">
+                                  <span class="text-dark-300 mr-1.5" />
+                                </div>
                                 <div class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
                                     <b>Date de début :</b>
