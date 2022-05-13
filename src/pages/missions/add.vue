@@ -944,7 +944,8 @@ const onFinishFailed = (errorInfo: any) => {
                                       </a-tag></label>
                                     </a-form-item>
                                   </div>
-                                  <a-form-item class="font-bold" name="local_city" label="Emplacement de la mission :">
+                                  <label>Emplacement de la mission :</label>
+                                  <a-form-item class="font-bold" name="local_city">
                                     <label class="font-normal">{{ formStateMission.local_city }}</label>
                                   </a-form-item>
                                   <a-form-item :wrapper-col="{ offset: 0, span: 24 }">

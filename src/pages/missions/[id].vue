@@ -724,12 +724,14 @@ const onFinishFailed = (errorInfo: any) => {
                                 </div>
                                 <br>
                                 <div class="flex">
-                                  <a-progress
-                                    :stroke-color="{
-                                      '0%': '#108ee9',
-                                      '100%': '#87d068',
-                                    }" :percent="unpayedAmounts[index]"
-                                  />
+                                  <a-card :bordered="false" class="bg-white" :body-style="{padding: '5px'}">
+                                    <a-progress
+                                      :stroke-color="{
+                                        '0%': '#108ee9',
+                                        '100%': '#87d068',
+                                      }" :percent="unpayedAmounts[index]"
+                                    />
+                                  </a-card>
                                 </div>
                                 <br>
                                 <div class="flex items-center">
