@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ExclamationCircleOutlined } from '@ant-design/icons-vue'
+import { ExclamationCircleOutlined, UploadOutlined } from '@ant-design/icons-vue'
 import dayjs, { Dayjs } from 'dayjs'
 import { Form, Modal, message } from 'ant-design-vue'
 import type { RuleObject } from 'ant-design-vue/es/form'
@@ -10,8 +10,11 @@ import globalApi from '~/api/modules/global'
 import freelancerApi from '~/api/modules/freelancer'
 import profileEntrepriseApi from '~/api/modules/profil-entreprise'
 import missionApi from '~/api/modules/mission'
-import { currentUser } from '~/stores'
+import { currentUser, token } from '~/stores'
 import 'swiper/css/pagination'
+
+const BASE_PREFIX = `${import.meta.env.VITE_API_FREELANCER}`
+
 SwiperCore.use([Controller, Pagination])
 const controlledSwiper = ref(null)
 
@@ -83,6 +86,21 @@ const profileEntrepriseLoading = ref(false)
 const visibleModalUpdateDevis = ref(false)
 const showUpdateBloc = ref(false)
 let indexBloc = null
+
+const fileListKabisDocuments = ref([])
+const fileListVigilanceDocuments = ref([])
+const fileListSasuDocuments = ref([])
+
+const handleChangeDocuments = (info: any) => {
+  if (info.file.status !== 'uploading')
+    console.log(info.file, info.fileList)
+
+  if (info.file.status === 'done')
+    message.success(`${info.file.name} file uploaded successfully`)
+
+  else if (info.file.status === 'error')
+    message.error(`${info.file.name} file upload failed.`)
+}
 
 /* module devis */
 const modelRefDevis = reactive({
@@ -2343,7 +2361,7 @@ onMounted(async () => {
                                 :status="(profileEntreprise?.legalMention?.sas && profileEntreprise?.legalMention?.siret) ? 'finish' : (currentStepProfileEtprs === 3 ? 'process' : 'wait')"
                                 title="Mentions"
                               />
-                              <a-step :disabled="true" status="wait" title="Documents légaux" />
+                              <a-step :disabled="false" status="wait" title="Documents légaux" />
                             </a-steps>
                             <div class="p-4">
                               <div class="max-w-md mx-auto">
@@ -2667,6 +2685,53 @@ onMounted(async () => {
                                       </a-button>
                                     </a-form-item>
                                   </a-form>
+                                </div>
+                                <div v-else-if="currentStepProfileEtprs === 4" class="">
+                                  <div class="mb-3">
+                                    <a-upload
+                                      v-model:file-list="fileListKabisDocuments"
+                                      name="documents"
+                                      method="PATCH"
+                                      :action="`${BASE_PREFIX}/freelancer/kabis-documents`"
+                                      :headers="{token: token}"
+                                      @change="handleChangeDocuments"
+                                    >
+                                      <a-button>
+                                        <upload-outlined />
+                                        Click to Upload kabis-documents
+                                      </a-button>
+                                    </a-upload>
+                                  </div>
+                                  <div class="mb-3">
+                                    <a-upload
+                                      v-model:file-list="fileListVigilanceDocuments"
+                                      name="documents"
+                                      method="PATCH"
+                                      :action="`${BASE_PREFIX}/freelancer/vigilance-documents`"
+                                      :headers="{token: token}"
+                                      @change="handleChangeDocuments"
+                                    >
+                                      <a-button>
+                                        <upload-outlined />
+                                        Click to Upload vigilance-documents
+                                      </a-button>
+                                    </a-upload>
+                                  </div>
+                                  <div class="mb-3">
+                                    <a-upload
+                                      v-model:file-list="fileListSasuDocuments"
+                                      name="documents"
+                                      method="PATCH"
+                                      :action="`${BASE_PREFIX}/freelancer/sasu-documents`"
+                                      :headers="{token: token}"
+                                      @change="handleChangeDocuments"
+                                    >
+                                      <a-button>
+                                        <upload-outlined />
+                                        Click to Upload sasu-documents
+                                      </a-button>
+                                    </a-upload>
+                                  </div>
                                 </div>
                               </div>
                             </div>

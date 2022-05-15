@@ -57,7 +57,7 @@ onClickOutside(asideOffcanvasMenu.value, () => {
                     </ul>
                   </li>
                   <li><a href="javascript:;" @click="router.push('/blog')"><span>Blog</span></a></li>
-                  <li><a href="employers-details.html"><span>À propos</span></a></li>
+                  <li><a href="#" @click.prevent="router.push('/chat')"><span>Chat</span></a></li>
                   <li v-if="!isAuthenticated">
                     <router-link to="/auth/registration" class="header-action-area">
                       <span class="btn-registration">Créer votre compte</span>
