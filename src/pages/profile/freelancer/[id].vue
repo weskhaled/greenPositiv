@@ -26,6 +26,8 @@ const { t } = useI18n()
 const activeKey = ref('1')
 const activeKeyProfileEtprs = ref('1')
 const currentStepProfileEtprs = ref(0)
+const unpayedAmounts = ref([])
+
 const formItemLayout = {
   labelCol: { span: 8 },
   wrapperCol: { span: 14 },
@@ -913,8 +915,10 @@ const getFormData = async () => {
     })))
   })
   missionApi.getDevisFreelance().then(({ data }) => {
-    if (data)
+    if (data) {
       devis.value = data
+      unpayedAmounts.value = data.unpayedAmounts
+    }
   })
   profile.value = null
   await freelancerApi.profile(props.id).then(({ data }) => {
@@ -2964,13 +2968,24 @@ onMounted(async () => {
                       :key="index"
                     >
                       <div v-if="item.id_freelance">
-                        <a-badge-ribbon v-if="item.confirmed == true" class="mr-2" color="green" text="accepté">
+                        <a-badge-ribbon v-if="item.confirmed && item.confirmed == true" class="mr-2" color="green" text="accepté">
                           <a-card class="mr-2" hoverable>
                             <template #actions>
                               <span key="update" class="i-carbon-edit inline-block" @click="updateDevis(item,devis?.missions[index].id_company,index)" />
                             </template>
                             <a-card-meta :title="Devis">
                               <template #description>
+                                <br>
+                                <div class="flex">
+                                  <a-progress
+                                    :stroke-color="{
+                                      '0%': '#108ee9',
+                                      '100%': '#87d068',
+                                    }" :percent="unpayedAmounts[index]"
+                                    :width="80"
+                                  />
+                                </div>
+                                <br>
                                 <div class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
                                     <b>Mission :</b>
@@ -2989,6 +3004,7 @@ onMounted(async () => {
                                   </span>
                                   {{ dayjs(item.dateEnd).format("DD-MM-YYYY") }}
                                 </div>
+
                                 <div class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
                                     <b>Total :</b>
@@ -3061,7 +3077,7 @@ onMounted(async () => {
                             </a-card-meta>
                           </a-card>
                         </a-badge-ribbon>
-                        <a-badge-ribbon v-else-if="!item.confirmed" class="mr-2" color="red" text="refusé">
+                        <a-badge-ribbon v-else-if="item.confirmed == false" class="mr-2" color="red" text="refusé">
                           <a-card class="mr-2" hoverable>
                             <template #actions>
                               <span key="update" class="i-carbon-edit inline-block" @click="updateDevis(item,devis?.missions[index].id_company,index)" />
@@ -3255,11 +3271,22 @@ onMounted(async () => {
                         </a-card>
                       </div>
                       <div v-else-if="item.id_agence">
-                        <a-badge-ribbon v-if="item.confirmed == true " class="mr-2" color="green" text="accepté">
+                        <a-badge-ribbon v-if="item.confirmed && item.confirmed == true " class="mr-2" color="green" text="accepté">
                           <a-card class="mr-2" hoverable>
                             <template #actions />
                             <a-card-meta :title="Devis">
                               <template #description>
+                                <br>
+                                <div class="flex">
+                                  <a-progress
+                                    :stroke-color="{
+                                      '0%': '#108ee9',
+                                      '100%': '#87d068',
+                                    }" :percent="unpayedAmounts[index]"
+                                    :width="80"
+                                  />
+                                </div>
+                                <br>
                                 <div class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
                                     <b>Mission :</b>
@@ -3350,7 +3377,7 @@ onMounted(async () => {
                             </a-card-meta>
                           </a-card>
                         </a-badge-ribbon>
-                        <a-badge-ribbon v-else-if="!item.confirmed" class="mr-2" color="red" text="refusé">
+                        <a-badge-ribbon v-else-if="item.confirmed == false" class="mr-2" color="red" text="refusé">
                           <a-card class="mr-2" hoverable>
                             <template #actions>
                               <span key="update" class="i-carbon-edit inline-block" @click="updateDevis(item,devis?.missions[index].id_company,index)" />
@@ -4077,7 +4104,7 @@ onMounted(async () => {
     <br><br>
     <template #footer>
       <a-button type="primary" :loading="profileEntrepriseLoading" @click="sendDevis">
-        Créer
+        Envoyer
       </a-button>
       <a-button style="margin-left: 10px" @click="resetFieldsDevis">
         Réinitialiser

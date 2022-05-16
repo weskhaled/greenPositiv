@@ -10,6 +10,8 @@ import missionApi from '~/api/modules/mission'
 import authApi from '~/api/modules/auth'
 import companyApi from '~/api/modules/company'
 import 'swiper/css/pagination'
+import paymentCards from '~/assets/img/stripe_credit-card-logos.png'
+
 SwiperCore.use([Controller, Pagination])
 
 const controlledSwiper = ref(null)
@@ -23,9 +25,15 @@ const { t } = useI18n()
 const devisLoading = ref(true)
 const paymentLoading = ref(true)
 const validatedLoading = ref(false)
+const counter = ref(0)
 const props = defineProps<{ id: string }>()
 const tasks = ref([])
 const cardElement = ref()
+const CounterPercent = () => {
+  while (counter.value < 100) {
+    counter.value++
+  }
+}
 const formStateDevis = reactive<Record<string, any>>({
   id: null,
   id_company: undefined,
@@ -98,9 +106,8 @@ const getFormData = async () => {
       devisLoading.value = false
     }
     else {
-      missionApi.getDevisById(props.id).then(({ data }) => {
+      missionApi.getDevisById(props.id).then(async ({ data }) => {
         const { devise } = data
-        console.log('devise ', devise)
         formStateDevis._id = devise._id
         formStateDevis.totalTva = devise.totalTva
         formStateDevis.dateBegin = devise.dateBegin
@@ -117,7 +124,7 @@ const getFormData = async () => {
         formStateDevis.id_agence = devise.id_agence
         tasks.value = devise.tasks
         devisLoading.value = false
-        setupStripe()
+        await setTimeout(() => { CounterPercent(); setupStripe() }, 3000)
       })
     }
   }
@@ -154,7 +161,7 @@ const onFinish = async (values: any) => {
     })
     if (error) {
       message.error(error)
-      setupStripe()
+      await setTimeout(() => { CounterPercent(); setupStripe() }, 3000)
       return
     }
     else {
@@ -189,7 +196,7 @@ const onFinish = async (values: any) => {
   catch (error) {
     devisLoading.value = false
     message.error('le paiement n\'a pas pu être effectué')
-    setupStripe()
+    await setTimeout(() => { CounterPercent(); setupStripe() }, 3000)
   }
 }
 
@@ -293,15 +300,32 @@ onMounted(async () => {
                   <br>
                   <label><b> TOTAL à payer (TTC): </b> {{ formStateDevis.totalTva }} €</label>
                   <br>
-                  <label><b> 1er versement (30% du total à payer): </b> {{ formStateDevis.totalTva * 0.3 }} €</label>
+                  <label><b> Acompte (30% du total à payer): </b> {{ formStateDevis.totalTva * 0.3 }} €</label>
                   <br>
                 </div>
                 <div class="form-title">
                   <h4 class="title">
+                    Sécurité du Paiement
+                  </h4>
+                  <div class="centerPercent items-center">
+                    <a-progress
+                      type="circle"
+                      :stroke-color="{
+                        '0%': '#108ee9',
+                        '100%': '#87d068',
+                      }"
+                      :percent="counter"
+                    />
+                    <br>
+                    <img class="logo-main" :src="paymentCards" alt="cards">
+                  </div>
+                  <br>
+                  <h4 class="title">
                     Paiement
                   </h4>
                 </div>
-                <div class="mb-4">
+                <a-spin v-if="counter != 100" class="mx-auto" />
+                <div v-else class="mb-4">
                   <a-form
                     :model="formState"
                     name="formState"
@@ -404,6 +428,10 @@ onMounted(async () => {
     border: 1px solid #d9d9d9;
     border-radius: 2px;
     transition: all 0.3s;
+}
+.centerPercent {
+    display: flex;
+    flex-direction: column !important;
 }
 #card-errors {
     color:red !important;

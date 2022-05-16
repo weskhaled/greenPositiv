@@ -12,9 +12,6 @@ import missionApi from '~/api/modules/mission'
 import profileEntrepriseApi from '~/api/modules/profil-entreprise'
 import { currentUser, token } from '~/stores'
 import 'swiper/css/pagination'
-
-const BASE_PREFIX = `${import.meta.env.VITE_API_AGENCE}`
-
 SwiperCore.use([Controller, Pagination])
 
 const useForm = Form.useForm
@@ -26,6 +23,8 @@ const typesAccount = ref([])
 const loadingDocuments = ref(false)
 const activeKeyProfileEtprs = ref('1')
 const currentStepProfileEtprs = ref(0)
+const unpayedAmounts = ref([])
+
 const formItemLayout = {
   labelCol: { span: 6 },
   wrapperCol: { span: 16 },
@@ -87,10 +86,6 @@ const visibleModalInformationValidated = ref(false)
 //   'checkbox-group': ['A', 'B'],
 //   'rate': 3.5,
 // })
-const controlledSwiper = ref(null)
-const setControlledSwiper = (swiper) => {
-  controlledSwiper.value = swiper
-}
 typesAccount.value = [{
   value: 'epargne',
   label: 'epargne',
@@ -929,8 +924,10 @@ const getFormData = async () => {
     })))
   })
   missionApi.getDevisAgence().then(({ data }) => {
-    if (data)
+    if (data) {
       devis.value = data
+      unpayedAmounts.value = data.unpayedAmounts
+    }
   })
   profile.value = null
   await agenceApi.profile(props.id).then(({ data }) => {
@@ -1072,6 +1069,8 @@ const getFormData = async () => {
     label: 'pas encore choisi',
   }]
 }
+const controlledSwiper = ref(null)
+
 const getScore = () => {
   if (!profile.value?.agence)
     return 0
@@ -2505,13 +2504,24 @@ onMounted(async () => {
                       :key="index"
                     >
                       <div v-if="item.id_freelance">
-                        <a-badge-ribbon v-if="item.confirmed == true" class="mr-2" color="green" text="accepté">
+                        <a-badge-ribbon v-if="item.confirmed && item.confirmed == true" class="mr-2" color="green" text="accepté">
                           <a-card class="mr-2" hoverable>
                             <template #actions>
                               <span key="update" class="i-carbon-edit inline-block" @click="updateDevis(item,devis?.missions[index].id_company,index)" />
                             </template>
                             <a-card-meta :title="Devis">
                               <template #description>
+                                <br>
+                                <div class="flex">
+                                  <a-progress
+                                    :stroke-color="{
+                                      '0%': '#108ee9',
+                                      '100%': '#87d068',
+                                    }" :percent="unpayedAmounts[index]"
+                                    :width="80"
+                                  />
+                                </div>
+                                <br>
                                 <div class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
                                     <b>Mission :</b>
@@ -2814,11 +2824,22 @@ onMounted(async () => {
                         </a-card>
                       </div>
                       <div v-else-if="item.id_agence">
-                        <a-badge-ribbon v-if="item.confirmed == true " class="mr-2" color="green" text="accepté">
+                        <a-badge-ribbon v-if="item.confirmed && item.confirmed == true " class="mr-2" color="green" text="accepté">
                           <a-card class="mr-2" hoverable>
                             <template #actions />
                             <a-card-meta :title="Devis">
                               <template #description>
+                                <br>
+                                <div class="flex">
+                                  <a-progress
+                                    :stroke-color="{
+                                      '0%': '#108ee9',
+                                      '100%': '#87d068',
+                                    }" :percent="unpayedAmounts[index]"
+                                    :width="80"
+                                  />
+                                </div>
+                                <br>
                                 <div class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
                                     <b>Mission :</b>
@@ -2915,7 +2936,7 @@ onMounted(async () => {
                             </a-card-meta>
                           </a-card>
                         </a-badge-ribbon>
-                        <a-badge-ribbon v-else-if="item.confirmed == false" class="mr-2" color="red" text="refusé">
+                        <a-badge-ribbon v-else-if=" item.confirmed == false" class="mr-2" color="red" text="refusé">
                           <a-card class="mr-2" hoverable>
                             <template #actions>
                               <span key="update" class="i-carbon-edit inline-block" @click="updateDevis(item,devis?.missions[index].id_company,index)" />
@@ -3549,7 +3570,7 @@ onMounted(async () => {
     <br><br>
     <template #footer>
       <a-button type="primary" :loading="profileEntrepriseLoading" @click="sendDevis">
-        Créer
+        Envoyer
       </a-button>
       <a-button style="margin-left: 10px" @click="resetFieldsDevis">
         Réinitialiser

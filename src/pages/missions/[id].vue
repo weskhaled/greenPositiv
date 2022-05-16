@@ -45,6 +45,8 @@ const showPriceArray = ref([])
 const showSuppMonthArray = ref([])
 const mission = ref(null)
 const profile = ref(null)
+const sended = ref(false)
+const sendRefuseDevis = ref(false)
 const visibleModalSendDevis = ref(false)
 const visibleModalSendDevisAgence = ref(false)
 const profileEntrepriseLoading = ref(false)
@@ -261,6 +263,7 @@ const sendDevis = async () => {
           visibleModalSendDevis.value = false
           message.info(data.message)
           profileEntrepriseLoading.value = false
+          sended.value = true
         }
         else { message.error(data.message) }
       }
@@ -271,9 +274,9 @@ const sendDevis = async () => {
         const { data } = await missionApi.sendDevisAgence(modelRefDevis)
         if (data) {
           visibleModalSendDevisAgence.value = false
-
           message.info(data.message)
           profileEntrepriseLoading.value = false
+          sended.value = true
         }
         else { message.error(data.message) }
       }
@@ -295,24 +298,31 @@ const payment = async (item: any) => {
 }
 
 const refuseDevis = async (item: any) => {
+  sendRefuseDevis.value = true
   if (item.state === 'terminé') { message.warning('vous avez déja répondu à ce devis') }
   else if (item.id_freelance) {
     await missionApi.refuseFreelance(item._id, { id_freelance: item.id_freelance }).then(({ data }) => {
       if (data) {
+        sendRefuseDevis.value = false
         message.info(data.message)
         getDevis()
       }
     }).catch((err) => {
+      sendRefuseDevis.value = false
       message.error(err.message)
     })
   }
   else if (item.id_agence) {
+    sendRefuseDevis.value = true
+
     await missionApi.refuseAgence(item._id, { id_agence: item.id_agence }).then(({ data }) => {
       if (data) {
+        sendRefuseDevis.value = false
         message.info(data.message)
         getDevis()
       }
     }).catch((err) => {
+      sendRefuseDevis.value = false
       message.error(err.message)
     })
   }
@@ -343,8 +353,9 @@ const getFormData = async () => {
   })
   await missionApi.findOneMission(props.id).then(({ data }) => {
     if (data) {
-      mission.value = data.value.mission
-      profile.value = data.value.profile
+      mission.value = data.mission
+      profile.value = data.profile
+      sended.value = data.sended
       formStateMission.title_profile = profile.value?.title_profile
       formStateMission.jobCat = profile.value?.jobCat
       formStateMission.level = profile.value?.level
@@ -438,14 +449,15 @@ const onFinishFailed = (errorInfo: any) => {
                       :key="index"
                     >
                       <div v-if="item.id_freelance">
-                        <a-badge-ribbon v-if="item.confirmed == true" class="mr-2" color="green" text="accepté">
+                        <a-badge-ribbon v-if="item.confirmed && item.confirmed == true" class="mr-2" color="green" text="accepté">
                           <a-card class="mr-2" hoverable>
                             <template v-if="item.confirmed == true" #actions>
-                              <span key="payment" class="i-carbon-wireless-checkout inline-block" @click="payment(item)" />
+                              <span key="payment" class="i-carbon-purchase inline-block" @click="payment(item)" />
                             </template>
                             <template v-else #actions>
                               <span key="accept" class="i-carbon-checkmark-outline inline-block" @click="acceptDevis(item)" />
-                              <span key="refuse" class="i-carbon-misuse-outline inline-block" @click="refuseDevis(item)" />
+                              <span v-if="!sendRefuseDevis" key="refuse" class="i-carbon-misuse-outline inline-block" @click="refuseDevis(item)" />
+                              <span v-else key="green-spin" class="inline-block"><a-spin class="mx-auto" /></span>
                             </template>
                             <a-card-meta :title="`Freelance : ${users[index].firstName} ${users[index].lastName}`">
                               <template #description>
@@ -541,7 +553,8 @@ const onFinishFailed = (errorInfo: any) => {
                             <template #actions>
                               <span key="accept" class="i-carbon-checkmark-outline inline-block" @click="acceptDevis(item)" />
 
-                              <span key="refuse" class="i-carbon-misuse-outline inline-block" @click="refuseDevis(item)" />
+                              <span v-if="!sendRefuseDevis" key="refuse" class="i-carbon-misuse-outline inline-block" @click="refuseDevis(item)" />
+                              <span v-else key="green-spin" class="inline-block"><a-spin class="mx-auto" /></span>
                             </template>
                             <a-card-meta :title="`Freelance : ${users[index].firstName} ${users[index].lastName}`">
                               <template #description>
@@ -624,7 +637,8 @@ const onFinishFailed = (errorInfo: any) => {
                           <template #actions>
                             <span key="accept" class="i-carbon-checkmark-outline inline-block" @click="acceptDevis(item)" />
 
-                            <span key="refuse" class="i-carbon-misuse-outline inline-block" @click="refuseDevis(item)" />
+                            <span v-if="!sendRefuseDevis" key="refuse" class="i-carbon-misuse-outline inline-block" @click="refuseDevis(item)" />
+                            <span v-else key="green-spin" class="inline-block"><a-spin class="mx-auto" /></span>
                           </template>
                           <a-card-meta :title="`Freelance : ${users[index].firstName} ${users[index].lastName}`">
                             <template #description>
@@ -704,14 +718,15 @@ const onFinishFailed = (errorInfo: any) => {
                         </a-card>
                       </div>
                       <div v-else>
-                        <a-badge-ribbon v-if="item.confirmed == true" class="mr-2" color="green" text="accepté">
+                        <a-badge-ribbon v-if="item.confirmed" class="mr-2" color="green" text="accepté">
                           <a-card class="mr-2" hoverable>
                             <template v-if="item.confirmed == true" #actions>
-                              <span key="payment" class="i-carbon-wireless-checkout inline-block" @click="payment(item)" />
+                              <span key="payment" class="i-carbon-purchase inline-block" @click="payment(item)" />
                             </template>
                             <template v-else #actions>
                               <span key="accept" class="i-carbon-checkmark-outline inline-block" @click="acceptDevis(item)" />
-                              <span key="refuse" class="i-carbon-misuse-outline inline-block" @click="refuseDevis(item)" />
+                              <span v-if="!sendRefuseDevis" key="refuse" class="i-carbon-misuse-outline inline-block" @click="refuseDevis(item)" />
+                              <span v-else key="green-spin" class="inline-block"><a-spin class="mx-auto" /></span>
                             </template>
                             <a-card-meta :title="`Agence : ${users[index].nameAgence}`">
                               <template #description>
@@ -807,12 +822,13 @@ const onFinishFailed = (errorInfo: any) => {
                             </a-card-meta>
                           </a-card>
                         </a-badge-ribbon>
-                        <a-badge-ribbon v-else-if="item.confirmed ==false" class="mr-2" color="red" text="refusé">
+                        <a-badge-ribbon v-else-if="item.confirmed == false" class="mr-2" color="red" text="refusé">
                           <a-card class="mr-2" hoverable>
                             <template #actions>
                               <span key="accept" class="i-carbon-checkmark-outline inline-block" @click="acceptDevis(item)" />
 
-                              <span key="refuse" class="i-carbon-misuse-outline inline-block" @click="refuseDevis(item)" />
+                              <span v-if="!sendRefuseDevis" key="refuse" class="i-carbon-misuse-outline inline-block" @click="refuseDevis(item)" />
+                              <span v-else key="green-spin" class="inline-block"><a-spin class="mx-auto" /></span>
                             </template>
                             <a-card-meta :title="`Agence : ${users[index].nameAgence}`">
                               <template #description>
@@ -901,7 +917,8 @@ const onFinishFailed = (errorInfo: any) => {
                           <template #actions>
                             <span key="accept" class="i-carbon-checkmark-outline inline-block" @click="acceptDevis(item)" />
 
-                            <span key="refuse" class="i-carbon-misuse-outline inline-block" @click="refuseDevis(item)" />
+                            <span v-if="!sendRefuseDevis" key="refuse" class="i-carbon-misuse-outline inline-block" @click="refuseDevis(item)" />
+                            <span v-else key="green-spin" class="inline-block"><a-spin class="mx-auto" /></span>
                           </template>
                           <a-card-meta :title="`Agence : ${users[index].nameAgence}`">
                             <template #description>
@@ -1189,9 +1206,9 @@ const onFinishFailed = (errorInfo: any) => {
                           <label class="font-normal">{{ formStateMission.local_city }}</label>
                         </a-form-item>
                         <div class="row">
-                          <div class="col text-center">
+                          <div v-if="sended == false" class="col text-center">
                             <a-button
-                              v-if="currentUser?.role === 'Freelancer'"
+                              v-if="currentUser?.role === 'Freelancer' "
                               class="btn-theme m-2"
                               @click="() => { resetFields(); modelRefDevis.id = undefined; visibleModalSendDevis = true }"
                             >
@@ -1203,6 +1220,13 @@ const onFinishFailed = (errorInfo: any) => {
                               @click="() => { resetFields(); modelRefDevis.id = undefined; visibleModalSendDevisAgence = true;getOffers() }"
                             >
                               Envoyer un Devis
+                            </a-button>
+                          </div>
+                          <div v-else class="col text-center">
+                            <a-button
+                              class="btn-theme m-2" disabled
+                            >
+                              Devis Déja envoyé
                             </a-button>
                           </div>
                         </div>

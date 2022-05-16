@@ -10,6 +10,7 @@ import missionApi from '~/api/modules/mission'
 import authApi from '~/api/modules/auth'
 import companyApi from '~/api/modules/company'
 import 'swiper/css/pagination'
+import paymentCards from '~/assets/img/stripe_credit-card-logos.png'
 SwiperCore.use([Controller, Pagination])
 
 const controlledSwiper = ref(null)
@@ -26,6 +27,12 @@ const validatedLoading = ref(false)
 const props = defineProps<{ id: string }>()
 const tasks = ref([])
 const cardElement = ref()
+const counter = ref(0)
+const CounterPercent = () => {
+  while (counter.value < 100) {
+    counter.value++
+  }
+}
 const formStateDevis = reactive<Record<string, any>>({
   id: null,
   id_company: undefined,
@@ -112,7 +119,7 @@ const getFormData = async () => {
       devisLoading.value = false
     }
     else {
-      missionApi.getDevisById(props.id).then(({ data }) => {
+      missionApi.getDevisById(props.id).then(async ({ data }) => {
         const { devise } = data
         formStateDevis._id = devise._id
         formStateDevis.totalTva = devise.totalTva
@@ -144,7 +151,7 @@ const getFormData = async () => {
             formStateUnpayed.amount = data.unpayed
           })
         }
-        setupStripe()
+        await setTimeout(() => { CounterPercent(); setupStripe() }, 3000)
       })
     }
   }
@@ -181,7 +188,7 @@ const onFinish = async (values: any) => {
     })
     if (error) {
       message.error(error)
-      setupStripe()
+      await setTimeout(() => { CounterPercent(); setupStripe() }, 3000)
       return
     }
     else {
@@ -193,7 +200,7 @@ const onFinish = async (values: any) => {
   catch (error) {
     devisLoading.value = false
     message.error('le paiement n\'a pas pu être effectué')
-    setupStripe()
+    await setTimeout(() => { CounterPercent(); setupStripe() }, 3000)
   }
 }
 
@@ -305,7 +312,29 @@ onMounted(async () => {
                     Paiement
                   </h4>
                 </div>
-                <div class="mb-4">
+                <div class="form-title">
+                  <h4 class="title">
+                    Sécurité du Paiement
+                  </h4>
+                  <div class="centerPercent items-center">
+                    <a-progress
+                      type="circle"
+                      :stroke-color="{
+                        '0%': '#108ee9',
+                        '100%': '#87d068',
+                      }"
+                      :percent="counter"
+                    />
+                    <br>
+                    <img class="logo-main" :src="paymentCards" alt="cards">
+                  </div>
+                  <br>
+                  <h4 class="title">
+                    Paiement
+                  </h4>
+                </div>
+                <a-spin v-if="counter != 100" class="mx-auto" />
+                <div v-else class="mb-4">
                   <a-form
                     :model="formState"
                     name="formState"
@@ -414,6 +443,10 @@ onMounted(async () => {
     border: 1px solid #d9d9d9;
     border-radius: 2px;
     transition: all 0.3s;
+}
+.centerPercent {
+    display: flex;
+    flex-direction: column !important;
 }
 #card-errors {
     color:red !important;
