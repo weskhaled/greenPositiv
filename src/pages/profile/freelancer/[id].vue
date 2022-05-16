@@ -98,10 +98,10 @@ const handleChangeDocuments = (info: any) => {
     console.log(info.file, info.fileList)
 
   if (info.file.status === 'done')
-    message.success(`${info.file.name} file uploaded successfully`)
+    message.success(`${info.file.name} téléchargé avec succés`)
 
   else if (info.file.status === 'error')
-    message.error(`${info.file.name} file upload failed.`)
+    message.error(`une erreur est survenu lors du téléchargement de ${info.file.name}.`)
 }
 
 /* module devis */
@@ -204,6 +204,9 @@ const formStateProfile = reactive<Record<string, any>>({
   url_github: '',
   url_twitter: '',
   url_linkedin: '',
+  kabis: '',
+  vigilance: '',
+  sasu: '',
 })
 const formStateContactDetails = reactive<any>({
   address: '',
@@ -971,6 +974,9 @@ const getFormData = async () => {
       socials.twitter.link = freelancer.url_twitter
       socials.linkedin.link = freelancer.url_linkedin
       socials.github.link = freelancer.url_github
+      formStateProfile.kabis = freelancer.documents[1]
+      formStateProfile.vigilance = freelancer.documents[2]
+      formStateProfile.sasu = freelancer.documents[3]
     }
   })
   /**/
@@ -1004,6 +1010,7 @@ const getFormData = async () => {
       formStateLegalMention.naf = legalMention.naf
       formStateLegalMention.tva_intracom = legalMention.tva_intracom
       formStateLegalMention.days = legalMention.days
+
       switch (formStateTypeIban.type_iban) {
         case 'iban': {
           formStateIbanModule.cb_iban_address_holder = ibanModule.cb_iban_address_holder
@@ -2365,7 +2372,11 @@ onMounted(async () => {
                                 :status="(profileEntreprise?.legalMention?.sas && profileEntreprise?.legalMention?.siret) ? 'finish' : (currentStepProfileEtprs === 3 ? 'process' : 'wait')"
                                 title="Mentions"
                               />
-                              <a-step :disabled="false" status="wait" title="Documents légaux" />
+                              <a-step
+                                :disabled="!(profileEntreprise?.legalMention?.sas && profileEntreprise?.legalMention?.siret)"
+                                :status="(profile?.freelancer?.documents[0] && profile?.freelancer?.documents[1] && profile?.freelancer?.documents[2] && profile?.freelancer?.documents[3]) ? 'finish' : (currentStepProfileEtprs === 4 ? 'process' : 'wait')"
+                                title="Documents Légaux"
+                              />
                             </a-steps>
                             <div class="p-4">
                               <div class="max-w-md mx-auto">
@@ -2700,9 +2711,12 @@ onMounted(async () => {
                                       :headers="{token: token}"
                                       @change="handleChangeDocuments"
                                     >
+                                      <label v-if="formStateProfile.kabis && formStateProfile.kabis.length > 0">Document déja téléchargé </label>
+                                      <br>
+                                      <br>
                                       <a-button>
                                         <upload-outlined />
-                                        Click to Upload kabis-documents
+                                        Télécharger votre kabis.
                                       </a-button>
                                     </a-upload>
                                   </div>
@@ -2715,9 +2729,12 @@ onMounted(async () => {
                                       :headers="{token: token}"
                                       @change="handleChangeDocuments"
                                     >
+                                      <label v-if="formStateProfile.vigilance && formStateProfile.vigilance.length > 0">Document déja téléchargé </label>
+                                      <br>
+                                      <br>
                                       <a-button>
                                         <upload-outlined />
-                                        Click to Upload vigilance-documents
+                                        Télécharger le document de vigilance.
                                       </a-button>
                                     </a-upload>
                                   </div>
@@ -2730,9 +2747,12 @@ onMounted(async () => {
                                       :headers="{token: token}"
                                       @change="handleChangeDocuments"
                                     >
+                                      <label v-if="formStateProfile.sasu && formStateProfile.sasu.length > 0">Document déja téléchargé </label>
+                                      <br>
+                                      <br>
                                       <a-button>
                                         <upload-outlined />
-                                        Click to Upload sasu-documents
+                                        Télécharger le SASU.
                                       </a-button>
                                     </a-upload>
                                   </div>

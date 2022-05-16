@@ -24,6 +24,21 @@ const loadingDocuments = ref(false)
 const activeKeyProfileEtprs = ref('1')
 const currentStepProfileEtprs = ref(0)
 const unpayedAmounts = ref([])
+const BASE_PREFIX = `${import.meta.env.VITE_API_AGENCE}`
+const fileListKabisDocuments = ref([])
+const fileListVigilanceDocuments = ref([])
+const fileListSasuDocuments = ref([])
+
+const handleChangeDocuments = (info: any) => {
+  if (info.file.status !== 'uploading')
+    console.log(info.file, info.fileList)
+
+  if (info.file.status === 'done')
+    message.success(`${info.file.name} téléchargé avec succés`)
+
+  else if (info.file.status === 'error')
+    message.error(`une erreur est survenu lors du téléchargement de ${info.file.name}.`)
+}
 
 const formItemLayout = {
   labelCol: { span: 6 },
@@ -108,6 +123,9 @@ const formStateProfile = reactive<Record<string, any>>({
   url_github: '',
   url_twitter: '',
   url_linkedin: '',
+  kabis: '',
+  vigilance: '',
+  sasu: '',
 })
 const formStateContactDetails = reactive<any>({
   address: '',
@@ -959,6 +977,9 @@ const getFormData = async () => {
       socials.twitter.link = agence.url_twitter
       socials.linkedin.link = agence.url_linkedin
       socials.github.link = agence.url_github
+      formStateProfile.kabis = agence.documents[1]
+      formStateProfile.vigilance = agence.documents[2]
+      formStateProfile.sasu = agence.documents[3]
     }
   })
   /**/
@@ -1977,7 +1998,11 @@ onMounted(async () => {
                                 :status="(profileEntreprise?.legalMention?.sas && profileEntreprise?.legalMention?.siret) ? 'finish' : (currentStepProfileEtprs === 3 ? 'process' : 'wait')"
                                 title="Mentions"
                               />
-                              <a-step :disabled="true" status="wait" title="Documents légaux" />
+                              <a-step
+                                :disabled="!(profileEntreprise?.legalMention?.sas && profileEntreprise?.legalMention?.siret)"
+                                :status="(profile?.freelancer?.documents[0] && profile?.freelancer?.documents[1] && profile?.freelancer?.documents[2] && profile?.freelancer?.documents[3]) ? 'finish' : (currentStepProfileEtprs === 4 ? 'process' : 'wait')"
+                                title="Documents Légaux"
+                              />
                             </a-steps>
                             <div class="p-4">
                               <div class="max-w-md mx-auto">
@@ -2254,6 +2279,62 @@ onMounted(async () => {
                                       </a-button>
                                     </a-form-item>
                                   </a-form>
+                                </div>
+                                <div v-else-if="currentStepProfileEtprs === 4" class="">
+                                  <div class="mb-3">
+                                    <a-upload
+                                      v-model:file-list="fileListKabisDocuments"
+                                      name="documents"
+                                      method="PATCH"
+                                      :action="`${BASE_PREFIX}/agence/kabis-documents`"
+                                      :headers="{token: token}"
+                                      @change="handleChangeDocuments"
+                                    >
+                                      <label v-if="formStateProfile.kabis && formStateProfile.kabis.length > 0">Document déja téléchargé </label>
+                                      <br>
+                                      <br>
+                                      <a-button>
+                                        <upload-outlined />
+                                        Télécharger votre kabis.
+                                      </a-button>
+                                    </a-upload>
+                                  </div>
+                                  <div class="mb-3">
+                                    <a-upload
+                                      v-model:file-list="fileListVigilanceDocuments"
+                                      name="documents"
+                                      method="PATCH"
+                                      :action="`${BASE_PREFIX}/agence/vigilance-documents`"
+                                      :headers="{token: token}"
+                                      @change="handleChangeDocuments"
+                                    >
+                                      <label v-if="formStateProfile.vigilance && formStateProfile.vigilance.length > 0">Document déja téléchargé </label>
+                                      <br>
+                                      <br>
+                                      <a-button>
+                                        <upload-outlined />
+                                        Télécharger le document de vigilance.
+                                      </a-button>
+                                    </a-upload>
+                                  </div>
+                                  <div class="mb-3">
+                                    <a-upload
+                                      v-model:file-list="fileListSasuDocuments"
+                                      name="documents"
+                                      method="PATCH"
+                                      :action="`${BASE_PREFIX}/agence/sasu-documents`"
+                                      :headers="{token: token}"
+                                      @change="handleChangeDocuments"
+                                    >
+                                      <label v-if="formStateProfile.sasu && formStateProfile.sasu.length > 0">Document déja téléchargé </label>
+                                      <br>
+                                      <br>
+                                      <a-button>
+                                        <upload-outlined />
+                                        Télécharger le SASU.
+                                      </a-button>
+                                    </a-upload>
+                                  </div>
                                 </div>
                               </div>
                             </div>
