@@ -184,6 +184,8 @@ const formStateMission = reactive<Record<string, any>>({
   document: null,
   supp_month: true,
   budget: 0,
+  freelancers: [],
+  id_agence: null,
 })
 levels.value = [{
   value: 'Junior',
@@ -284,6 +286,7 @@ const sendDevis = async () => {
     })
     .catch((err) => {
       console.log('error', err)
+      message.error(err.message)
     }).finally(() => {
       profileEntrepriseLoading.value = false
     })
@@ -356,6 +359,10 @@ const getFormData = async () => {
       mission.value = data.mission
       profile.value = data.profile
       sended.value = data.sended
+      if (mission.value.id_agence)
+        formStateMission.id_agence = mission.value?.id_agence
+      if (mission.value.freelancers)
+        formStateMission.freelancers = mission.value?.freelancers
       formStateMission.title_profile = profile.value?.title_profile
       formStateMission.jobCat = profile.value?.jobCat
       formStateMission.level = profile.value?.level
@@ -1208,14 +1215,14 @@ const onFinishFailed = (errorInfo: any) => {
                         <div class="row">
                           <div v-if="sended == false" class="col text-center">
                             <a-button
-                              v-if="currentUser?.role === 'Freelancer' "
+                              v-if="currentUser?.role === 'Freelancer' && formStateMission.id_agence == null "
                               class="btn-theme m-2"
                               @click="() => { resetFields(); modelRefDevis.id = undefined; visibleModalSendDevis = true }"
                             >
                               Envoyer un Devis
                             </a-button>
                             <a-button
-                              v-if="currentUser?.role === 'Agence'"
+                              v-if="currentUser?.role === 'Agence' && formStateMission.freelancers.length == 0 && formStateMission.id_agence == null"
                               class="btn-theme m-2"
                               @click="() => { resetFields(); modelRefDevis.id = undefined; visibleModalSendDevisAgence = true;getOffers() }"
                             >

@@ -11,7 +11,7 @@ const formState = reactive<any>({
   repeatPassword: '',
 })
 
-const updatePassword = async() => {
+const updatePassword = async () => {
   profileEntrepriseLoading.value = true
   try {
     const response = await authApi.updatePassword(formState)
@@ -33,7 +33,7 @@ const updatePassword = async() => {
   }
 }
 
-const validatePassword = async(_rule: RuleObject, value: string) => {
+const validatePassword = async (_rule: RuleObject, value: string) => {
   if (value === '')
     return Promise.reject(new Error('veuillez saisir votre mot de passe'))
 
@@ -44,7 +44,7 @@ const validatePassword = async(_rule: RuleObject, value: string) => {
     return Promise.resolve()
 }
 
-const validateRepeatPassword = async(_rule: RuleObject, value: string) => {
+const validateRepeatPassword = async (_rule: RuleObject, value: string) => {
   if (value === '')
     return Promise.reject(new Error('veuillez resaisir votre mot de passe'))
 

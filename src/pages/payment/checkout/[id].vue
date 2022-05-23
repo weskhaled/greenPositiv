@@ -309,11 +309,6 @@ onMounted(async () => {
                 </div>
                 <div class="form-title">
                   <h4 class="title">
-                    Paiement
-                  </h4>
-                </div>
-                <div class="form-title">
-                  <h4 class="title">
                     Sécurité du Paiement
                   </h4>
                   <div class="centerPercent items-center">
