@@ -2716,7 +2716,7 @@ onMounted(async () => {
                                       <br>
                                       <a-button>
                                         <upload-outlined />
-                                        Télécharger votre kabis.
+                                        Télécharger votre Kbis.
                                       </a-button>
                                     </a-upload>
                                   </div>
