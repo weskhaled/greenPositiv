@@ -1590,6 +1590,32 @@ onMounted(async () => {
                             </template>
                             <a-card-meta :title="`Mission : ${item.name}`">
                               <template #description>
+                                <div v-if="item.search">
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Recherche effectué :</b>
+                                    </span>
+                                    <a-tag
+                                      class="text-xs ml-2 leading-5"
+                                      color="#080"
+                                    >
+                                      Oui
+                                    </a-tag>
+                                  </div>
+                                </div>
+                                <div v-else>
+                                  <div class="flex items-center">
+                                    <span class="text-dark-300 mr-1.5">
+                                      <b>Recherche effectué :</b>
+                                    </span>
+                                    <a-tag
+                                      class="text-xs ml-2 leading-5"
+                                      color="#D00"
+                                    >
+                                      Non
+                                    </a-tag>
+                                  </div>
+                                </div>
                                 <div v-if="item.state == 'en cours'">
                                   <div class="flex items-center">
                                     <span class="text-dark-300 mr-1.5">

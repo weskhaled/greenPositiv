@@ -467,7 +467,7 @@ onMounted(async () => {
                     <div v-else>
                       <div v-if="agences && agences.length > 0" class="row justify-content-between">
                         <a-skeleton v-if="!agences" avatar active :paragraph="{ rows: 15 }" />
-                        <div class="min-h-70 flex items-center justify-center">
+                        <div>
                           <a-spin v-if="agencesLoading" class="mx-auto" />
                           <div v-else>
                             <h1>Solutions innovantes :</h1>
