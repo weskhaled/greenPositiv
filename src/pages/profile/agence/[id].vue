@@ -2000,7 +2000,7 @@ onMounted(async () => {
                               />
                               <a-step
                                 :disabled="!(profileEntreprise?.legalMention?.sas && profileEntreprise?.legalMention?.siret)"
-                                :status="(profile?.freelancer?.documents[0] && profile?.freelancer?.documents[1] && profile?.freelancer?.documents[2] && profile?.freelancer?.documents[3]) ? 'finish' : (currentStepProfileEtprs === 4 ? 'process' : 'wait')"
+                                :status="(profile?.agence?.documents[1] && profile?.agence?.documents[2] && profile?.agence?.documents[3]) ? 'finish' : (currentStepProfileEtprs === 4 ? 'process' : 'wait')"
                                 title="Documents Légaux"
                               />
                             </a-steps>
