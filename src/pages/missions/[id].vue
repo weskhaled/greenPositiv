@@ -1628,5 +1628,5 @@ const onFinishFailed = (errorInfo: any) => {
 meta:
   layout: home
   requiresAuth: true
-  roles: [Freelance, Agence]
+  roles: [Freelance, Agence, Company, Collab]
 </route>

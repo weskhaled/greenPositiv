@@ -1772,5 +1772,4 @@ onMounted(async () => {
 meta:
   layout: home
   requiresAuth: true
-  roles: [Agence]
 </route>

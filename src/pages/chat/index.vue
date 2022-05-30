@@ -191,5 +191,5 @@ const your_user_profile = ref('')
 meta:
   layout: home
   requiresAuth: true
-  roles: [Agence]
+  roles: [Agence,Freelancer,Company,Collab]
 </route>

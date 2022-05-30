@@ -7,13 +7,13 @@ const route = useRoute()
 const formStateValidation = reactive<Record<string, any>>({
   message: '',
 })
-const getFormData = async(id: string, idCollab: string) => {
+const getFormData = async (id: string, idCollab: string) => {
   companyApi.addCollab(id, idCollab).then(({ data }) => {
     if (data.value)
       formStateValidation.message = data.value.message
   })
 }
-onMounted(async() => {
+onMounted(async () => {
   const { id, idCollab } = route.query
   if (id && idCollab)
     getFormData(id, idCollab)
@@ -148,4 +148,6 @@ onMounted(async() => {
 <route lang="yaml">
 meta:
   layout: home
+  requiresAuth: true
+  roles: [Company]
 </route>
