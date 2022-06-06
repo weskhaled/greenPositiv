@@ -8,9 +8,11 @@ import companyApi from '~/api/modules/company'
 import bookMark from '~/assets/img/icons/bookmark1.png'
 import bookMarkHover from '~/assets/img/icons/bookmark2.png'
 
+const router = useRouter()
 const freelancers = ref([])
 const freelancersLoading = ref(false)
 const freelancersUnfiltred = ref([])
+const boolFalse = ref(false)
 
 const priceRange = ref([50, 810])
 const checkList = ref([])
@@ -26,7 +28,7 @@ const formStateFilter = reactive<Record<string, any>>({
 })
 const favorites = ref([])
 
-const getFormData = async() => {
+const getFormData = async () => {
   jobsValues.value = []
   freelancersLoading.value = true
   await freelancerApi.getAllVisibleAndValidated().then(({ data }) => {
@@ -62,15 +64,15 @@ const getFormData = async() => {
   }
   freelancersLoading.value = false
 }
-const addFavoris = async(id: string) => {
+const addFavoris = async (id: string) => {
   favorites.value.push(id)
-  await companyApi.addFavoris(id).then(async({ data }) => {
+  await companyApi.addFavoris(id).then(async ({ data }) => {
     message.success(data.message)
   }).catch((err) => {
     message.error(err.message)
   })
 }
-const filterAll = async() => {
+const filterAll = async () => {
   freelancers.value = freelancersUnfiltred.value
   if (jobsValues.value.length !== 0)
     freelancers.value = await freelancers.value.filter(j => jobsValues.value.includes(j.jobCat))
@@ -85,11 +87,11 @@ const filterAll = async() => {
     freelancers.value = await freelancers.value.filter(j => checkList.value.includes(j.level))
 }
 
-const initJobs = async() => {
+const initJobs = async () => {
   jobsValues.value = []
   filterAll()
 }
-onMounted(async() => {
+onMounted(async () => {
   getFormData()
 })
 </script>
@@ -133,7 +135,7 @@ onMounted(async() => {
                 <div class="widget-body">
                   <div>
                     <h3><b>Prix/jour</b></h3>
-                    <a-slider v-model:value="priceRange" max="810" range @change="filterAll($event)" />
+                    <a-slider v-model:value="priceRange" :max="formStateFilter.max" range @change="filterAll($event)" />
                   </div>
                   <div>
                     <h3><b>Niveau d'éxpérience</b></h3>
@@ -181,7 +183,7 @@ onMounted(async() => {
                       <a-checkbox v-if="jobsValues?.value?.length == 0" value="all" checked>
                         Tous
                       </a-checkbox>
-                      <a-checkbox v-else checked="false">
+                      <a-checkbox v-else :checked="boolFalse">
                         Tous
                       </a-checkbox>
                     </a-col>
@@ -215,9 +217,9 @@ onMounted(async() => {
                     </div>
                     <div class="content">
                       <h4 class="title">
-                        <routrer-link :to="`/profile/${item._id}`">
+                        <div @click="router.push(`/profile/${item._id}`)">
                           {{ item.firstName }} {{ item.lastName }}
-                        </routrer-link>
+                        </div>
                       </h4>
                       <h5 class="sub-title">
                         {{ item.title_profile }}
@@ -236,9 +238,12 @@ onMounted(async() => {
                         </a-tag>
                         <br>
                       </div>
-                      <router-link class="btn-theme mt-2 btn-white btn-sm" :to="`/freelancers/${item._id}`">
+                      <div
+                        class="btn-theme mt-2 btn-white btn-sm"
+                        @click="router.push(`/freelancers/${item._id}`)"
+                      >
                         Voir profile
-                      </router-link>
+                      </div>
                       <div v-if="currentUser && (currentUser.role == 'Company'|| currentUser.role == 'Collab') && favorites.includes(item._id)" class="bookmark-icon">
                         <img :src="bookMarkHover" alt="Image-HasTech">
                       </div>

@@ -212,7 +212,6 @@ const rulesProfileEntreprise = reactive({
         }
         else {
           if (Number(value) < 0 || Number(value) > 6)
-            // eslint-disable-next-line prefer-promise-reject-errors
             return Promise.reject(`${'Choisir une taille autorisé'}`)
           else
             return Promise.resolve()
@@ -228,7 +227,6 @@ const rulesProfileEntreprise = reactive({
     },
   ],
 })
-/**/
 const rulesFacturation = reactive({
   social_reason: [
     {
@@ -379,7 +377,6 @@ const getFormData = async () => {
       formStateProfile.active_collab = company.active_collab
     }
   })
-  /**/
   profileEntreprise.value = null
   await profileEntrepriseApi.profileEntrepriseCompany(props.id).then(async ({ data }) => {
     if (data) {
@@ -405,8 +402,6 @@ const getFormData = async () => {
     }
   })
 }
-
-/* bloc collaborator */
 const { resetFields, validate, validateInfos: collaboratorValidateInfos } = useForm(modelRefCollaborator, rulesCollab)
 const onSubmitCollab = async () => {
   validate()
@@ -461,8 +456,6 @@ const deleteFavoris = (id: string) => {
     })
   })
 }
-
-/* end bloc reference */
 const sendSearchDemand = async (id: string) => {
   sendDemandLoading.value = true
   await missionApi.sendDemand(id).then(({ data }) => {
@@ -497,8 +490,6 @@ const updateProfile = async (profileData: any) => {
   getFormData()
   profileEntrepriseLoading.value = false
 }
-
-/* bloc contact */
 const useFormContact = useForm(formStateContact, rulesContact)
 const validateContact = useFormContact.validate
 const validateInfosContact = useFormContact.validateInfos
@@ -517,8 +508,6 @@ const onSubmitContact = async () => {
       console.log('error', err)
     }).finally(() => profileEntrepriseLoading.value = false)
 }
-/* bloc end contact */
-/* bloc facturation */
 const useFormFacturation = useForm(formStateFacturation, rulesFacturation)
 const validateFacturation = useFormFacturation.validate
 const validateInfosFacturation = useFormFacturation.validateInfos
@@ -537,8 +526,6 @@ const onSubmitFacturation = async () => {
       console.log('error', err)
     }).finally(() => profileEntrepriseLoading.value = false)
 }
-/* end bloc facturation */
-/* bloc profil Entreprise */
 const useFormProfileEntreprise = useForm(formStateProfileEntreprise, rulesProfileEntreprise)
 const validateProfileEntreprise = useFormProfileEntreprise.validate
 const validateInfosProfileEntreprise = useFormProfileEntreprise.validateInfos
@@ -561,9 +548,6 @@ const onSubmitProfileEntreprise = async () => {
       console.log('error', err)
     }).finally(() => profileEntrepriseLoading.value = false)
 }
-/* end bloc profil Entreprise */
-
-/* bloc mission */
 const updateMission = (id: string) => {
   router.push(`/missions/update/${id}`)
 }
@@ -595,8 +579,6 @@ const deleteMission = (id: string) => {
     })
   })
 }
-/* end bloc mission */
-
 const beforeUploadProfileAvatar = async (file: any) => {
   const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png'
   if (!isJpgOrPng)

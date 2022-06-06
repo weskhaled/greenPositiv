@@ -103,8 +103,6 @@ const handleChangeDocuments = (info: any) => {
   else if (info.file.status === 'error')
     message.error(`une erreur est survenu lors du téléchargement de ${info.file.name}.`)
 }
-
-/* module devis */
 const modelRefDevis = reactive({
   _id: null,
   id_freelance: undefined,
@@ -184,8 +182,6 @@ const sendDevis = async () => {
     .catch((err) => {
     }).finally(() => profileEntrepriseLoading.value = false)
 }
-
-/* end module devis */
 const formStateProfile = reactive<Record<string, any>>({
   avatar: null,
   passion: '',
@@ -276,7 +272,6 @@ const modelRefCertification = reactive({
   description: '',
   place: '',
 })
-/**/
 const modelRefFormation = reactive({
   id: undefined,
   name: '',
@@ -310,7 +305,6 @@ const rulesIban = reactive({
         }
         else {
           if (value.length !== 5)
-            // eslint-disable-next-line prefer-promise-reject-errors
             return Promise.reject(`${'le numéro doit contenir 5 chiffres'}`)
           else
             return Promise.resolve()
@@ -343,7 +337,6 @@ const rulesIban = reactive({
           }
           else {
             if (value.length < 27)
-            // eslint-disable-next-line prefer-promise-reject-errors
               return Promise.reject(`${'l\iban doit contenir au minimu 27 caractéres'}`)
             else
               return Promise.resolve()
@@ -381,7 +374,6 @@ const rulesIban = reactive({
           }
           else {
             if (value.length !== 8)
-            // eslint-disable-next-line prefer-promise-reject-errors
               return Promise.reject(`${'l\iban doit contenir 8 chiffres'}`)
             else
               return Promise.resolve()
@@ -406,7 +398,6 @@ const rulesIban = reactive({
           }
           else {
             if (value.length !== 9)
-            // eslint-disable-next-line prefer-promise-reject-errors
               return Promise.reject(`${'l\iban doit contenir 9 chiffres'}`)
             else
               return Promise.resolve()
@@ -445,7 +436,6 @@ const rulesIban = reactive({
           }
           else {
             if (value.length !== 5)
-            // eslint-disable-next-line prefer-promise-reject-errors
               return Promise.reject(`${'iban doit contenir 5 chiffres'}`)
             else
               return Promise.resolve()
@@ -470,7 +460,6 @@ const rulesIban = reactive({
           }
           else {
             if (value.length !== 3)
-            // eslint-disable-next-line prefer-promise-reject-errors
               return Promise.reject(`${'le numéro d\institution doit contenir 3 chiffres'}`)
             else
               return Promise.resolve()
@@ -513,7 +502,6 @@ const rulesIban = reactive({
           }
           else {
             if (value.length !== 8)
-            // eslint-disable-next-line prefer-promise-reject-errors
               return Promise.reject(`${'le BIC/SWIFT doit contenir 8 chiffres'}`)
             else
               return Promise.resolve()
@@ -593,7 +581,6 @@ const rulesRef = reactive({
     },
   ],
 })
-/**/
 const rulesForm = reactive({
   name: [
     {
@@ -696,7 +683,6 @@ const rulesLegaleRepresentative = reactive({
         }
         else {
           if (value.length !== 5)
-            // eslint-disable-next-line prefer-promise-reject-errors
             return Promise.reject(`${'le numéro doit contenir 5 chiffres'}`)
           else
             return Promise.resolve()
@@ -721,7 +707,6 @@ const rulesTaxe = reactive({
         }
         else {
           if (value > 100 || value < 0)
-            // eslint-disable-next-line prefer-promise-reject-errors
             return Promise.reject(`${'le numéro doit être entre 0 et 100'}`)
           else
             return Promise.resolve()
@@ -979,7 +964,7 @@ const getFormData = async () => {
       formStateProfile.sasu = freelancer.documents[3]
     }
   })
-  /**/
+
   profileEntreprise.value = null
   await profileEntrepriseApi.profileEntreprise(props.id).then(async ({ data }) => {
     if (data) {
@@ -1138,8 +1123,6 @@ const updateProfile = async (profileData: any) => {
   getFormData()
   profileEntrepriseLoading.value = false
 }
-
-/* bloc iban modules */
 const useFormIbanModule = useForm(formStateIbanModule, rulesIban)
 const validateIbanModule = useFormIbanModule.validate
 const validateInfosIbanModule = useFormIbanModule.validateInfos
@@ -1158,8 +1141,6 @@ const onSubmitIbanModule = async () => {
     .catch((err) => {
     }).finally(() => profileEntrepriseLoading.value = false)
 }
-/* bloc end iban modules */
-/* bloc contact details */
 const useFormContactDetails = useForm(formStateContactDetails, rulesContactDetails)
 const validateContactDetails = useFormContactDetails.validate
 const validateInfosContactDetails = useFormContactDetails.validateInfos
@@ -1178,8 +1159,6 @@ const onSubmitContactDetails = async () => {
       console.log('error', err)
     }).finally(() => profileEntrepriseLoading.value = false)
 }
-/* end bloc contact details */
-/* bloc legal representative */
 const useFormLegalRepresentative = useForm(formStateLegalRepresentative, rulesLegaleRepresentative)
 const validateLegalRepresentative = useFormLegalRepresentative.validate
 const validateInfosLegalRepresentative = useFormLegalRepresentative.validateInfos
@@ -1204,8 +1183,6 @@ const onSubmitLegalRepresentative = async () => {
       console.log('error', err)
     }).finally(() => profileEntrepriseLoading.value = false)
 }
-/* end bloc legal representative */
-/* bloc taxe */
 const useFormTaxe = useForm(formStateTaxe, rulesTaxe)
 const validateTaxe = useFormTaxe.validate
 const validateInfosTaxe = useFormTaxe.validateInfos
@@ -1225,8 +1202,6 @@ const onSubmitTaxe = async () => {
       message.error(err.message)
     }).finally(() => profileEntrepriseLoading.value = false)
 }
-/* end bloc taxe */
-/* bloc legal mention */
 const useFormLegalMention = useForm(formStateLegalMention, rulesLegaleMention)
 const validateLegalMention = useFormLegalMention.validate
 const validateInfosLegalMention = useFormLegalMention.validateInfos
@@ -1246,8 +1221,6 @@ const onSubmitLegalMentions = async () => {
       message.error(err.message)
     }).finally(() => profileEntrepriseLoading.value = false)
 }
-/* end bloc legal mention */
-/* bloc experience */
 const { resetFields, validate, validateInfos: experienceValidateInfos } = useForm(modelRefExperience, rulesRef)
 const onSubmit = async () => {
   validate()
@@ -1307,8 +1280,6 @@ const deleteExperience = (id: string) => {
     })
   })
 }
-/* end bloc experience */
-/* bloc formation */
 const useFormFormation = useForm(modelRefFormation, rulesForm)
 const resetFieldsFormation = useFormFormation.resetFields
 const validateFormation = useFormFormation.validate
@@ -1437,8 +1408,6 @@ const deleteFormation = (id: string) => {
     })
   })
 }
-/* end bloc formation */
-/* bloc certification */
 const useFormCertification = useForm(modelRefCertification, rulesCert)
 const resetFieldsCertification = useFormCertification.resetFields
 const validateCertification = useFormCertification.validate
@@ -1496,7 +1465,6 @@ const deleteCertification = (id: string) => {
     })
   })
 }
-/* end bloc certification */
 const beforeUploadProfileAvatar = async (file: any) => {
   const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png'
   if (!isJpgOrPng)
@@ -3058,7 +3026,7 @@ onMounted(async () => {
                             <template #actions>
                               <span key="update" class="i-carbon-edit inline-block" @click="updateDevis(item,devis?.missions[index].id_company,index)" />
                             </template>
-                            <a-card-meta :title="Devis">
+                            <a-card-meta title="Devis">
                               <template #description>
                                 <br>
                                 <div class="flex">
@@ -3167,7 +3135,7 @@ onMounted(async () => {
                             <template #actions>
                               <span key="update" class="i-carbon-edit inline-block" @click="updateDevis(item,devis?.missions[index].id_company,index)" />
                             </template>
-                            <a-card-meta :title="Devis">
+                            <a-card-meta title="Devis">
                               <template #description>
                                 <div class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
@@ -3263,7 +3231,7 @@ onMounted(async () => {
                           <template #actions>
                             <span key="update" class="i-carbon-edit inline-block" @click="updateDevis(item,devis?.missions[index].id_company,index)" />
                           </template>
-                          <a-card-meta :title="Devis">
+                          <a-card-meta title="Devis">
                             <template #description>
                               <div class="flex items-center">
                                 <span class="text-dark-300 mr-1.5">
@@ -3359,7 +3327,7 @@ onMounted(async () => {
                         <a-badge-ribbon v-if="item.confirmed && item.confirmed == true " class="mr-2" color="green" text="accepté">
                           <a-card class="mr-2" hoverable>
                             <template #actions />
-                            <a-card-meta :title="Devis">
+                            <a-card-meta title="Devis">
                               <template #description>
                                 <br>
                                 <div class="flex">
@@ -3467,7 +3435,7 @@ onMounted(async () => {
                             <template #actions>
                               <span key="update" class="i-carbon-edit inline-block" @click="updateDevis(item,devis?.missions[index].id_company,index)" />
                             </template>
-                            <a-card-meta :title="Devis">
+                            <a-card-meta title="Devis">
                               <template #description>
                                 <div class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
@@ -3563,7 +3531,7 @@ onMounted(async () => {
                           <template #actions>
                             <span key="update" class="i-carbon-edit inline-block" @click="updateDevis(item,devis?.missions[index].id_company,index)" />
                           </template>
-                          <a-card-meta :title="Devis">
+                          <a-card-meta title="Devis">
                             <template #description>
                               <div class="flex items-center">
                                 <span class="text-dark-300 mr-1.5">

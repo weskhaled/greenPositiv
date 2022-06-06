@@ -1,16 +1,9 @@
 <script setup lang="ts">
-import { ExclamationCircleOutlined } from '@ant-design/icons-vue'
-import dayjs, { Dayjs } from 'dayjs'
-import { Form, Modal, message } from 'ant-design-vue'
-import type { RuleObject } from 'ant-design-vue/es/form'
+import dayjs from 'dayjs'
 import adminApi from '~/api/modules/admin'
 import globalApi from '~/api/modules/global'
 import freelancerApi from '~/api/modules/freelancer'
-import profileEntrepriseApi from '~/api/modules/profil-entreprise'
-const useForm = Form.useForm
 const props = defineProps<{ id: string }>()
-const { t } = useI18n()
-const activeKey = ref('1')
 const formItemLayout = {
   labelCol: { span: 6 },
   wrapperCol: { span: 16 },
@@ -54,11 +47,7 @@ const types = ref([])
 const typesAccount = ref([])
 const typesIban = ref([])
 const activities = ref([])
-// const formState = reactive<Record<string, any>>({
-//   'input-number': 3,
-//   'checkbox-group': ['A', 'B'],
-//   'rate': 3.5,
-// })
+
 const formStateProfile = reactive<Record<string, any>>({
   avatar: null,
   passion: '',
@@ -157,7 +146,6 @@ const getFormData = async () => {
       socials.github.link = freelancer.url_github
     }
   })
-  /**/
   profileEntreprise.value = null
 }
 const onFinish = async (values: any) => {

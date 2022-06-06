@@ -70,7 +70,6 @@ const validatePostal = async (_rule: RuleObject, value: string) => {
   }
   else {
     if (value.length !== 5)
-    // eslint-disable-next-line prefer-promise-reject-errors
       return Promise.reject(`${'le numéro doit contenir 5 chiffres'}`)
     else
       return Promise.resolve()

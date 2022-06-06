@@ -101,7 +101,6 @@ const validateRepeatPassword = async (_rule: RuleObject, value: string) => {
                   :label-col="{ span: 0 }"
                   :wrapper-col="{ span: 24 }"
                   autocomplete="on"
-                  @finish="onFinish"
                 >
                   <a-form-item
                     name="password"

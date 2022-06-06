@@ -292,7 +292,10 @@ onMounted(async () => {
                           >
                             <a-card class="mr-2" hoverable>
                               <template #actions>
-                                <router-link key="show" class="i-ant-design-user-outlined inline-block" :to="`/freelancers/${item._id}`" />
+                                <div
+                                  key="show" class="i-ant-design-user-outlined inline-block"
+                                  @click="router.push(`/freelancers/${item._id}`)"
+                                />
                               </template>
                               <a-card-meta :title="item.title_profile">
                                 <template #description>
@@ -352,7 +355,10 @@ onMounted(async () => {
                           >
                             <a-card class="mr-2" hoverable>
                               <template #actions>
-                                <router-link key="show" class="i-ant-design-user-outlined inline-block" :to="`/freelancers/${item._id}`" />
+                                <div
+                                  key="show" class="i-ant-design-user-outlined inline-block"
+                                  @click="router.push(`/freelancers/${item._id}`)"
+                                />
                               </template>
                               <a-card-meta :title="item.title_profile">
                                 <template #description>

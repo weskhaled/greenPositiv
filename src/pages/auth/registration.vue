@@ -180,13 +180,6 @@ const validaterePasswordCompany = async (_rule: RuleObject, value: string) => {
   else
     return Promise.resolve()
 }
-/*
-const validateConfidentiality = async(_rules, value) => {
-  if (value === true)
-    return Promise.resolve()
-  return Promise.reject(new Error('Please input the Confidentiality'))
-}
-*/
 const validatePhone = async (_rule: RuleObject, value: any) => {
   if (!value)
     return Promise.reject(new Error('Veuillez saisir un numéro de téléphone valide'))
@@ -196,7 +189,6 @@ const validatePhone = async (_rule: RuleObject, value: any) => {
   }
   else {
     if (value.length < 10)
-    // eslint-disable-next-line prefer-promise-reject-errors
       return Promise.reject(`${'le numéro doit contenir 10 chiffres'}`)
     else
       return Promise.resolve()

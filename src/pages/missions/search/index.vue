@@ -7,7 +7,6 @@ import globalApi from '~/api/modules/global'
 import adminApi from '~/api/modules/admin'
 import freelancerApi from '~/api/modules/freelancer'
 import 'swiper/css/pagination'
-import missionApi from '~/api/modules/mission'
 import agenceApi from '~/api/modules/agence'
 const controlledSwiper = ref(null)
 const offerSwiper = ref(null)
@@ -17,7 +16,7 @@ const setControlledSwiper = (swiper) => {
 const setOfferSwiper = (swiper) => {
   offerSwiper.value = swiper
 }
-const props = defineProps<{ id: string }>()
+const router = useRouter()
 
 SwiperCore.use([Controller, Pagination])
 const useForm = Form.useForm
@@ -270,7 +269,10 @@ onMounted(async () => {
                           >
                             <a-card class="mr-2" hoverable>
                               <template #actions>
-                                <router-link key="show" class="i-ant-design-user-outlined inline-block" :to="`/freelancers/${item._id}`" />
+                                <div
+                                  key="show" class="i-ant-design-user-outlined inline-block"
+                                  @click="router.push(`/freelancers/${item._id}`)"
+                                />
                               </template>
                               <a-card-meta :title="item.title_profile">
                                 <template #description>
@@ -330,7 +332,10 @@ onMounted(async () => {
                           >
                             <a-card class="mr-2" hoverable>
                               <template #actions>
-                                <router-link key="show" class="i-ant-design-user-outlined inline-block" :to="`/freelancers/${item._id}`" />
+                                <div
+                                  key="show" class="i-ant-design-user-outlined inline-block"
+                                  @click="router.push(`/freelancers/${item._id}`)"
+                                />
                               </template>
                               <a-card-meta :title="item.title_profile">
                                 <template #description>
@@ -391,7 +396,10 @@ onMounted(async () => {
                           >
                             <a-card class="mr-2" hoverable>
                               <template #actions>
-                                <router-link key="show" class="i-ant-design-user-outlined inline-block" :to="`/freelancers/${item._id}`" />
+                                <div
+                                  key="show" class="i-ant-design-user-outlined inline-block"
+                                  @click="router.push(`/freelancers/${item._id}`)"
+                                />
                               </template>
                               <a-card-meta :title="item.title_profile">
                                 <template #description>
@@ -474,9 +482,12 @@ onMounted(async () => {
                                       + {{ item.phone }}
                                     </a-tag>
                                     <br>
-                                    <router-link class="btn-theme mt-2 btn-white btn-sm" :to="`/agences/${item._id}`">
+                                    <div
+                                      class="btn-theme mt-2 btn-white btn-sm"
+                                      @click="router.push(`/agences/${item._id}`)"
+                                    >
                                       Voir profile
-                                    </router-link>
+                                    </div>
                                   </div>
                                   <!--== End Team Item ==-->
                                 </div>
@@ -520,7 +531,10 @@ onMounted(async () => {
                                     >
                                       <a-card class="mr-2" hoverable>
                                         <template #actions>
-                                          <router-link key="show" class="i-ant-design-user-outlined inline-block" :to="`/agence/${item.id_agence}`" />
+                                          <div
+                                            key="show" class="i-ant-design-user-outlined inline-block"
+                                            @click="router.push(`/agence/${item.id_agence}`)"
+                                          />
                                         </template>
                                         <a-card-meta :title="item.title_profile">
                                           <template #description>

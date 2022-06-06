@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ExclamationCircleOutlined } from '@ant-design/icons-vue'
+import { ExclamationCircleOutlined, UploadOutlined } from '@ant-design/icons-vue'
 import SwiperCore, { Controller, Pagination } from 'swiper'
 import { Swiper, SwiperSlide } from 'swiper/vue'
-import dayjs, { Dayjs } from 'dayjs'
+import dayjs from 'dayjs'
 import { Form, Modal, message } from 'ant-design-vue'
 import type { RuleObject } from 'ant-design-vue/es/form'
 import adminApi from '~/api/modules/admin'
@@ -13,7 +13,14 @@ import profileEntrepriseApi from '~/api/modules/profil-entreprise'
 import { currentUser, token } from '~/stores'
 import 'swiper/css/pagination'
 SwiperCore.use([Controller, Pagination])
-
+const controlledSwiper = ref(null)
+const setControlledSwiper = (swiper) => {
+  controlledSwiper.value = swiper
+}
+const controlledSwiperDevis = ref(null)
+const setDevisSwiper = (swiper) => {
+  controlledSwiperDevis.value = swiper
+}
 const useForm = Form.useForm
 const props = defineProps<{ id: string }>()
 const router = useRouter()
@@ -96,11 +103,6 @@ const visibleModalInformationDocumentVal = ref(false)
 const visibleModalInformationSignatureCharte = ref(false)
 const visibleModalGreenQuestion = ref(false)
 const visibleModalInformationValidated = ref(false)
-// const formState = reactive<Record<string, any>>({
-//   'input-number': 3,
-//   'checkbox-group': ['A', 'B'],
-//   'rate': 3.5,
-// })
 typesAccount.value = [{
   value: 'epargne',
   label: 'epargne',
@@ -193,7 +195,6 @@ const modelRefOffer = reactive({
   description: '',
 })
 
-/* module devis */
 const devisIndex = reactive({
   index: null,
 })
@@ -366,7 +367,6 @@ const updateTask = () => {
   indexBloc = null
   getTotal()
 }
-/* end module devis */
 const rulesIban = reactive({
   cb_iban_name_lastname: [
     {
@@ -391,7 +391,6 @@ const rulesIban = reactive({
         }
         else {
           if (value.length !== 5)
-            // eslint-disable-next-line prefer-promise-reject-errors
             return Promise.reject(`${'le numéro doit contenir 5 chiffres'}`)
           else
             return Promise.resolve()
@@ -433,7 +432,6 @@ const rulesIban = reactive({
           }
           else {
             if (value.length < 27)
-              // eslint-disable-next-line prefer-promise-reject-errors
               return Promise.reject(`${'l\iban doit contenir au minimu 27 caractéres'}`)
             else
               return Promise.resolve()
@@ -471,7 +469,6 @@ const rulesIban = reactive({
           }
           else {
             if (value.length !== 8)
-              // eslint-disable-next-line prefer-promise-reject-errors
               return Promise.reject(`${'l\iban doit contenir 8 chiffres'}`)
             else
               return Promise.resolve()
@@ -496,7 +493,6 @@ const rulesIban = reactive({
           }
           else {
             if (value.length !== 9)
-              // eslint-disable-next-line prefer-promise-reject-errors
               return Promise.reject(`${'l\iban doit contenir 9 chiffres'}`)
             else
               return Promise.resolve()
@@ -535,7 +531,6 @@ const rulesIban = reactive({
           }
           else {
             if (value.length !== 5)
-              // eslint-disable-next-line prefer-promise-reject-errors
               return Promise.reject(`${'iban doit contenir 5 chiffres'}`)
             else
               return Promise.resolve()
@@ -560,7 +555,6 @@ const rulesIban = reactive({
           }
           else {
             if (value.length !== 3)
-              // eslint-disable-next-line prefer-promise-reject-errors
               return Promise.reject(`${'le numéro d\institution doit contenir 3 chiffres'}`)
             else
               return Promise.resolve()
@@ -603,7 +597,6 @@ const rulesIban = reactive({
           }
           else {
             if (value.length !== 8)
-              // eslint-disable-next-line prefer-promise-reject-errors
               return Promise.reject(`${'le BIC/SWIFT doit contenir 8 chiffres'}`)
             else
               return Promise.resolve()
@@ -782,7 +775,6 @@ const rulesLegaleRepresentative = reactive({
         }
         else {
           if (value.length !== 5)
-            // eslint-disable-next-line prefer-promise-reject-errors
             return Promise.reject(`${'le numéro doit contenir 5 chiffres'}`)
           else
             return Promise.resolve()
@@ -807,7 +799,6 @@ const rulesTaxe = reactive({
         }
         else {
           if (value > 100 || value < 0)
-            // eslint-disable-next-line prefer-promise-reject-errors
             return Promise.reject(`${'le numéro doit être entre 0 et 100'}`)
           else
             return Promise.resolve()
@@ -982,7 +973,6 @@ const getFormData = async () => {
       formStateProfile.sasu = agence.documents[3]
     }
   })
-  /**/
   profileEntreprise.value = null
   await profileEntrepriseApi.profileEntrepriseAgence(props.id).then(async ({ data }) => {
     if (data) {
@@ -1090,7 +1080,6 @@ const getFormData = async () => {
     label: 'pas encore choisi',
   }]
 }
-const controlledSwiper = ref(null)
 
 const getScore = () => {
   if (!profile.value?.agence)
@@ -1127,7 +1116,6 @@ const updateProfile = async (profileData: any) => {
 const onLoad = () => {
   profileEntrepriseLoading.value = true
 }
-/* bloc iban modules */
 const useFormIbanModule = useForm(formStateIbanModule, rulesIban)
 const validateIbanModule = useFormIbanModule.validate
 const validateInfosIbanModule = useFormIbanModule.validateInfos
@@ -1146,8 +1134,6 @@ const onSubmitIbanModule = async () => {
       console.log('error', err)
     })
 }
-/* bloc end iban modules */
-/* bloc contact details */
 const useFormContactDetails = useForm(formStateContactDetails, rulesContactDetails)
 const validateContactDetails = useFormContactDetails.validate
 const validateInfosContactDetails = useFormContactDetails.validateInfos
@@ -1169,8 +1155,6 @@ const onSubmitContactDetails = async () => {
       console.log('error', err)
     }).finally(() => profileEntrepriseLoading.value = false)
 }
-/* end bloc contact details */
-/* bloc legal representative */
 const useFormLegalRepresentative = useForm(formStateLegalRepresentative, rulesLegaleRepresentative)
 const validateLegalRepresentative = useFormLegalRepresentative.validate
 const validateInfosLegalRepresentative = useFormLegalRepresentative.validateInfos
@@ -1198,8 +1182,6 @@ const onSubmitLegalRepresentative = async () => {
       console.log('error', err)
     }).finally(() => profileEntrepriseLoading.value = false)
 }
-/* end bloc legal representative */
-/* bloc taxe */
 const useFormTaxe = useForm(formStateTaxe, rulesTaxe)
 const validateTaxe = useFormTaxe.validate
 const validateInfosTaxe = useFormTaxe.validateInfos
@@ -1222,8 +1204,6 @@ const onSubmitTaxe = async () => {
       message.error(err.message)
     }).finally(() => profileEntrepriseLoading.value = false)
 }
-/* end bloc taxe */
-/* bloc legal mention */
 const useFormLegalMention = useForm(formStateLegalMention, rulesLegaleMention)
 const validateLegalMention = useFormLegalMention.validate
 const validateInfosLegalMention = useFormLegalMention.validateInfos
@@ -1246,8 +1226,6 @@ const onSubmitLegalMentions = async () => {
       message.error(err.message)
     }).finally(() => profileEntrepriseLoading.value = false)
 }
-/* end bloc legal mention */
-/* bloc reference */
 const { resetFields, validate, validateInfos: referenceValidateInfos } = useForm(modelRefReference, rulesRef)
 const onSubmit = async () => {
   validate()
@@ -1324,9 +1302,6 @@ const deleteReference = (id: string) => {
     },
   })
 }
-/* end bloc reference */
-
-/* bloc offer */
 const useFormOffer = useForm(modelRefOffer, rulesOffer)
 const resetFieldsOffer = useFormOffer.resetFields
 const validateOffer = useFormOffer.validate
@@ -1401,7 +1376,6 @@ const handleChangeUpload = async (event, offer) => {
       message.info(data.message)
   }
 }
-/* end bloc offer */
 const beforeUploadProfileAvatar = async (file: any) => {
   const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png'
   if (!isJpgOrPng)
@@ -2590,7 +2564,7 @@ onMounted(async () => {
                             <template #actions>
                               <span key="update" class="i-carbon-edit inline-block" @click="updateDevis(item,devis?.missions[index].id_company,index)" />
                             </template>
-                            <a-card-meta :title="Devis">
+                            <a-card-meta title="Devis">
                               <template #description>
                                 <br>
                                 <div class="flex">
@@ -2704,7 +2678,7 @@ onMounted(async () => {
                             <template #actions>
                               <span key="update" class="i-carbon-edit inline-block" @click="updateDevis(item,devis?.missions[index].id_company,index)" />
                             </template>
-                            <a-card-meta :title="Devis">
+                            <a-card-meta title="Devis">
                               <template #description>
                                 <div class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
@@ -2806,7 +2780,7 @@ onMounted(async () => {
                           <template #actions>
                             <span key="update" class="i-carbon-edit inline-block" @click="updateDevis(item,devis?.missions[index].id_company,index)" />
                           </template>
-                          <a-card-meta :title="Devis">
+                          <a-card-meta title="Devis">
                             <template #description>
                               <div class="flex items-center">
                                 <span class="text-dark-300 mr-1.5">
@@ -2908,7 +2882,7 @@ onMounted(async () => {
                         <a-badge-ribbon v-if="item.confirmed && item.confirmed == true " class="mr-2" color="green" text="accepté">
                           <a-card class="mr-2" hoverable>
                             <template #actions />
-                            <a-card-meta :title="Devis">
+                            <a-card-meta title="Devis">
                               <template #description>
                                 <br>
                                 <div class="flex">
@@ -3022,7 +2996,7 @@ onMounted(async () => {
                             <template #actions>
                               <span key="update" class="i-carbon-edit inline-block" @click="updateDevis(item,devis?.missions[index].id_company,index)" />
                             </template>
-                            <a-card-meta :title="Devis">
+                            <a-card-meta title="Devis">
                               <template #description>
                                 <div class="flex items-center">
                                   <span class="text-dark-300 mr-1.5">
@@ -3124,7 +3098,7 @@ onMounted(async () => {
                           <template #actions>
                             <span key="update" class="i-carbon-edit inline-block" @click="updateDevis(item,devis?.missions[index].id_company,index)" />
                           </template>
-                          <a-card-meta :title="Devis">
+                          <a-card-meta title="Devis">
                             <template #description>
                               <div class="flex items-center">
                                 <span class="text-dark-300 mr-1.5">
@@ -3449,12 +3423,12 @@ onMounted(async () => {
           <h3>Signature de la charte</h3>
         </div>
         <div>
-          Merci de bien vouloir lire et accepter la charte afin de valider votre profil via <router-link
+          Merci de bien vouloir lire et accepter la charte afin de valider votre profil via <div
             class="green"
-            :to="`/charte/agence/${$props.id}`"
+            @click="router.push(`/charte/agence/${$props.id}`)"
           >
             <span>ce lien</span>
-          </router-link>
+          </div>
         </div>
       </div>
     </div>

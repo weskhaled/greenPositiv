@@ -15,7 +15,7 @@ const formState = reactive<any>({
 const onLoad = () => {
   profileEntrepriseLoading.value = true
 }
-const onFinish = async(values: any) => {
+const onFinish = async (values: any) => {
   profileEntrepriseLoading.value = true
   const { username, password } = values
   try {
@@ -33,7 +33,6 @@ const onFinish = async(values: any) => {
       }
       else {
         currentUser.value = null
-        // token.value = null
       }
     }
   }
