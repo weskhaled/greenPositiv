@@ -1,7 +1,69 @@
 <script lang="ts" setup>
 // const el = document.getElementById('messages')
 // el.scrollTop = el.scrollHeight
-const your_user_profile = ref('')
+import { useFetch } from '@vueuse/core'
+import authApi from '~/api/modules/auth'
+import agenceApi from '~/api/modules/agence'
+import companyApi from '~/api/modules/company'
+import freelanceApi from '~/api/modules/freelancer'
+const your_user_profile_image = ref('')
+const receiver_user_profile_image = ref('')
+const current = ref(null)
+const receiver = ref(null)
+
+const getCurrent = async (current: any) => {
+  if (current.value.role === 'Freelancer') {
+    await freelanceApi.profile(current.value.idUser).then(({ data }) => {
+      data && (your_user_profile_image.value = data.value.freelancer.image)
+    })
+  }
+  else if (current.value.role === 'Agence') {
+    await agenceApi.profile(current.value.idUser).then(({ data }) => {
+      data && (your_user_profile_image.value = data.value.agence.image)
+    })
+  }
+
+  else {
+    await companyApi.profile(current.value.idUser).then(({ data }) => {
+      data && (your_user_profile_image.value = data.value.company.image)
+    })
+  }
+}
+
+const getReceiver = async (current: any) => {
+  if (current.value.role === 'Freelancer') {
+    await freelanceApi.profile(current.value.idUser).then(({ data }) => {
+      data && (receiver_user_profile_image.value = data.value.freelancer.image)
+    })
+  }
+  else if (current.value.role === 'Agence') {
+    await agenceApi.profile(current.value.idUser).then(({ data }) => {
+      data && (receiver_user_profile_image.value = data.value.agence.image)
+    })
+  }
+
+  else {
+    await companyApi.profile(current.value.idUser).then(({ data }) => {
+      data && (receiver_user_profile_image.value = data.value.company.image)
+    })
+  }
+}
+
+const getFormData = async () => {
+  await authApi.currentUser().then(({ data }) => {
+    data && (current.value = data)
+  })
+  await authApi.currentUser().then(({ data }) => {
+    data && (receiver.value = data)
+  })
+  await getCurrent(current.value)
+  await getReceiver(receiver.value)
+}
+
+onMounted(async () => {
+  getFormData()
+})
+
 </script>
 <template>
   <!-- component -->
@@ -14,7 +76,7 @@ const your_user_profile = ref('')
               <circle cx="8" cy="8" r="8" fill="currentColor" />
             </svg>
           </span>
-          <img src="https://images.unsplash.com/photo-1549078642-b2ba4bda0cdb?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=facearea&amp;facepad=3&amp;w=144&amp;h=144" alt="" class="w-10 sm:w-16 h-10 sm:h-16 rounded-full">
+          <img :src="your_user_profile_image" class="w-10 sm:w-16 h-10 sm:h-16 rounded-full">
         </div>
         <div class="flex flex-col leading-tight">
           <div class="text-2xl mt-1 flex items-center">
@@ -191,5 +253,5 @@ const your_user_profile = ref('')
 meta:
   layout: home
   requiresAuth: true
-  roles: [Agence,Freelancer,Company,Collab]
+  roles: [Agence, Freelancer, Company, Collab]
 </route>
