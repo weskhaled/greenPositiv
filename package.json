@@ -25,6 +25,7 @@
     "nprogress": "^0.2.0",
     "pinia": "^2.0.11",
     "prism-theme-vars": "^0.2.2",
+    "pusher-js": "^7.1.1-beta",
     "sass": "^1.49.9",
     "swiper": "^8.1.4",
     "vite-plugin-fonts": "^0.3.0",

@@ -1,19 +1,23 @@
 <script lang="ts" setup>
-// const el = document.getElementById('messages')
-// el.scrollTop = el.scrollHeight
+import Pusher from 'pusher-js'
 import authApi from '~/api/modules/auth'
 import agenceApi from '~/api/modules/agence'
 import companyApi from '~/api/modules/company'
 import freelanceApi from '~/api/modules/freelancer'
+import { currentUser } from '~/stores'
 const BASE_PREFIX = `${import.meta.env.VITE_API_CHAT}`
 
 const your_user_profile_image = ref('')
 const receiver_user_profile_image = ref('')
+const message_to_send = ref('')
 const current = ref(null)
 const receiver = ref(null)
 const receiver_title_profile = ref('')
 const props = defineProps<{ id: string }>()
 const messages = ref([])
+const connectedUsers = ref([])
+const rooms = ref([])
+const users = ref([])
 
 const getCurrent = async (current: any) => {
   if (current.value.role === 'Freelancer') {
@@ -26,7 +30,6 @@ const getCurrent = async (current: any) => {
       data && (your_user_profile_image.value = data.value.agence.image)
     })
   }
-
   else {
     await companyApi.profile(current.value.idUser).then(({ data }) => {
       data && (your_user_profile_image.value = data.value.company.image)
@@ -45,13 +48,87 @@ const getReceiver = async (current: any) => {
       data && (receiver_user_profile_image.value = data.value.agence.image) && (receiver_title_profile.value = data.value.agence.nameAgence)
     })
   }
-
   else {
     await companyApi.profile(current.value.idUser).then(({ data }) => {
       data && (receiver_user_profile_image.value = data.value.company.image)
     })
   }
 }
+
+// send message
+const sendMessage = async () => {
+  console.log('here')
+  const { data: dataSendMessage, error: errorSendMessage } = await useFetch(`${BASE_PREFIX}/pusher/send-message`).post({
+    idSender: current.value.idUser,
+    idReceiver: receiver.value.idUser,
+    usernameSender: current.value.username,
+    usernameReceiver: receiver.value.username,
+    content: message_to_send.value,
+  }).json()
+  if (dataSendMessage.value && !errorSendMessage.value)
+    console.log('dataSendMessage ', dataSendMessage.value)
+  else
+    console.log('errorSendMessage ', errorSendMessage.value)
+}
+
+// init pusher
+const initPusher = async () => {
+  const pusher = new Pusher('70479cebefa3d9baa33f', {
+    cluster: 'mt1',
+    forceTLS: true,
+  })
+  pusher.logToConsole = true
+  const channelRoom = pusher.subscribe('rooms')
+  const messageRoom = pusher.subscribe('messages')
+  const usersRoom = pusher.subscribe('users')
+
+  // channel room
+  channelRoom.bind('add', async (data: any) => {
+    if (!rooms.value.includes(data.room._id))
+      rooms.value.push(data.room._id)
+
+    console.log('rooms', rooms)
+    if (current.value.idUser === data.room.user1) {
+      console.log(current.value.idUser === data.room.user1)
+      if (!users.value.includes(data.room.user2))
+        users.value.push(data.room.user2)
+    }
+    else if (current.value.idUser === data.room.user2) {
+      console.log(current.value.idUser === data.room.user2)
+      if (!users.value.includes(data.room.user1))
+        users.value.push(data.room.user1)
+    }
+  })
+  // message room
+  messageRoom.bind('add', async (data: any) => {
+    console.log('in messageRoom bind')
+    console.log('data bind', data)
+    messages.value[0].push(data.message)
+    console.log('messages.value[0].push', messages.value[0])
+
+    if (current.value.idUser === data.room.user1) {
+      console.log(current.value.idUser === data.room.user1)
+      if (!users.value.includes(data.room.user2))
+        users.value.push(data.room.user2)
+    }
+    else if (current.value.idUser === data.room.user2) {
+      console.log(current.value.idUser === data.room.user2)
+      if (!users.value.includes(data.room.user1))
+        users.value.push(data.room.user1)
+    }
+  })
+  // users room
+  usersRoom.bind('add', async (data: any) => {
+    if (!connectedUsers.value.includes(data.idUser))
+      connectedUsers.value.push(data.idUser)
+  })
+  usersRoom.bind('remove', async (data: any) => {
+    const index = connectedUsers.value.indexOf(data.idUser)
+    connectedUsers.value.splice(index, 1)
+  })
+}
+
+// connect to room
 
 const getFormData = async () => {
   await authApi.currentUser().then(({ data }) => {
@@ -61,13 +138,27 @@ const getFormData = async () => {
   await authApi.getUser(props.id).then(async ({ data }) => {
     data && (receiver.value = data.value)
     getReceiver(receiver)
-    const { data: dataMessagesRoom, error: errorMessagesRoom } = await useFetch(`${BASE_PREFIX}/chat/room/${current.value.idUser}`).post().json()
-    if (dataMessagesRoom.value && !errorMessagesRoom.value) {
-      messages.value = dataMessagesRoom.value.filter(m =>
-        m.idReceiver === props.id,
-      ).map(msgs => msgs.messages)
+
+    const { data: dataAddRoom, error: errorAddRoom } = await useFetch(`${BASE_PREFIX}/pusher/connect/${current.value.idUser}`).post().json()
+    if (dataAddRoom.value && !errorAddRoom.value) {
+      const { data: dataConnectRoom, error: errorConnectRoom } = await useFetch(`${BASE_PREFIX}/pusher/connect-room`).post({
+        idSender: current.value.idUser,
+        idReceiver: receiver.value.idUser,
+        usernameSender: current.value.username,
+        usernameReceiver: receiver.value.username,
+      }).json()
+      if (dataConnectRoom.value && !errorConnectRoom.value) {
+        const { data: dataMessagesRoom, error: errorMessagesRoom } = await useFetch(`${BASE_PREFIX}/chat/room/${current.value.idUser}`).post().json()
+        if (dataMessagesRoom.value && !errorMessagesRoom.value) {
+          messages.value = dataMessagesRoom.value.filter(m =>
+            m.idReceiver === props.id,
+          ).map(msgs => msgs.messages)
+          console.log('messages ', messages)
+        }
+      }
     }
   })
+  initPusher()
 }
 
 onMounted(async () => {
@@ -105,7 +196,17 @@ onMounted(async () => {
           <img :src="receiver_user_profile_image" alt="My profile" class="w-6 h-6 rounded-full order-1">
         </div>
       </div>
-      <div v-else-if="message.idSender == current.idUser" class="chat-message">
+      <div v-else-if="message.idReceiver == props.id && message.showedReceiver == false" class="chat-message">
+        <div class="flex items-end justify-end">
+          <div class="flex flex-col space-y-2 text-xs max-w-xs mx-2 order-1 items-end">
+            <div>
+              <span class="px-4 py-2 rounded-lg inline-block rounded-br-none bg-green-300 text-white ">{{ message.content }}</span>
+            </div>
+          </div>
+          <img :src="your_user_profile_image" alt="My profile" class="w-6 h-6 rounded-full order-2">
+        </div>
+      </div>
+      <div v-else-if="message.idReceiver == props.id" class="chat-message">
         <div class="flex items-end justify-end">
           <div class="flex flex-col space-y-2 text-xs max-w-xs mx-2 order-1 items-end">
             <div>
@@ -118,7 +219,7 @@ onMounted(async () => {
     </div>
     <div class="border-t-2 border-gray-200 px-4 pt-4 mb-2 sm:mb-0">
       <div class="relative flex">
-        <input type="text" placeholder="Saisir votre message" class="w-full focus:outline-none focus:placeholder-gray-400 text-gray-600 placeholder-gray-600 pl-12 bg-gray-200 rounded-md py-3">
+        <a-input v-model:value="message_to_send" type="text" placeholder="Saisir votre message" class="w-full focus:outline-none focus:placeholder-gray-400 text-gray-600 placeholder-gray-600 pl-12 bg-gray-200 rounded-md py-3" />
         <div class="absolute right-0 items-center inset-y-0 hidden sm:flex">
           <button type="button" class="inline-flex items-center justify-center rounded-full h-10 w-10 transition duration-500 ease-in-out text-gray-500 hover:bg-gray-300 focus:outline-none">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-6 w-6 text-gray-600">
@@ -131,8 +232,8 @@ onMounted(async () => {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
           </button>
-          <button type="button" class="inline-flex items-center justify-center rounded-lg px-4 py-3 transition duration-500 ease-in-out text-white bg-green-600 hover:bg-blue-400 focus:outline-none">
-            <span class="font-bold">Send</span>
+          <button type="button" class="inline-flex items-center justify-center rounded-lg px-4 py-3 transition duration-500 ease-in-out text-white bg-green-600 hover:bg-blue-400 focus:outline-none" @click="sendMessage()">
+            <span class="font-bold">Envoyer</span>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-6 w-6 ml-2 transform rotate-90">
               <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
             </svg>

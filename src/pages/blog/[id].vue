@@ -40,7 +40,7 @@ const formPost = reactive<Record<string, any>>({
   url_twitter: '',
   url_linkedin: '',
 })
-const getPostById = async() => {
+const getPostById = async () => {
   const { data } = await adminApi.getPostById(props.id)
   post.value = data.value
   formPost.title = post.value?.title
