@@ -1,13 +1,19 @@
 <script lang="ts" setup>
 import Pusher from 'pusher-js'
+import { message } from 'ant-design-vue'
 import authApi from '~/api/modules/auth'
 import agenceApi from '~/api/modules/agence'
 import companyApi from '~/api/modules/company'
 import freelanceApi from '~/api/modules/freelancer'
 import { currentUser } from '~/stores'
+
 const BASE_PREFIX = `${import.meta.env.VITE_API_CHAT}`
 const BASE_PREFIX_AUTH = `${import.meta.env.VITE_API_AUTH}`
 
+const formStateAvatar = reactive<Record<string, any>>({
+  avatar: null,
+  showFilesList: false,
+})
 const user_to_talk = ref('')
 const your_user_profile_image = ref('')
 const receiver_user_profile_image = ref('')
@@ -21,6 +27,28 @@ const rooms = ref([])
 const users = ref([])
 const listUsers = ref([])
 const listImagesUser = ref([])
+
+const beforeUploadProfileAvatar = async (file: any) => {
+  const isLt2M = file.size / 1024 / 1024 < 10
+  if (!isLt2M)
+    message.error('la taille du fichier doit être inférieur à 10 MB!')
+  if (isLt2M) {
+    formStateAvatar.avatar = [file]
+    console.log('formStateAvatar.avatar', formStateAvatar.avatar)
+    const formData = new FormData()
+    formData.append('idSender', current.value.idUser)
+    formData.append('idReceiver', receiver.value.idUser)
+    formData.append('usernameSender', current.value.username)
+    formData.append('usernameReceiver', receiver.value.username)
+    formData.append('content', message_to_send.value)
+
+    const { data: dataSendFile, error: errorSendFile } = await useFetch(`${BASE_PREFIX}/pusher/send-file`).post(formData).formData().json()
+    if (dataSendFile.value && !errorSendFile.value)
+      console.log('dataSendFile ', dataSendFile)
+    else
+      console.log('error in download')
+  }
+}
 
 const getCurrent = async (current: any) => {
   if (current.value.role === 'Freelancer') {
@@ -91,18 +119,21 @@ const getFormData = async () => {
     messageRoom.bind('add', async (data: any) => {
       console.log('in messageRoom bind')
       console.log('data bind', data)
-      messages.value[0].push(data.message)
-      console.log('messages.value[0].push', messages.value[0])
+      console.log('length', messages.value.length)
+      if (messages.value.length !== 0) {
+        messages.value[0].push(data.message)
+        console.log('messages.value[0].push', messages.value[0])
 
-      if (current.value.idUser === data.room.user1) {
-        console.log(current.value.idUser === data.room.user1)
-        if (!users.value.includes(data.room.user2))
-          users.value.push(data.room.user2)
-      }
-      else if (current.value.idUser === data.room.user2) {
-        console.log(current.value.idUser === data.room.user2)
-        if (!users.value.includes(data.room.user1))
-          users.value.push(data.room.user1)
+        if (current.value.idUser === data.room.user1) {
+          console.log(current.value.idUser === data.room.user1)
+          if (!users.value.includes(data.room.user2))
+            users.value.push(data.room.user2)
+        }
+        else if (current.value.idUser === data.room.user2) {
+          console.log(current.value.idUser === data.room.user2)
+          if (!users.value.includes(data.room.user1))
+            users.value.push(data.room.user1)
+        }
       }
     })
     // users room
@@ -123,21 +154,19 @@ const getFormData = async () => {
         const { data: dataGetUser, error: errorGetUser } = await useFetch(`${BASE_PREFIX_AUTH}/auth/get/${element.user2}`).get().json()
         if (dataGetUser.value && !errorGetUser.value) {
           console.log('user x ', dataGetUser.value)
-          await listUsers.value.push(dataGetUser.value)
-
           if (dataGetUser.value.role === 'Freelancer') {
             await freelanceApi.profile(element.user2).then(async ({ data }) => {
-              data && (await listImagesUser.value.push(data.value.freelancer.image))
+              data && (listImagesUser.value.push(data.value.freelancer.image) && listUsers.value.push(dataGetUser.value))
             })
           }
           else if (current.value.role === 'Agence') {
             await agenceApi.profile(element.user2).then(async ({ data }) => {
-              data && (await listImagesUser.value.push(data.value.agence.image))
+              data && (await listImagesUser.value.push(data.value.agence.image) && listUsers.value.push(dataGetUser.value))
             })
           }
           else {
             await companyApi.profile(element.user2).then(async ({ data }) => {
-              data && (await listImagesUser.value.push(data.value.company.image))
+              data && (await listImagesUser.value.push(data.value.company.image) && listUsers.value.push(dataGetUser.value))
             })
           }
         }
@@ -149,12 +178,12 @@ const getFormData = async () => {
 
           if (dataGetUser.value.role === 'Freelancer') {
             await freelanceApi.profile(element.user1).then(async ({ data }) => {
-              data && (await listImagesUser.value.push(data.value.freelancer.image))
+              data && (await listImagesUser.value.push(data.value.freelancer.image) && listUsers.value.push(dataGetUser.value))
             })
           }
           else if (current.value.role === 'Agence') {
             await agenceApi.profile(element.user1).then(async ({ data }) => {
-              data && (await listImagesUser.value.push(data.value.agence.image))
+              data && (await listImagesUser.value.push(data.value.agence.image) && listUsers.value.push(dataGetUser.value) && listUsers.value.push(dataGetUser.value))
             })
           }
           else {
@@ -179,10 +208,19 @@ const sendMessage = async () => {
     usernameReceiver: receiver.value.username,
     content: message_to_send.value,
   }).json()
-  if (dataSendMessage.value && !errorSendMessage.value)
-    console.log('dataSendMessage ', dataSendMessage.value)
-  else
-    console.log('errorSendMessage ', errorSendMessage.value)
+  if (dataSendMessage.value && !errorSendMessage.value) {
+    message_to_send.value = ''
+    if (messages.value.length === 0) {
+      const { data: dataMessagesRoom, error: errorMessagesRoom } = await useFetch(`${BASE_PREFIX}/chat/room/${current.value.idUser}`).post().json()
+      if (dataMessagesRoom.value && !errorMessagesRoom.value) {
+        messages.value = dataMessagesRoom.value.filter(m =>
+          m.idReceiver === user_to_talk.value,
+        ).map(msgs => msgs.messages)
+        console.log('messages first time', messages)
+      }
+    }
+  }
+  else { console.log('errorSendMessage ', errorSendMessage.value) }
 }
 // change props
 const changeProps = async (idUser: any) => {
@@ -253,8 +291,8 @@ onMounted(async () => {
             </div>
             <div class="flex items-center space-x-2">
               <button type="button" class="inline-flex items-center justify-center rounded-lg border h-10 w-10 transition duration-500 ease-in-out text-gray-500 hover:bg-gray-300 focus:outline-none" @click="changeProps(user.idUser)">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-6 w-6">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-6 w-6 ml-2 transform rotate-90">
+                  <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
                 </svg>
               </button>
             </div>
@@ -319,18 +357,21 @@ onMounted(async () => {
           <div class="relative flex">
             <a-input v-model:value="message_to_send" type="text" placeholder="Saisir votre message" class="w-full focus:outline-none focus:placeholder-gray-400 text-gray-600 placeholder-gray-600 pl-12 bg-gray-200 rounded-md py-3" />
             <div class="absolute right-0 items-center inset-y-0 hidden sm:flex">
-              <button type="button" class="inline-flex items-center justify-center rounded-full h-10 w-10 transition duration-500 ease-in-out text-gray-500 hover:bg-gray-300 focus:outline-none">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-6 w-6 text-gray-600">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                </svg>
-              </button>
-              <button type="button" class="inline-flex items-center justify-center rounded-full h-10 w-10 transition duration-500 ease-in-out text-gray-500 hover:bg-gray-300 focus:outline-none">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-6 w-6 text-gray-600">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </button>
-              <button type="button" class="inline-flex items-center justify-center rounded-lg px-4 py-3 transition duration-500 ease-in-out text-white bg-green-600 hover:bg-blue-400 focus:outline-none" @click="sendMessage()">
+              <a-upload-dragger
+                v-model:fileList="formStateAvatar.avatar"
+                :multiple="false"
+                :before-upload="beforeUploadProfileAvatar"
+                name="avtar"
+                :show-upload-list="formStateAvatar.showFilesList"
+                class="text-gray-600"
+              >
+                <button type="button" class="inline-flex items-center justify-center rounded-full h-10 w-10 transition duration-500 ease-in-out text-gray-500 hover:bg-gray-300 focus:outline-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-6 w-6 text-gray-600">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                  </svg>
+                </button>
+              </a-upload-dragger>
+              <button type="button" class="inline-flex items-center justify-center rounded-lg px-4 py-3 transition duration-500 ease-in-out text-white bg-green-600 focus:outline-none" @click="sendMessage()">
                 <span class="font-bold">Envoyer</span>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-6 w-6 ml-2 transform rotate-90">
                   <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
@@ -348,6 +389,12 @@ onMounted(async () => {
   </div>
 </template>
 <style>
+
+.ant-upload .ant-upload-btn {
+  background:#E5E7EB !important;
+  padding: 0px !important;
+}
+
 .scrollbar-w-2::-webkit-scrollbar {
   width: 0.25rem;
   height: 0.25rem;

@@ -3,6 +3,11 @@ import dayjs from 'dayjs'
 import adminApi from '~/api/modules/admin'
 import globalApi from '~/api/modules/global'
 import freelancerApi from '~/api/modules/freelancer'
+import authApi from '~/api/modules/auth'
+
+const BASE_PREFIX = `${import.meta.env.VITE_API_CHAT}`
+
+const router = useRouter()
 const props = defineProps<{ id: string }>()
 const formItemLayout = {
   labelCol: { span: 6 },
@@ -32,21 +37,14 @@ const socials = reactive({
 })
 const profile = ref(null)
 const profileAvatar = ref('')
-const userDocument = ref(null)
 const profileEntreprise = ref(null)
 const skills = ref([])
 const skillsValue = ref([])
 const passionValue = ref('')
-const legalForms = ref([])
 const languages = ref([])
-const countries = ref([])
-const countriesIban = ref([])
-const countriesIbanOthers = ref([])
-const jobs = ref([])
-const types = ref([])
-const typesAccount = ref([])
-const typesIban = ref([])
-const activities = ref([])
+
+const current = ref(null)
+const receiver = ref(null)
 
 const formStateProfile = reactive<Record<string, any>>({
   avatar: null,
@@ -164,6 +162,24 @@ onMounted(async () => {
   console.log('props id ', props.id)
   getFormData()
 })
+
+const sendMessage = async () => {
+  await authApi.currentUser().then(({ data }) => {
+    data && (current.value = data)
+  })
+
+  const { data: dataAddRoom, error: errorAddRoom } = await useFetch(`${BASE_PREFIX}/pusher/connect/${current.value.idUser}`).post().json()
+  if (dataAddRoom.value && !errorAddRoom.value) {
+    const { data: dataConnectRoom, error: errorConnectRoom } = await useFetch(`${BASE_PREFIX}/pusher/connect-room`).post({
+      idSender: current.value.idUser,
+      idReceiver: props.id,
+      usernameSender: current.value.username,
+      usernameReceiver: formStateProfile.username,
+    }).json()
+    if (dataConnectRoom.value && !errorConnectRoom.value)
+      await router.push({ path: '/chat' })
+  }
+}
 </script>
 
 <template>
@@ -259,6 +275,13 @@ onMounted(async () => {
                 </div>
                 <div class>
                   <social-media :socials="socials" />
+                  <br>
+                  <button type="button" class="inline-flex items-center justify-center rounded-lg px-4 py-3 transition duration-500 ease-in-out text-white bg-green-600 focus:outline-none" @click="sendMessage()">
+                    <span class="font-bold">Contactez</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-6 w-6 ml-2 transform rotate-90">
+                      <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                    </svg>
+                  </button>
                 </div>
               </div>
             </div>
@@ -287,7 +310,7 @@ onMounted(async () => {
                         <a-slider
                           v-model:value="formStateProfile.disponibility_freq"
                           :step="null"
-                          disabled="true"
+                          :disabled="true"
                           :tip-formatter="null"
                           :marks="{
                             0: '1 jour',
