@@ -29,6 +29,7 @@ const users = ref([])
 const listUsers = ref([])
 const listImagesUser = ref([])
 const listUsersLoading = ref(true)
+const listImagesUsersLoading = ref(false)
 const messagesLoading = ref(false)
 
 const beforeUploadProfileAvatar = async (file: any) => {
@@ -70,19 +71,20 @@ const getCurrent = async (current: any) => {
 }
 
 const getReceiver = async (current: any) => {
+  listImagesUsersLoading.value = true
   if (current.value.role === 'Freelancer') {
     await freelanceApi.profile(current.value.idUser).then(({ data }) => {
-      data && (receiver_user_profile_image.value = data.value.freelancer.image) && (receiver_title_profile.value = data.value.freelancer.title_profile)
+      data && (receiver_user_profile_image.value = data.value.freelancer.image) && (receiver_title_profile.value = data.value.freelancer.title_profile) && (listImagesUsersLoading.value = false)
     })
   }
   else if (current.value.role === 'Agence') {
     await agenceApi.profile(current.value.idUser).then(({ data }) => {
-      data && (receiver_user_profile_image.value = data.value.agence.image) && (receiver_title_profile.value = data.value.agence.nameAgence)
+      data && (receiver_user_profile_image.value = data.value.agence.image) && (receiver_title_profile.value = data.value.agence.nameAgence) && (listImagesUsersLoading.value = false)
     })
   }
   else {
     await companyApi.profile(current.value.idUser).then(({ data }) => {
-      data && (receiver_user_profile_image.value = data.value.company.image)
+      data && (receiver_user_profile_image.value = data.value.company.image) && (listImagesUsersLoading.value = false)
     })
   }
 }
@@ -213,6 +215,7 @@ const changeProps = async (idUser: any) => {
   message_to_send.value = ''
   await authApi.getUser(user_to_talk.value).then(async ({ data }) => {
     data && (receiver.value = data.value)
+    listImagesUsersLoading.value = true
     await getReceiver(receiver)
     const { data: dataAddRoom, error: errorAddRoom } = await useFetch(`${BASE_PREFIX}/pusher/connect/${current.value.idUser}`).post().json()
     if (dataAddRoom.value && !errorAddRoom.value) {
@@ -270,7 +273,7 @@ onMounted(async () => {
               </div>
             </div>
             <div class="flex items-center space-x-2">
-              <button type="button" class="inline-flex items-center justify-center rounded-lg border h-10 w-10 transition duration-500 ease-in-out text-gray-500 hover:bg-gray-300 focus:outline-none" @click="changeProps(user.idUser)">
+              <button type="button" class="inline-flex items-center justify-center rounded-lg border h-10 w-10 transition duration-500 ease-in-out text-gray-500 hover:bg-gray-300 focus:outline-none" @click="listImagesUsersLoading=true;changeProps(user.idUser)">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-6 w-6 ml-2 transform rotate-90">
                   <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
                 </svg>
@@ -283,7 +286,7 @@ onMounted(async () => {
     <div class="col-md-8">
       <div v-if="user_to_talk !== ''" class="flex-1 mt-15 p:2 sm:p-6 justify-between flex flex-col h-screen">
         <div class="flex sm:items-center justify-between py-3 border-b-2 border-gray-200">
-          <div class="relative flex items-center space-x-4">
+          <div v-if="!listImagesUsersLoading" class="relative flex items-center space-x-4">
             <div class="relative">
               <span class="absolute text-green-500 right-0 bottom-0">
                 <svg width="20" height="20">
@@ -299,6 +302,7 @@ onMounted(async () => {
               <span class="text-lg text-gray-600">{{ receiver_title_profile }}</span>
             </div>
           </div>
+          <a-spin v-else class="mx-auto" />
         </div>
         <div class="flex flex-col space-y-4 p-3 overflow-y-auto scrollbar-thumb-blue scrollbar-thumb-rounded scrollbar-track-blue-lighter scrollbar-w-2 scrolling-touch">
           <div v-for="message in messages[0]" id="messages" :key="message._id">
