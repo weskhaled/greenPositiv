@@ -28,6 +28,8 @@ const rooms = ref([])
 const users = ref([])
 const listUsers = ref([])
 const listImagesUser = ref([])
+const listUsersLoading = ref(true)
+const messagesLoading = ref(false)
 
 const beforeUploadProfileAvatar = async (file: any) => {
   const isLt2M = file.size / 1024 / 1024 < 10
@@ -35,7 +37,6 @@ const beforeUploadProfileAvatar = async (file: any) => {
     message.error('la taille du fichier doit être inférieur à 10 MB!')
   if (isLt2M) {
     formStateAvatar.avatar = [file]
-    console.log('formStateAvatar.avatar', formStateAvatar.avatar)
     const formData = new FormData()
     formData.append('idSender', current.value.idUser)
     formData.append('idReceiver', receiver.value.idUser)
@@ -43,13 +44,10 @@ const beforeUploadProfileAvatar = async (file: any) => {
     formData.append('usernameReceiver', receiver.value.username)
     formData.append('content', message_to_send.value)
     formData.append('image', formStateAvatar.avatar[0])
-    console.log('formData ', formData)
 
     const { data: dataSendFile, error: errorSendFile } = await useFetch(`${BASE_PREFIX}/pusher/send-file`).post(formData).formData().json()
-    if (dataSendFile.value && !errorSendFile.value)
-      console.log('file sended')
-    else
-      console.log('error in download')
+    if (errorSendFile.value)
+      message.error('un probléme est survenu lors de l\'envoi du fichier')
   }
 }
 
@@ -90,7 +88,6 @@ const getReceiver = async (current: any) => {
 }
 
 const getFormData = async () => {
-  // init pusher
   const initPusher = async () => {
     const pusher = new Pusher('70479cebefa3d9baa33f', {
       cluster: 'mt1',
@@ -101,45 +98,32 @@ const getFormData = async () => {
     const messageRoom = pusher.subscribe('messages')
     const usersRoom = pusher.subscribe('users')
 
-    // channel room
     channelRoom.bind('add', async (data: any) => {
       if (!rooms.value.includes(data.room._id))
         rooms.value.push(data.room._id)
-
-      console.log('rooms', rooms)
       if (current.value.idUser === data.room.user1) {
-        console.log(current.value.idUser === data.room.user1)
         if (!users.value.includes(data.room.user2))
           users.value.push(data.room.user2)
       }
       else if (current.value.idUser === data.room.user2) {
-        console.log(current.value.idUser === data.room.user2)
         if (!users.value.includes(data.room.user1))
           users.value.push(data.room.user1)
       }
     })
-    // message room
     messageRoom.bind('add', async (data: any) => {
-      console.log('in messageRoom bind')
-      console.log('data bind', data)
-      console.log('length', messages.value.length)
       if (messages.value.length !== 0) {
         messages.value[0].push(data.message)
-        console.log('messages.value[0].push', messages.value[0])
-
         if (current.value.idUser === data.room.user1) {
-          console.log(current.value.idUser === data.room.user1)
           if (!users.value.includes(data.room.user2))
             users.value.push(data.room.user2)
         }
         else if (current.value.idUser === data.room.user2) {
-          console.log(current.value.idUser === data.room.user2)
           if (!users.value.includes(data.room.user1))
             users.value.push(data.room.user1)
         }
       }
     })
-    // users room
+
     usersRoom.bind('add', async (data: any) => {
       if (!connectedUsers.value.includes(data.idUser))
         connectedUsers.value.push(data.idUser)
@@ -151,25 +135,23 @@ const getFormData = async () => {
   }
   const { data: dataGetRooms, error: errorGetRooms } = await useFetch(`${BASE_PREFIX}/pusher/rooms/${current.value.idUser}`).get().json()
   if (dataGetRooms.value && !errorGetRooms.value) {
-    console.log('rooms ', dataGetRooms.value)
     await dataGetRooms.value.rooms.forEach(async (element) => {
       if (element.user1 === current.value.idUser) {
         const { data: dataGetUser, error: errorGetUser } = await useFetch(`${BASE_PREFIX_AUTH}/auth/get/${element.user2}`).get().json()
         if (dataGetUser.value && !errorGetUser.value) {
-          console.log('user x ', dataGetUser.value)
           if (dataGetUser.value.role === 'Freelancer') {
             await freelanceApi.profile(element.user2).then(async ({ data }) => {
-              data && (listImagesUser.value.push(data.value.freelancer.image) && listUsers.value.push(dataGetUser.value))
+              data && (listImagesUser.value.push(data.value.freelancer.image) && listUsers.value.push(dataGetUser.value) && (listUsersLoading.value = false))
             })
           }
           else if (current.value.role === 'Agence') {
             await agenceApi.profile(element.user2).then(async ({ data }) => {
-              data && (await listImagesUser.value.push(data.value.agence.image) && listUsers.value.push(dataGetUser.value))
+              data && (await listImagesUser.value.push(data.value.agence.image) && listUsers.value.push(dataGetUser.value) && (listUsersLoading.value = false))
             })
           }
           else {
             await companyApi.profile(element.user2).then(async ({ data }) => {
-              data && (await listImagesUser.value.push(data.value.company.image) && listUsers.value.push(dataGetUser.value))
+              data && (await listImagesUser.value.push(data.value.company.image) && listUsers.value.push(dataGetUser.value) && (listUsersLoading.value = false))
             })
           }
         }
@@ -181,17 +163,17 @@ const getFormData = async () => {
 
           if (dataGetUser.value.role === 'Freelancer') {
             await freelanceApi.profile(element.user1).then(async ({ data }) => {
-              data && (await listImagesUser.value.push(data.value.freelancer.image) && listUsers.value.push(dataGetUser.value))
+              data && (await listImagesUser.value.push(data.value.freelancer.image) && listUsers.value.push(dataGetUser.value) && (listUsersLoading.value = false))
             })
           }
           else if (current.value.role === 'Agence') {
             await agenceApi.profile(element.user1).then(async ({ data }) => {
-              data && (await listImagesUser.value.push(data.value.agence.image) && listUsers.value.push(dataGetUser.value) && listUsers.value.push(dataGetUser.value))
+              data && (await listImagesUser.value.push(data.value.agence.image) && listUsers.value.push(dataGetUser.value) && listUsers.value.push(dataGetUser.value) && (listUsersLoading.value = false))
             })
           }
           else {
             await companyApi.profile(element.user1).then(async ({ data }) => {
-              data && (await listImagesUser.value.push(data.value.company.image))
+              data && (await listImagesUser.value.push(data.value.company.image) && (listUsersLoading.value = false))
             })
           }
         }
@@ -200,10 +182,7 @@ const getFormData = async () => {
   }
   initPusher()
 }
-
-// send message
 const sendMessage = async () => {
-  console.log('here')
   const { data: dataSendMessage, error: errorSendMessage } = await useFetch(`${BASE_PREFIX}/pusher/send-message`).post({
     idSender: current.value.idUser,
     idReceiver: receiver.value.idUser,
@@ -219,26 +198,22 @@ const sendMessage = async () => {
         messages.value = dataMessagesRoom.value.filter(m =>
           m.idReceiver === user_to_talk.value,
         ).map(msgs => msgs.messages)
-        console.log('messages first time', messages)
       }
     }
   }
-  else { console.log('errorSendMessage ', errorSendMessage.value) }
+  else { message.error('le message n\a pas pu être envoyé') }
 }
 const openNewTab = async (url: any) => {
   window.open(url)
 }
-// change props
 const changeProps = async (idUser: any) => {
+  messagesLoading.value = true
   messages.value = []
   user_to_talk.value = idUser
   message_to_send.value = ''
-
-  console.log('user to talk', user_to_talk.value)
   await authApi.getUser(user_to_talk.value).then(async ({ data }) => {
     data && (receiver.value = data.value)
     await getReceiver(receiver)
-    console.log('receiver ', receiver)
     const { data: dataAddRoom, error: errorAddRoom } = await useFetch(`${BASE_PREFIX}/pusher/connect/${current.value.idUser}`).post().json()
     if (dataAddRoom.value && !errorAddRoom.value) {
       const { data: dataConnectRoom, error: errorConnectRoom } = await useFetch(`${BASE_PREFIX}/pusher/connect-room`).post({
@@ -253,14 +228,12 @@ const changeProps = async (idUser: any) => {
           messages.value = dataMessagesRoom.value.filter(m =>
             m.idReceiver === user_to_talk.value,
           ).map(msgs => msgs.messages)
-          console.log('messages ', messages)
+          messagesLoading.value = false
         }
       }
     }
   })
 }
-
-// connect to room
 const initCurrentUser = async () => {
   await authApi.currentUser().then(({ data }) => {
     data && (current.value = data)
@@ -278,7 +251,8 @@ onMounted(async () => {
   <div class="row">
     <div class="col-md-4">
       <div class="flex-1 mt-15 p:2 sm:p-6 flex flex-col h-screen overflow-y-auto scrollbar-thumb-blue scrollbar-thumb-rounded scrollbar-track-blue-lighter scrollbar-w-2 scrolling-touch">
-        <div v-for="(user,index) in listUsers" :key="user._id">
+        <a-spin v-if="listUsersLoading" class="mx-auto" />
+        <div v-for="(user,index) in listUsers" v-else :key="user._id">
           <div class="flex sm:items-center py-3 border-b-2 border-gray-200">
             <div class="relative flex items-center space-x-4">
               <div class="relative">
@@ -307,7 +281,6 @@ onMounted(async () => {
       </div>
     </div>
     <div class="col-md-8">
-      <!-- component -->
       <div v-if="user_to_talk !== ''" class="flex-1 mt-15 p:2 sm:p-6 justify-between flex flex-col h-screen">
         <div class="flex sm:items-center justify-between py-3 border-b-2 border-gray-200">
           <div class="relative flex items-center space-x-4">
