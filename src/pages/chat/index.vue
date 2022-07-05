@@ -6,6 +6,7 @@ import agenceApi from '~/api/modules/agence'
 import companyApi from '~/api/modules/company'
 import freelanceApi from '~/api/modules/freelancer'
 import { currentUser } from '~/stores'
+import pdfImage from '~/assets/img/pdf.png'
 
 const BASE_PREFIX = `${import.meta.env.VITE_API_CHAT}`
 const BASE_PREFIX_AUTH = `${import.meta.env.VITE_API_AUTH}`
@@ -41,10 +42,12 @@ const beforeUploadProfileAvatar = async (file: any) => {
     formData.append('usernameSender', current.value.username)
     formData.append('usernameReceiver', receiver.value.username)
     formData.append('content', message_to_send.value)
+    formData.append('image', formStateAvatar.avatar[0])
+    console.log('formData ', formData)
 
     const { data: dataSendFile, error: errorSendFile } = await useFetch(`${BASE_PREFIX}/pusher/send-file`).post(formData).formData().json()
     if (dataSendFile.value && !errorSendFile.value)
-      console.log('dataSendFile ', dataSendFile)
+      console.log('file sended')
     else
       console.log('error in download')
   }
@@ -222,6 +225,9 @@ const sendMessage = async () => {
   }
   else { console.log('errorSendMessage ', errorSendMessage.value) }
 }
+const openNewTab = async (url: any) => {
+  window.open(url)
+}
 // change props
 const changeProps = async (idUser: any) => {
   messages.value = []
@@ -323,32 +329,122 @@ onMounted(async () => {
         </div>
         <div class="flex flex-col space-y-4 p-3 overflow-y-auto scrollbar-thumb-blue scrollbar-thumb-rounded scrollbar-track-blue-lighter scrollbar-w-2 scrolling-touch">
           <div v-for="message in messages[0]" id="messages" :key="message._id">
-            <div v-if="message.idSender === user_to_talk" class="chat-message">
-              <div class="flex items-end">
-                <div class="flex flex-col space-y-2 text-xs max-w-xs mx-2 order-2 items-start">
-                  <div><span class="px-4 py-2 rounded-lg inline-block rounded-bl-none bg-gray-300 text-gray-600">{{ message.content }}</span></div>
+            <div v-if="message.type === 'text'">
+              <div v-if="message.idSender === user_to_talk" class="chat-message">
+                <div class="flex items-end">
+                  <div class="flex flex-col space-y-2 text-xs max-w-xs mx-2 order-2 items-start">
+                    <div><span class="px-4 py-2 rounded-lg inline-block rounded-bl-none bg-gray-300 text-gray-600">{{ message.content }}</span></div>
+                  </div>
+                  <img :src="receiver_user_profile_image" alt="My profile" class="w-6 h-6 rounded-full order-1">
                 </div>
-                <img :src="receiver_user_profile_image" alt="My profile" class="w-6 h-6 rounded-full order-1">
+              </div>
+              <div v-else-if="message.idReceiver == user_to_talk && message.showedReceiver == false" class="chat-message">
+                <div class="flex items-end justify-end">
+                  <div class="flex flex-col space-y-2 text-xs max-w-xs mx-2 order-1 items-end">
+                    <div>
+                      <span class="px-4 py-2 rounded-lg inline-block rounded-br-none bg-green-300 text-white ">{{ message.content }}</span>
+                    </div>
+                  </div>
+                  <img :src="your_user_profile_image" alt="My profile" class="w-6 h-6 rounded-full order-2">
+                </div>
+              </div>
+              <div v-else-if="message.idReceiver == user_to_talk" class="chat-message">
+                <div class="flex items-end justify-end">
+                  <div class="flex flex-col space-y-2 text-xs max-w-xs mx-2 order-1 items-end">
+                    <div>
+                      <span class="px-4 py-2 rounded-lg inline-block rounded-br-none bg-green-600 text-white ">{{ message.content }}</span>
+                    </div>
+                  </div>
+                  <img :src="your_user_profile_image" alt="My profile" class="w-6 h-6 rounded-full order-2">
+                </div>
               </div>
             </div>
-            <div v-else-if="message.idReceiver == user_to_talk && message.showedReceiver == false" class="chat-message">
-              <div class="flex items-end justify-end">
-                <div class="flex flex-col space-y-2 text-xs max-w-xs mx-2 order-1 items-end">
-                  <div>
-                    <span class="px-4 py-2 rounded-lg inline-block rounded-br-none bg-green-300 text-white ">{{ message.content }}</span>
+            <div v-else-if="message.type === 'image'">
+              <div v-if="message.idSender === user_to_talk" class="chat-message">
+                <div class="flex items-end">
+                  <div class="flex flex-col space-y-2 text-xs max-w-xs mx-2 order-2 items-start">
+                    <div>
+                      <span class="px-4 py-2 rounded-lg inline-block rounded-bl-none bg-gray-300 text-gray-600"><a href="javascript:;" @click="openNewTab(message.content)"><a-avatar
+                        :src="message.content"
+                        shape="square"
+                        :size="{ xs: 24, sm: 32, md: 40, lg: 64, xl: 220, xxl: 260 }"
+                      /></a></span>
+                    </div>
                   </div>
+                  <img :src="receiver_user_profile_image" alt="My profile" class="w-6 h-6 rounded-full order-1">
                 </div>
-                <img :src="your_user_profile_image" alt="My profile" class="w-6 h-6 rounded-full order-2">
+              </div>
+              <div v-else-if="message.idReceiver == user_to_talk && message.showedReceiver == false" class="chat-message">
+                <div class="flex items-end justify-end">
+                  <div class="flex flex-col space-y-2 text-xs max-w-xs mx-2 order-1 items-end">
+                    <div>
+                      <span class="px-4 py-2 rounded-lg inline-block rounded-br-none bg-green-300 text-white "><a href="javascript:;" @click="openNewTab(message.content)"><a-avatar
+                        :src="message.content"
+                        shape="square"
+                        :size="{ xs: 24, sm: 32, md: 40, lg: 64, xl: 220, xxl: 260 }"
+                      /></a></span>
+                    </div>
+                  </div>
+                  <img :src="your_user_profile_image" alt="My profile" class="w-6 h-6 rounded-full order-2">
+                </div>
+              </div>
+              <div v-else-if="message.idReceiver == user_to_talk" class="chat-message">
+                <div class="flex items-end justify-end">
+                  <div class="flex flex-col space-y-2 text-xs max-w-xs mx-2 order-1 items-end">
+                    <div>
+                      <span class="px-4 py-2 rounded-lg inline-block rounded-br-none bg-green-600 text-white "><a href="javascript:;" @click="openNewTab(message.content)"><a-avatar
+                        :src="message.content"
+                        shape="square"
+                        :size="{ xs: 24, sm: 32, md: 40, lg: 64, xl: 220, xxl: 260 }"
+                      /></a></span>
+                    </div>
+                  </div>
+                  <img :src="your_user_profile_image" alt="My profile" class="w-6 h-6 rounded-full order-2">
+                </div>
               </div>
             </div>
-            <div v-else-if="message.idReceiver == user_to_talk" class="chat-message">
-              <div class="flex items-end justify-end">
-                <div class="flex flex-col space-y-2 text-xs max-w-xs mx-2 order-1 items-end">
-                  <div>
-                    <span class="px-4 py-2 rounded-lg inline-block rounded-br-none bg-green-600 text-white ">{{ message.content }}</span>
+            <div v-else-if="message.type === 'pdf'">
+              <div v-if="message.idSender === user_to_talk" class="chat-message">
+                <div class="flex items-end">
+                  <div class="flex flex-col space-y-2 text-xs max-w-xs mx-2 order-2 items-start">
+                    <div>
+                      <span class="px-4 py-2 rounded-lg inline-block rounded-bl-none bg-gray-300 text-gray-600"><a href="javascript:;" @click="openNewTab(message.content)"><a-avatar
+                        :src="pdfImage"
+                        shape="square"
+                        :size="{ xs: 24, sm: 32, md: 40, lg: 64, xl: 220, xxl: 260 }"
+                      /></a></span>
+                    </div>
                   </div>
+                  <img :src="receiver_user_profile_image" alt="My profile" class="w-6 h-6 rounded-full order-1">
                 </div>
-                <img :src="your_user_profile_image" alt="My profile" class="w-6 h-6 rounded-full order-2">
+              </div>
+              <div v-else-if="message.idReceiver == user_to_talk && message.showedReceiver == false" class="chat-message">
+                <div class="flex items-end justify-end">
+                  <div class="flex flex-col space-y-2 text-xs max-w-xs mx-2 order-1 items-end">
+                    <div>
+                      <span class="px-4 py-2 rounded-lg inline-block rounded-br-none bg-green-300 text-white "><a href="javascript:;" @click="openNewTab(message.content)"><a-avatar
+                        :src="pdfImage"
+                        shape="square"
+                        :size="{ xs: 24, sm: 32, md: 40, lg: 64, xl: 220, xxl: 260 }"
+                      /></a></span>
+                    </div>
+                  </div>
+                  <img :src="your_user_profile_image" alt="My profile" class="w-6 h-6 rounded-full order-2">
+                </div>
+              </div>
+              <div v-else-if="message.idReceiver == user_to_talk" class="chat-message">
+                <div class="flex items-end justify-end">
+                  <div class="flex flex-col space-y-2 text-xs max-w-xs mx-2 order-1 items-end">
+                    <div>
+                      <span class="px-4 py-2 rounded-lg inline-block rounded-br-none bg-green-600 text-white "><a href="javascript:;" @click="openNewTab(message.content)"><a-avatar
+                        :src="pdfImage"
+                        shape="square"
+                        :size="{ xs: 24, sm: 32, md: 40, lg: 64, xl: 220, xxl: 260 }"
+                      /></a></span>
+                    </div>
+                  </div>
+                  <img :src="your_user_profile_image" alt="My profile" class="w-6 h-6 rounded-full order-2">
+                </div>
               </div>
             </div>
           </div>
